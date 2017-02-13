@@ -1,18 +1,11 @@
-
-from __future__ import print_function
-import httplib2
+import itertools
 import os
 
 from apiclient import discovery
+import httplib2
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
-
-try:
-    import argparse
-    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-except ImportError:
-    flags = None
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/sheets.googleapis.com-python-quickstart.json
@@ -42,40 +35,30 @@ def get_credentials():
     if not credentials or credentials.invalid:
         flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
         flow.user_agent = APPLICATION_NAME
-        if flags:
-            credentials = tools.run_flow(flow, store, flags)
-        else: # Needed only for compatibility with Python 2.6
-            credentials = tools.run(flow, store)
+        credentials = tools.run_flow(flow, store)
         print('Storing credentials to ' + credential_path)
     return credentials
 
-def main():
-    """Shows basic usage of the Sheets API.
-
-    Creates a Sheets API service object and prints the names and majors of
-    students in a sample spreadsheet:
-    https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-    """
-    credentials = get_credentials()
-    http = credentials.authorize(httplib2.Http())
+def read_csv(http, sheet_id, range):
     discoveryUrl = ('https://sheets.googleapis.com/$discovery/rest?'
                     'version=v4')
     service = discovery.build('sheets', 'v4', http=http,
                               discoveryServiceUrl=discoveryUrl)
 
-    spreadsheetId = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
-    rangeName = 'Class Data!A2:E'
     result = service.spreadsheets().values().get(
-        spreadsheetId=spreadsheetId, range=rangeName).execute()
+        spreadsheetId=sheet_id, range=range).execute()
     values = result.get('values', [])
 
-    if not values:
-        print('No data found.')
-    else:
-        print('Name, Major:')
-        for row in values:
-            # Print columns A and E, which correspond to indices 0 and 4.
-            print('%s, %s' % (row[0], row[4]))
+    if values:
+        headers = values[0]
+        for row in values[1:]:
+            yield {k: v for k, v in itertools.zip_longest(headers, row, fillvalue='')}
+
+def main():
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+    for row in read_csv(http, '1PzJER3Jp8d3FbfZoIci5zMKEMlDS-k8PNbPCFuvnBZc', '1 Pimentel'):
+        print(row)
 
 
 if __name__ == '__main__':
