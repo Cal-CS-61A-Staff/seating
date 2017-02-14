@@ -1,9 +1,25 @@
 import os
 
 from flask import Flask
+import flask.ctx
 from flask_caching import Cache
 
-app = Flask(__name__)
+class UrlRequestContext(flask.ctx.RequestContext):
+    def match_request(self):
+        """Matches the request in a request context."""
+        try:
+            with self:
+                url_rule, self.request.view_args = \
+                    self.url_adapter.match(return_rule=True)
+                self.request.url_rule = url_rule
+        except HTTPException as e:
+            self.request.routing_exception = e
+
+class App(Flask):
+    def request_context(self, environ):
+        return UrlRequestContext(self, environ)
+
+app = App(__name__)
 app.config.update(
     SECRET_KEY=os.getenv('SECRET_KEY'),
     OK_CLIENT_ID=os.getenv('OK_CLIENT_ID'),
