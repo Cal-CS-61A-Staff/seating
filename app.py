@@ -10,20 +10,15 @@ from oauth2client.contrib.flask_util import UserOAuth2
 from werkzeug import security
 
 app = Flask(__name__)
-
-### Config
-
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.config['SERVER_URL'] = 'https://okpy.org'
-
-app.config['OK_CLIENT_ID'] = os.getenv('OK_CLIENT_ID')
-app.config['OK_CLIENT_SECRET'] = os.getenv('OK_CLIENT_SECRET')
-
-app.config['GOOGLE_OAUTH2_CLIENT_ID'] = 'your-client-id'  # TODO
-app.config['GOOGLE_OAUTH2_CLIENT_SECRET'] = 'your-client-secret'   # TODO
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.update(
+    SECRET_KEY=os.getenv('SECRET_KEY'),
+    OK_CLIENT_ID=os.getenv('OK_CLIENT_ID'),
+    OK_CLIENT_SECRET=os.getenv('OK_CLIENT_SECRET'),
+    GOOGLE_OAUTH2_CLIENT_ID=os.getenv('GOOGLE_CLIENT_ID'),
+    GOOGLE_OAUTH2_CLIENT_SECRET=os.getenv('GOOGLE_CLIENT_SECRET'),
+    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URI'),
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+)
 
 ### Models
 
@@ -47,7 +42,7 @@ def init_db():
 login_manager = LoginManager(app=app)
 
 oauth = OAuth()
-server_url = app.config.get('SERVER_URL')
+server_url = 'https://okpy.org'
 ok_oauth = oauth.remote_app(
     'seating',
     consumer_key=app.config.get('OK_CLIENT_ID'),

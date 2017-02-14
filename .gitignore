@@ -2,7 +2,7 @@
 app.db
 
 # Secrets
-secrets*
+secrets.sh
 client_secret.json
 
 # Byte-compiled / optimized / DLL files
