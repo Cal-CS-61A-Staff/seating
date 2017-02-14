@@ -1,43 +1,11 @@
-import os
-
-from flask import Flask, redirect, request, session, url_for
-from flask_login import (
-    LoginManager, UserMixin,
-    login_required, login_user, logout_user)
+from flask import redirect, request, session, url_for
+from flask_login import LoginManager, login_required, login_user, logout_user
 from flask_oauthlib.client import OAuth, OAuthException
-from flask_sqlalchemy import SQLAlchemy
 from oauth2client.contrib.flask_util import UserOAuth2
 from werkzeug import security
 
-app = Flask(__name__)
-app.config.update(
-    SECRET_KEY=os.getenv('SECRET_KEY'),
-    OK_CLIENT_ID=os.getenv('OK_CLIENT_ID'),
-    OK_CLIENT_SECRET=os.getenv('OK_CLIENT_SECRET'),
-    GOOGLE_OAUTH2_CLIENT_ID=os.getenv('GOOGLE_CLIENT_ID'),
-    GOOGLE_OAUTH2_CLIENT_SECRET=os.getenv('GOOGLE_CLIENT_SECRET'),
-    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URI'),
-    SQLALCHEMY_TRACK_MODIFICATIONS=False,
-)
-
-### Models
-
-db = SQLAlchemy(app=app)
-
-class User(db.Model, UserMixin):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), nullable=False, index=True)
-
-###
-
-@app.cli.command('initdb')
-def init_db():
-    """Initializes the database."""
-    print('Initializing database...')
-    db.create_all()
-
-### Authentication
+from server import app
+from server.models import db, User
 
 login_manager = LoginManager(app=app)
 
@@ -101,10 +69,3 @@ def logout():
     logout_user()
     session.clear()
     return redirect(url_for('index'))
-
-### App
-
-@app.route('/')
-@login_required
-def index():
-    return 'Hello world!'
