@@ -1,2 +1,5 @@
 google-api-python-client
 flask
+flask-login
+flask-oauthlib
+flask-sqlalchemy

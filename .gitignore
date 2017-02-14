@@ -1,4 +1,8 @@
+# Database
+app.db
+
 # Secrets
+secrets*
 client_secret.json
 
 # Byte-compiled / optimized / DLL files
