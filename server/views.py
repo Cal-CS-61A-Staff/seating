@@ -142,23 +142,14 @@ def validate_seats(exam, room_form):
 @login_required
 @google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def new_room(exam):
+    seats = []
     form = RoomForm()
     if form.validate_on_submit():
         try:
             seats = validate_seats(exam, form)
-            for seat in seats:
-                print(dict(
-                    room=seat.room,
-                    name=seat.name,
-                    row=seat.row,
-                    seat=seat.seat,
-                    x=seat.x,
-                    y=seat.y,
-                    attributes=seat.attributes,
-                ))
         except ValidationError as e:
             form.sheet_url.errors.append(str(e))
-    return render_template('new_room.html.j2', form=form)
+    return render_template('new_room.html.j2', form=form, seats=seats)
 
 @app.route('/<exam:exam>/<string:room>/')
 @login_required

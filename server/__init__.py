@@ -31,6 +31,11 @@ app.config.update(
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
 
+app.jinja_env.filters.update(
+    min=min,
+    max=max,
+)
+
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 import server.auth

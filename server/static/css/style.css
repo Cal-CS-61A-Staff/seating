@@ -1,0 +1,16 @@
+.room {
+  padding: 50px;
+}
+
+.seats {
+  position: relative;
+}
+
+.seat {
+  position: absolute;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #555;
+  background-color: #ddd;
+}
