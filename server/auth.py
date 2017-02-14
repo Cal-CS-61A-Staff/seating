@@ -16,7 +16,7 @@ ok_oauth = oauth.remote_app(
     consumer_key=app.config.get('OK_CLIENT_ID'),
     consumer_secret=app.config.get('OK_CLIENT_SECRET'),
     request_token_params={
-        'scope': 'email',
+        'scope': 'all',
         'state': lambda: security.gen_salt(10),
     },
     base_url=server_url + '/api/v3/',
@@ -49,7 +49,7 @@ def login():
 def authorized():
     resp = ok_oauth.authorized_response()
     if resp is None:
-        return 403, 'Access denied: {}'.format(request.args.get('error', 'unknown error'))
+        return 'Access denied: {}'.format(request.args.get('error', 'unknown error'))
     session['ok_token'] = (resp['access_token'], '')
 
     info = ok_oauth.get('user').data['data']
@@ -66,6 +66,6 @@ def authorized():
 
 @app.route('/logout/')
 def logout():
-    logout_user()
     session.clear()
+    logout_user()
     return redirect(url_for('index'))

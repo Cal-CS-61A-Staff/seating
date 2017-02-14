@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask
+from flask_caching import Cache
 
 app = Flask(__name__)
 app.config.update(
@@ -13,5 +14,8 @@ app.config.update(
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
 
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
 import server.auth
+import server.models
 import server.views
