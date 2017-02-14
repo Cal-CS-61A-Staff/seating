@@ -15,3 +15,28 @@
   </ul>
   {% endif %}
 {% endmacro %}
+
+{% macro room(room) %}
+{% if room.seats %}
+<div class="room">
+  {% set x_min = room.seats|map(attribute='x')|min %}
+  {% set x_max = room.seats|map(attribute='x')|max %}
+  {% set y_min = room.seats|map(attribute='y')|min %}
+  {% set y_max = room.seats|map(attribute='y')|max %}
+  {% set scale = 20 %}
+  <div class="seats" style="width:{{ scale * (x_max - x_min + 1) }}px;height:{{ scale * (y_max - y_min + 1) }}px">
+  {% for seat in room.seats %}
+    <div id="{{ seat.name }}" class="seat"
+      style="left:{{ scale * (x_max - seat.x) }}px;top:{{ scale * (seat.y - y_min) }}px">
+    </div>
+    <div class="mdl-tooltip" for="{{ seat.name }}">
+      {{ seat.name }}
+      {% for attribute in seat.attributes %}
+        <br>{{ attribute|upper }}
+      {% endfor %}
+    </div>
+  {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endmacro %}

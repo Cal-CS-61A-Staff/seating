@@ -82,7 +82,7 @@ def read_csv(sheet_url, sheet_range):
     ]
     return headers, rows
 
-def validate_seats(exam, room_form):
+def validate_room(exam, room_form):
     room = Room(
         exam_id=exam.id,
         name=slug(room_form.display_name.data),
@@ -103,7 +103,6 @@ def validate_seats(exam, room_form):
 
     x, y = 0, -1
     last_row = None
-    seats = []
     for row in rows:
         if row['row'] != last_row:
             x = 0
@@ -122,8 +121,8 @@ def validate_seats(exam, room_form):
             k for k, v in row.items()
             if k not in ('row', 'seat', 'x', 'y') and v.lower() == 'true'
         }
+        print(attributes)
         seat = Seat(
-            room=room,
             name=row['row'] + row['seat'],
             row=row['row'],
             seat=row['seat'],
@@ -131,28 +130,32 @@ def validate_seats(exam, room_form):
             y=y,
             attributes=attributes,
         )
-        seats.append(seat)
-    if len(set(seat.name for seat in seats)) != len(seats):
+        room.seats.append(seat)
+    if len(set(seat.name for seat in room.seats)) != len(room.seats):
         raise ValidationError('Seats are not unique')
-    elif len(set((seat.x, seat.y) for seat in seats)) != len(seats):
+    elif len(set((seat.x, seat.y) for seat in room.seats)) != len(room.seats):
         raise ValidationError('Seat coordinates are not unique')
-    return seats
+    return room
 
 @app.route('/<exam:exam>/new/', methods=['GET', 'POST'])
 @login_required
 @google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def new_room(exam):
-    seats = []
     form = RoomForm()
+    room = None
     if form.validate_on_submit():
         try:
-            seats = validate_seats(exam, form)
+            room = validate_room(exam, form)
         except ValidationError as e:
             form.sheet_url.errors.append(str(e))
-    return render_template('new_room.html.j2', form=form, seats=seats)
+        if form.create_room.data:
+            db.session.add(room)
+            db.session.commit()
+            return redirect(url_for('room', exam=exam, room=room.name))
+    return render_template('new_room.html.j2', form=form, room=room)
 
 @app.route('/<exam:exam>/<string:room>/')
 @login_required
 def room(exam, room):
     room = Room.query.filter_by(name=room).first_or_404()
-    return 'OK'
+    return render_template('room.html.j2', room=room)

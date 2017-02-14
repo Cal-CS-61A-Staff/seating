@@ -12,16 +12,10 @@ class StringSet(types.TypeDecorator):
     impl = types.Text
 
     def process_bind_param(self, value, engine):
-        if not value:
-            return None
-        else:
-            return ','.join(set(value))
+        return ','.join(set(value))
 
     def process_result_value(self, value, engine):
-        if not value:
-            return set()
-        else:
-            return set(value.split(','))
+        return set(value.split(','))
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -53,7 +47,7 @@ class Seat(db.Model):
     y = db.Column(db.Float, nullable=False)
     attributes = db.Column(StringSet, nullable=False)
 
-    room = db.relationship('Room')
+    room = db.relationship('Room', backref='seats')
 
 class Student(db.Model):
     __tablename__ = 'students'
@@ -85,6 +79,7 @@ seed_exam = Exam(
 @app.cli.command('initdb')
 def init_db():
     print('Initializing database...')
+    db.drop_all()
     db.create_all()
     db.session.add(seed_exam)
     db.session.commit()
