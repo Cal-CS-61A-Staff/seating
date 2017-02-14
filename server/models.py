@@ -46,11 +46,14 @@ class Seat(db.Model):
     __tablename__ = 'seats'
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.ForeignKey('rooms.id'), index=True, nullable=False)
+    name = db.Column(db.String(255), nullable=False)
     row = db.Column(db.String(255), nullable=False)
     seat = db.Column(db.String(255), nullable=False, index=True)
     x = db.Column(db.Float, nullable=False)
     y = db.Column(db.Float, nullable=False)
     attributes = db.Column(StringSet, nullable=False)
+
+    room = db.relationship('Room')
 
 class Student(db.Model):
     __tablename__ = 'students'
