@@ -3,6 +3,7 @@ import os
 from flask import Flask
 import flask.ctx
 from flask_caching import Cache
+from werkzeug.exceptions import HTTPException
 
 class UrlRequestContext(flask.ctx.RequestContext):
     def match_request(self):
