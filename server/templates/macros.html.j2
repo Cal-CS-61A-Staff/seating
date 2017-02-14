@@ -1,6 +1,17 @@
 {% macro form(form) %}
-<form method="POST" action="/">
+<form method="POST">
   {{ form.hidden_tag() }}
   {{ caller() }}
 </form>
+{% endmacro %}
+
+{% macro field(field) %}
+  {{ field(**kwargs)|safe }}
+  {% if field.errors %}
+  <ul>
+    {% for error in field.errors %}
+      <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
 {% endmacro %}

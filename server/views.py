@@ -1,8 +1,9 @@
-from flask import redirect, render_template, url_for
+from flask import redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from werkzeug.routing import BaseConverter
-from wtforms import validators, StringField
+from wtforms import HiddenField, StringField, SubmitField
+from wtforms.validators import InputRequired, URL
 
 from server import app, cache
 from server.auth import ok_oauth
@@ -40,13 +41,31 @@ def staff_offerings(email):
 def exam(exam):
     return 'OK'
 
-class RoomForm(FlaskForm):
-    display_name = StringField('display_name', validators=[validators.URL()])
+class Form(FlaskForm):
+    @property
+    def public_data(self):
+        return {
+            field.name: field.data for field in self
+            if not isinstance(field, (HiddenField, SubmitField))
+        }
+
+class RoomForm(Form):
+    display_name = StringField('display_name', [InputRequired()])
+    sheet_url = StringField('sheet_url', [URL()])
+    sheet_range = StringField('sheet_range', [InputRequired()])
+    preview_room = SubmitField('preview_room')
+    create_room = SubmitField('create_room')
 
 @app.route('/<exam:exam>/new/', methods=['GET', 'POST'])
 @login_required
 def new_room(exam):
-    form = RoomForm()
+    form = RoomForm(**request.args.to_dict())
+    print(form.public_data)
+    if form.validate_on_submit():
+        if form.preview_room.data:
+            return redirect(url_for('new_room', exam=exam, **form.public_data))
+        elif form.create_room.data:
+            return redirect(url_for('exam', exam=exam))
     return render_template('new_room.html.j2', form=form)
 
 @app.route('/<exam:exam>/<string:room>/')
