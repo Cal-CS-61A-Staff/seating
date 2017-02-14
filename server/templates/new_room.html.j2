@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+
+{% block body %}
+{% call render_form(form) %}
+Name: {{ form.display_name }}
+{% endblock %}
