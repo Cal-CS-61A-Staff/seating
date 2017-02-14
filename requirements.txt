@@ -4,3 +4,4 @@ flask-caching
 flask-login
 flask-oauthlib
 flask-sqlalchemy
+flask-wtf

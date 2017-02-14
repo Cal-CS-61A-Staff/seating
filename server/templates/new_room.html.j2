@@ -1,6 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros %}
 
 {% block body %}
-{% call render_form(form) %}
+{% call macros.form(form) %}
 Name: {{ form.display_name }}
+{% endcall %}
 {% endblock %}

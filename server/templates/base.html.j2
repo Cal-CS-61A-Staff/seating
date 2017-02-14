@@ -9,10 +9,3 @@
     {% block body %}{% endblock %}
   </body>
 </html>
-
-{% macro render_form(form) %}
-<form method="POST" action="/">
-  {{ form.hidden_tag() }}
-  {{ caller() }}
-</form>
-{% endmacro %}

@@ -1,6 +1,8 @@
 from flask import redirect, render_template, url_for
 from flask_login import current_user, login_required
+from flask_wtf import FlaskForm
 from werkzeug.routing import BaseConverter
+from wtforms import validators, StringField
 
 from server import app, cache
 from server.auth import ok_oauth
@@ -38,10 +40,14 @@ def staff_offerings(email):
 def exam(exam):
     return 'OK'
 
+class RoomForm(FlaskForm):
+    display_name = StringField('display_name', validators=[validators.URL()])
+
 @app.route('/<exam:exam>/new/', methods=['GET', 'POST'])
 @login_required
 def new_room(exam):
-    return 'OK'
+    form = RoomForm()
+    return render_template('new_room.html.j2', form=form)
 
 @app.route('/<exam:exam>/<string:room>/')
 @login_required
