@@ -4,11 +4,11 @@ from werkzeug.routing import BaseConverter
 
 from server import app, cache
 from server.auth import ok_oauth
-from server.models import db, Exam, Room
+from server.models import db, Exam, Room, seed_exam
 
 @app.route('/')
 def index():
-    return redirect(url_for('exam', offering='cal/cs61a/sp17', exam_name='midterm1'))
+    return redirect(url_for('exam', offering=seed_exam.offering, exam_name=seed_exam.name))
 
 name_part = '[^/]+'
 

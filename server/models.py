@@ -1,4 +1,4 @@
-import json
+import re
 
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
@@ -8,16 +8,20 @@ from server import app
 
 db = SQLAlchemy(app=app)
 
-class Json(types.TypeDecorator):
+class StringSet(types.TypeDecorator):
     impl = types.Text
 
-    def process_bind_param(self, value, dialect):
-        # Python -> SQL
-        return json.dumps(value)
+    def process_bind_param(self, value, engine):
+        if not value:
+            return None
+        else:
+            return ','.join(set(value))
 
-    def process_result_value(self, value, dialect):
-        # SQL -> Python
-        return json.loads(value)
+    def process_result_value(self, value, engine):
+        if not value:
+            return set()
+        else:
+            return set(value.split(','))
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -42,10 +46,11 @@ class Seat(db.Model):
     __tablename__ = 'seats'
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.ForeignKey('rooms.id'), index=True, nullable=False)
-    name = db.Column(db.String(255), nullable=False, index=True)
+    row = db.Column(db.String(255), nullable=False)
+    seat = db.Column(db.String(255), nullable=False, index=True)
+    x = db.Column(db.Float, nullable=False)
     y = db.Column(db.Float, nullable=False)
-    y = db.Column(db.Float, nullable=False)
-    attributes = db.Column(Json, nullable=False)
+    attributes = db.Column(StringSet, nullable=False)
 
 class Student(db.Model):
     __tablename__ = 'students'
@@ -53,7 +58,7 @@ class Student(db.Model):
     name = db.Column(db.String(255))
     email = db.Column(db.String(255))
     sid = db.Column(db.String(255))
-    attributes = db.Column(Json, nullable=False)
+    attributes = db.Column(StringSet, nullable=False)
 
 class SeatAssignment(db.Model):
     __tablename__ = 'seat_assignments'
@@ -64,7 +69,19 @@ class SeatAssignment(db.Model):
     seat_id = db.Column(db.ForeignKey('seats.id'), index=True, nullable=False)
     emailed = db.Column(db.Boolean, default=False, index=True, nullable=False)
 
+def slug(display_name):
+    return re.sub(r'[^A-Za-z0-9._-]', '', display_name.lower())
+
+midterm1 = 'Midterm 1'
+seed_exam = Exam(
+    offering='cal/cs61a/sp17',
+    name=slug(midterm1),
+    display_name=midterm1,
+)
+
 @app.cli.command('initdb')
 def init_db():
     print('Initializing database...')
     db.create_all()
+    db.session.add(seed_exam)
+    db.session.commit()
