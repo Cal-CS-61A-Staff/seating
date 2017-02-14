@@ -13,4 +13,9 @@
   height: 16px;
   border: 2px solid #555;
   background-color: #ddd;
+  outline: 0;
+}
+
+.seat:hover {
+  background-color: #c00;
 }

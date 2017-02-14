@@ -18,7 +18,15 @@
   {% set scale = 20 %}
   <div class="seats" style="width:{{ scale * (x_max - x_min + 1) }}px;height:{{ scale * (y_max - y_min + 1) }}px">
   {% for seat in seats %}
-    <div class="seat" style="left:{{ scale * (x_max - seat.x) }}px;top:{{ scale * (seat.y - y_min) }}px"></div>
+    <div id="{{ seat.name }}" class="seat"
+      style="left:{{ scale * (x_max - seat.x) }}px;top:{{ scale * (seat.y - y_min) }}px">
+    </div>
+    <div class="mdl-tooltip" for="{{ seat.name }}">
+      {{ seat.name }}
+      {% for attribute in seat.attributes %}
+        <br>{{ attribute|upper }}
+      {% endfor %}
+    </div>
   {% endfor %}
   </div>
 </div>
