@@ -1,0 +1,10 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+{% call macros.form(form) %}
+  Google Sheets URL: {{ macros.field(form.sheet_url) }}
+  Sheet Name: {{ macros.field(form.sheet_range) }}
+  {{ macros.field(form.submit) }}
+{% endcall %}
+{% endblock %}

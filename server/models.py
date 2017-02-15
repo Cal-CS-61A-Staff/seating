@@ -1,3 +1,4 @@
+import json
 import re
 
 from flask_login import UserMixin
@@ -8,14 +9,16 @@ from server import app
 
 db = SQLAlchemy(app=app)
 
-class StringSet(types.TypeDecorator):
+class Json(types.TypeDecorator):
     impl = types.Text
 
-    def process_bind_param(self, value, engine):
-        return ','.join(set(value))
+    def process_bind_param(self, value, dialect):
+        # Python -> SQL
+        return json.dumps(value)
 
-    def process_result_value(self, value, engine):
-        return set(value.split(','))
+    def process_result_value(self, value, dialect):
+        # SQL -> Python
+        return json.loads(value)
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -47,17 +50,18 @@ class Seat(db.Model):
     seat = db.Column(db.String(255), nullable=False, index=True)
     x = db.Column(db.Float, nullable=False)
     y = db.Column(db.Float, nullable=False)
-    attributes = db.Column(StringSet, nullable=False)
+    attributes = db.Column(Json, nullable=False)
 
     room = db.relationship('Room', backref='seats')
 
 class Student(db.Model):
     __tablename__ = 'students'
     id = db.Column(db.Integer, primary_key=True)
+    exam_id = db.Column(db.ForeignKey('exams.id'), index=True, nullable=False)
+    email = db.Column(db.String(255), index=True)
     name = db.Column(db.String(255))
-    email = db.Column(db.String(255))
-    sid = db.Column(db.String(255))
-    attributes = db.Column(StringSet, nullable=False)
+    student_id = db.Column(db.String(255))
+    preferences = db.Column(Json, nullable=False)
 
 class SeatAssignment(db.Model):
     __tablename__ = 'seat_assignments'
