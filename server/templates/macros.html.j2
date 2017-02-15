@@ -16,7 +16,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro room(room) %}
+{% macro room(room, highlight_name=none) %}
 {% if room.seats %}
 <div class="room">
   {% set x_min = room.seats|map(attribute='x')|min %}
@@ -26,7 +26,7 @@
   {% set scale = 20 %}
   <div class="seats" style="width:{{ scale * (x_max - x_min + 1) }}px;height:{{ scale * (y_max - y_min + 1) }}px">
   {% for seat in room.seats %}
-    <div id="{{ seat.name }}" class="seat"
+    <div id="{{ seat.name }}" class="seat {% if seat.name == highlight_name %}highlight{% endif %}"
       style="left:{{ scale * (x_max - seat.x) }}px;top:{{ scale * (seat.y - y_min) }}px">
     </div>
     <div class="mdl-tooltip" for="{{ seat.name }}">

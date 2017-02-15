@@ -16,6 +16,10 @@
   outline: 0;
 }
 
+.seat.highlight {
+  background-color: #0c0;
+}
+
 .seat:hover {
   background-color: #c00;
 }

@@ -162,7 +162,8 @@ def new_room(exam):
 @login_required
 def room(exam, room):
     room = Room.query.filter_by(exam_id=exam.id, name=room).first_or_404()
-    return render_template('room.html.j2', room=room)
+    seat = request.args.get('seat')
+    return render_template('room.html.j2', room=room, seat=seat)
 
 class StudentForm(FlaskForm):
     sheet_url = StringField('sheet_url', [URL()])
