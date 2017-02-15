@@ -23,3 +23,8 @@
 .seat:hover {
   background-color: #c00;
 }
+
+.photo {
+  width: 187px;
+  height: 250px;
+}

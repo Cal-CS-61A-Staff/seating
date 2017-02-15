@@ -99,10 +99,11 @@ def validate_room(exam, room_form):
     x, y = 0, -1
     last_row = None
     for row in rows:
-        seat_row = row['row']
-        seat_seat = row['seat']
-        seat_name = seat_row + seat_seat
-        if not seat_name:
+        seat = Seat()
+        seat.row = row.pop('row')
+        seat.seat = row.pop('seat')
+        seat.name = seat.row + seat.seat
+        if not seat.name:
             continue
         if seat_row != last_row:
             x = 0
@@ -110,25 +111,18 @@ def validate_room(exam, room_form):
         else:
             x += 1
         last_row = seat_row
+        x_override = row.pop('x')
+        y_override = row.pop('y')
         try:
-            if row.get('x'):
-                x = float(row.get('x'))
-            if row.get('y'):
-                y = float(row.get('y'))
+            if x_override:
+                x = float(x_override)
+            if y_override:
+                y = float(y_override)
         except TypeError:
             raise ValidationError('xy coordinates must be floats')
-        attributes = {
-            k: True for k, v in row.items()
-            if k not in ('row', 'seat', 'x', 'y') and v.lower() == 'true'
-        }
-        seat = Seat(
-            name=seat_name,
-            row=seat_row,
-            seat=seat_seat,
-            x=x,
-            y=y,
-            attributes=attributes,
-        )
+        seat.x = x
+        seat.y = y
+        seat.attributes = { k for k, v in row.items() if v.lower() == 'true' }
         room.seats.append(seat)
     if len(set(seat.name for seat in room.seats)) != len(room.seats):
         raise ValidationError('Seats are not unique')
@@ -136,7 +130,7 @@ def validate_room(exam, room_form):
         raise ValidationError('Seat coordinates are not unique')
     return room
 
-@app.route('/<exam:exam>/new/', methods=['GET', 'POST'])
+@app.route('/<exam:exam>/rooms/import/', methods=['GET', 'POST'])
 @login_required
 @google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def new_room(exam):
@@ -153,7 +147,7 @@ def new_room(exam):
             return redirect(url_for('room', exam=exam, room=room.name))
     return render_template('new_room.html.j2', form=form, room=room)
 
-@app.route('/<exam:exam>/<string:room>/')
+@app.route('/<exam:exam>/rooms/<string:room>/')
 @login_required
 def room(exam, room):
     room = Room.query.filter_by(exam_id=exam.id, name=room).first_or_404()
@@ -171,22 +165,21 @@ def validate_students(exam, form):
         raise Validation('Missing "email" column')
     students = []
     for row in rows:
-        email = row['email']
+        email = row.pop('email')
         if not email:
             continue
         student = Student.query.filter_by(exam_id=exam.id, email=email).first()
         if not student:
             student = Student(exam_id=exam.id, email=email)
-        student.name = row.get('name')
-        student.student_id = row.get('student id')
-        student.preferences = {
-            k: v.lower() == 'true' for k, v in row.items()
-            if k not in ('email', 'name', 'student id') and v
-        }
+        student.name = row.pop('name')
+        student.sid = row.pop('student id')
+        student.photo = row.pop('photo')
+        student.wants = { k for k, v in row.items() if v.lower() == 'true' }
+        student.avoids = { k for k, v in row.items() if v.lower() == 'false' }
         students.append(student)
     return students
 
-@app.route('/<exam:exam>/students/', methods=['GET', 'POST'])
+@app.route('/<exam:exam>/students/import/', methods=['GET', 'POST'])
 @login_required
 @google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def new_students(exam):
@@ -200,3 +193,9 @@ def new_students(exam):
         except ValidationError as e:
             form.sheet_url.errors.append(str(e))
     return render_template('new_students.html.j2', form=form)
+
+@app.route('/<exam:exam>/students/<string:email>/')
+@login_required
+def student(exam, email):
+    student = Student.query.filter_by(exam_id=exam.id, email=email).first_or_404()
+    return render_template('student.html.j2', exam=exam, student=student)

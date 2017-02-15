@@ -21,7 +21,9 @@
     {% for student in exam.students|selectattr('assignment') %}
     {% set seat = student.assignment.seat %}
     <tr>
-      <td>{{ student.email }}</td>
+      <td><a href="{{ url_for('student', exam=exam, email=student.email) }}">
+        {{ student.email }}
+      </a></td>
       <td>{{ student.name }}</td>
       <td>{{ student.student_id }}</td>
       <td><a href="url_for('room', exam=exam, room=seat.room.display_name, seat=seat.name)">
@@ -46,7 +48,9 @@
   <tbody>
     {% for student in exam.students|rejectattr('assignment') %}
     <tr>
-      <td>{{ student.email }}</td>
+      <td><a href="{{ url_for('student', exam=exam, email=student.email) }}">
+        {{ student.email }}
+      </a></td>
       <td>{{ student.name }}</td>
       <td>{{ student.student_id }}</td>
       <td>{{ student.wants|map('upper')|join(', ') }}</td>

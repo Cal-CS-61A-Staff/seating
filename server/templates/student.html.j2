@@ -1,0 +1,18 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+Email: {{ student.email }}
+Name: {{ student.name }}
+SID: {{ student.sid }}
+Photo:
+{% if student.photo %}
+<object class="photo" data="{{ student.photo }}" type="image/jpeg">
+  Could not load photo. Make sure you are logged in to CalCentral.
+</object>
+{% else %}
+<div class="photo">
+  No photo available.
+</div>
+{% endif %}
+{% endblock %}
