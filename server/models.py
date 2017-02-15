@@ -4,6 +4,7 @@ import re
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, types
+from sqlalchemy.orm import backref
 
 from server import app
 
@@ -63,6 +64,16 @@ class Student(db.Model):
     student_id = db.Column(db.String(255))
     preferences = db.Column(Json, nullable=False)
 
+    exam = db.relationship('Exam', backref='students')
+
+    @property
+    def wants(self):
+        return {k for k, v in self.preferences.items() if v}
+
+    @property
+    def rejects(self):
+        return {k for k, v in self.preferences.items() if not v}
+
 class SeatAssignment(db.Model):
     __tablename__ = 'seat_assignments'
     __table_args__ = (
@@ -71,6 +82,9 @@ class SeatAssignment(db.Model):
     student_id = db.Column(db.ForeignKey('students.id'), index=True, nullable=False)
     seat_id = db.Column(db.ForeignKey('seats.id'), index=True, nullable=False)
     emailed = db.Column(db.Boolean, default=False, index=True, nullable=False)
+
+    student = db.relationship('Student', backref=backref('assignment', uselist=False))
+    seat = db.relationship('Seat', backref=backref('assignment', uselist=False))
 
 def slug(display_name):
     return re.sub(r'[^A-Za-z0-9._-]', '', display_name.lower())
