@@ -13,10 +13,6 @@ from server import app
 from server.auth import google_oauth, ok_oauth
 from server.models import db, Exam, Room, Seat, Student, seed_exam, slug
 
-@app.route('/')
-def index():
-    return redirect(url_for('exam', exam=seed_exam))
-
 name_part = '[^/]+'
 
 class ExamConverter(BaseConverter):
@@ -34,11 +30,6 @@ class ExamConverter(BaseConverter):
         return exam.offering + '/' + exam.name
 
 app.url_map.converters['exam'] = ExamConverter
-
-@app.route('/<exam:exam>/')
-@login_required
-def exam(exam):
-    return render_template('exam.html.j2', exam=exam)
 
 class ValidationError(Exception):
     pass
@@ -131,7 +122,6 @@ def validate_room(exam, room_form):
     return room
 
 @app.route('/<exam:exam>/rooms/import/', methods=['GET', 'POST'])
-@login_required
 @google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def new_room(exam):
     form = RoomForm()
@@ -146,13 +136,6 @@ def new_room(exam):
             db.session.commit()
             return redirect(url_for('room', exam=exam, room=room.name))
     return render_template('new_room.html.j2', form=form, room=room)
-
-@app.route('/<exam:exam>/rooms/<string:room>/')
-@login_required
-def room(exam, room):
-    room = Room.query.filter_by(exam_id=exam.id, name=room).first_or_404()
-    seat = request.args.get('seat')
-    return render_template('room.html.j2', room=room, seat=seat)
 
 class StudentForm(FlaskForm):
     sheet_url = StringField('sheet_url', [URL()])
@@ -180,7 +163,6 @@ def validate_students(exam, form):
     return students
 
 @app.route('/<exam:exam>/students/import/', methods=['GET', 'POST'])
-@login_required
 @google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def new_students(exam):
     form = StudentForm()
@@ -194,8 +176,27 @@ def new_students(exam):
             form.sheet_url.errors.append(str(e))
     return render_template('new_students.html.j2', form=form)
 
+@app.route('/')
+def index():
+    return redirect(url_for('exam', exam=seed_exam))
+
+@app.route('/<exam:exam>/')
+def exam(exam):
+    return render_template('exam.html.j2', exam=exam)
+
+@app.route('/<exam:exam>/rooms/<string:name>/')
+def room(exam, name):
+    room = Room.query.filter_by(exam_id=exam.id, name=name).first_or_404()
+    seat = request.args.get('seat')
+    return render_template('room.html.j2', exam=exam, room=room, seat=seat)
+
+@app.route('/<exam:exam>/students/')
+def students(exam):
+    # TODO load assignment and seat at the same time?
+    students = Student.query.filter_by(exam_id=exam.id).all()
+    return render_template('students.html.j2', exam=exam, students=students)
+
 @app.route('/<exam:exam>/students/<string:email>/')
-@login_required
 def student(exam, email):
     student = Student.query.filter_by(exam_id=exam.id, email=email).first_or_404()
     return render_template('student.html.j2', exam=exam, student=student)
