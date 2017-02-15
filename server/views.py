@@ -43,7 +43,7 @@ def staff_offerings(email):
 @app.route('/<exam:exam>/')
 @login_required
 def exam(exam):
-    return 'OK'
+    return render_template('exam.html.j2', exam=exam)
 
 class ValidationError(Exception):
     pass
@@ -121,7 +121,6 @@ def validate_room(exam, room_form):
             k for k, v in row.items()
             if k not in ('row', 'seat', 'x', 'y') and v.lower() == 'true'
         }
-        print(attributes)
         seat = Seat(
             name=row['row'] + row['seat'],
             row=row['row'],
@@ -157,5 +156,5 @@ def new_room(exam):
 @app.route('/<exam:exam>/<string:room>/')
 @login_required
 def room(exam, room):
-    room = Room.query.filter_by(name=room).first_or_404()
+    room = Room.query.filter_by(exam_id=exam.id, name=room).first_or_404()
     return render_template('room.html.j2', room=room)

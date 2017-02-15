@@ -1,0 +1,8 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+{% for room in exam.rooms %}
+  <a href="{{ url_for('room', exam=exam, room=room.name) }}">{{ room.display_name }}</a>
+{% endfor %}
+{% endblock %}

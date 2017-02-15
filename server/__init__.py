@@ -7,12 +7,14 @@ from werkzeug.exceptions import HTTPException
 
 class UrlRequestContext(flask.ctx.RequestContext):
     def match_request(self):
-        """Matches the request in a request context."""
+        pass
+
+    def push(self):
+        super().push()
         try:
-            with self:
-                url_rule, self.request.view_args = \
-                    self.url_adapter.match(return_rule=True)
-                self.request.url_rule = url_rule
+            url_rule, self.request.view_args = \
+                self.url_adapter.match(return_rule=True)
+            self.request.url_rule = url_rule
         except HTTPException as e:
             self.request.routing_exception = e
 
