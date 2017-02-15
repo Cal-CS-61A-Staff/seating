@@ -9,7 +9,7 @@ from werkzeug.routing import BaseConverter
 from wtforms import HiddenField, StringField, SubmitField
 from wtforms.validators import InputRequired, URL
 
-from server import app, cache
+from server import app
 from server.auth import google_oauth, ok_oauth
 from server.models import db, Exam, Room, Seat, Student, seed_exam, slug
 
@@ -25,7 +25,7 @@ class ExamConverter(BaseConverter):
     @login_required
     def to_python(self, value):
         offering, name = value.rsplit('/', 1)
-        if offering not in staff_offerings(current_user.email):
+        if offering not in current_user.offerings:
             abort(404)
         exam = Exam.query.filter_by(offering=offering, name=name).first_or_404()
         return exam
@@ -34,11 +34,6 @@ class ExamConverter(BaseConverter):
         return exam.offering + '/' + exam.name
 
 app.url_map.converters['exam'] = ExamConverter
-
-@cache.memoize(5*60)
-def staff_offerings(email):
-    data = ok_oauth.get('enrollment/' + email).data['data']
-    return [c['course']['offering'] for c in data['courses']]
 
 @app.route('/<exam:exam>/')
 @login_required

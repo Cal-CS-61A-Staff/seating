@@ -2,7 +2,6 @@ import os
 
 from flask import Flask
 import flask.ctx
-from flask_caching import Cache
 from werkzeug.exceptions import HTTPException
 
 class UrlRequestContext(flask.ctx.RequestContext):
@@ -37,8 +36,6 @@ app.jinja_env.filters.update(
     min=min,
     max=max,
 )
-
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 import server.auth
 import server.models

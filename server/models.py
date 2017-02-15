@@ -1,4 +1,3 @@
-import json
 import re
 
 from flask_login import UserMixin
@@ -10,21 +9,20 @@ from server import app
 
 db = SQLAlchemy(app=app)
 
-class Json(types.TypeDecorator):
+class StringSet(types.TypeDecorator):
     impl = types.Text
 
-    def process_bind_param(self, value, dialect):
-        # Python -> SQL
-        return json.dumps(value)
+    def process_bind_param(self, value, engine):
+        return ','.join(set(value))
 
-    def process_result_value(self, value, dialect):
-        # SQL -> Python
-        return json.loads(value)
+    def process_result_value(self, value, engine):
+        return set(value.split(','))
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False, index=True)
+    offerings = db.Column(StringSet, nullable=False)
 
 class Exam(db.Model):
     __tablename__ = 'exams'
@@ -51,7 +49,7 @@ class Seat(db.Model):
     seat = db.Column(db.String(255), nullable=False, index=True)
     x = db.Column(db.Float, nullable=False)
     y = db.Column(db.Float, nullable=False)
-    attributes = db.Column(Json, nullable=False)
+    attributes = db.Column(StringSet, nullable=False)
 
     room = db.relationship('Room', backref='seats')
 
@@ -61,18 +59,12 @@ class Student(db.Model):
     exam_id = db.Column(db.ForeignKey('exams.id'), index=True, nullable=False)
     email = db.Column(db.String(255), index=True)
     name = db.Column(db.String(255))
-    student_id = db.Column(db.String(255))
-    preferences = db.Column(Json, nullable=False)
+    sid = db.Column(db.String(255))
+    photo = db.Column(db.String(255))
+    wants = db.Column(StringSet, nullable=False)
+    avoids = db.Column(StringSet, nullable=False)
 
     exam = db.relationship('Exam', backref='students')
-
-    @property
-    def wants(self):
-        return {k for k, v in self.preferences.items() if v}
-
-    @property
-    def rejects(self):
-        return {k for k, v in self.preferences.items() if not v}
 
 class SeatAssignment(db.Model):
     __tablename__ = 'seat_assignments'

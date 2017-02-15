@@ -57,6 +57,8 @@ def authorized():
     user = User.query.filter_by(email=email).one_or_none()
     if not user:
         user = User(email=email)
+    user.offerings = [p['course']['offering'] for p in info['participations']]
+
     db.session.add(user)
     db.session.commit()
 
