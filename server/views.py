@@ -2,7 +2,7 @@ import itertools
 import re
 
 from apiclient import discovery, errors
-from flask import abort, redirect, render_template, request, url_for
+from flask import abort, redirect, render_template, request, send_file, url_for
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from werkzeug.routing import BaseConverter
@@ -179,6 +179,10 @@ def new_students(exam):
 @app.route('/')
 def index():
     return redirect(url_for('exam', exam=seed_exam))
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_file('static/img/favicon.ico')
 
 @app.route('/<exam:exam>/')
 def exam(exam):
