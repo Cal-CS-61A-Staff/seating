@@ -2,10 +2,19 @@
 {% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
-<section class="students mdl-grid">
+<section id="student-table" class="students mdl-grid">
   <div class="mdl-cell mdl-cell--12-col">
     <h4>Students</h4>
-    <table id="student-table" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
+      <label class="mdl-button mdl-js-button mdl-button--icon" for="search">
+        <i class="material-icons">search</i>
+      </label>
+      <div class="mdl-textfield__expandable-holder">
+        <input class="search mdl-textfield__input" type="text" id="search">
+        <label class="mdl-textfield__label" for="search-expandable">Search</label>
+      </div>
+    </div>
+    <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
       <thead>
         <tr>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="name">Name</th>
@@ -48,5 +57,6 @@ var options = {
 
 var studentTable = new List('student-table', options);
 studentTable.sort('name');
+document.getElementById('search').focus();
 </script>
 {% endblock %}
