@@ -5,33 +5,33 @@
 <section class="students mdl-grid">
   <div class="mdl-cell mdl-cell--12-col">
     <h4>Students</h4>
-    <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
+    <table id="student-table" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
       <thead>
         <tr>
-          <th class="mdl-data-table__cell--non-numeric">Name</th>
-          <th class="mdl-data-table__cell--non-numeric">Email</th>
-          <th>Student ID</th>
-          <th class="mdl-data-table__cell--non-numeric">Seat</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="name">Name</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="email">Email</th>
+          <th class="sort" data-sort="sid">Student ID</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment">Seat</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="list">
         {% for student in exam.students %}
         <tr>
           <td class="mdl-data-table__cell--non-numeric">
-            <a href="{{ url_for('student', exam=exam, email=student.email) }}">
+            <a class="name" href="{{ url_for('student', exam=exam, email=student.email) }}">
               {{ student.name|title }}
             </a>
           </td>
-          <td class="mdl-data-table__cell--non-numeric">{{ student.email }}</td>
-          <td>{{ student.sid }}</td>
+          <td class="email mdl-data-table__cell--non-numeric">{{ student.email }}</td>
+          <td class="sid">{{ student.sid }}</td>
           <td class="mdl-data-table__cell--non-numeric">
           {% if student.assignment %}
             {% set seat = student.assignment.seat %}
-            <a href="url_for('room', exam=exam, name=seat.room.display_name, seat=seat.name)">
+            <a class="assignment" href="url_for('room', exam=exam, name=seat.room.display_name, seat=seat.name)">
               {{ seat.room.display_name }} {{ seat.name }}
             </a>
           {% else %}
-            None
+            <span class="assignment">&mdash;</span>
           {% endif %}
           </td>
         </tr>
@@ -40,4 +40,13 @@
     </table>
   </div>
 </section>
+<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+<script>
+var options = {
+  valueNames: ['name', 'email', 'sid', 'assignment']
+};
+
+var studentTable = new List('student-table', options);
+studentTable.sort('name');
+</script>
 {% endblock %}
