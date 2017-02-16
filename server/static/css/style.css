@@ -69,6 +69,12 @@ header a {
 
 .students table {
   width: 100%;
+  table-layout: fixed;
+}
+
+.students table td {
+  width: 50%;
+  text-overflow: ellipsis;
 }
 
 .photo {

@@ -18,8 +18,6 @@
       <thead>
         <tr>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="name">Name</th>
-          <th class="sort mdl-data-table__cell--non-numeric" data-sort="email">Email</th>
-          <th class="sort" data-sort="sid">Student ID</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment">Seat</th>
         </tr>
       </thead>
@@ -31,8 +29,6 @@
               {{ student.name|title }}
             </a>
           </td>
-          <td class="email mdl-data-table__cell--non-numeric">{{ student.email }}</td>
-          <td class="sid">{{ student.sid }}</td>
           <td class="mdl-data-table__cell--non-numeric">
           {% if student.assignment %}
             {% set seat = student.assignment.seat %}
