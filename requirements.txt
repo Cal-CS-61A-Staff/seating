@@ -7,3 +7,4 @@ flask-sqlalchemy
 flask-wtf
 natsort
 pymysql
+sendgrid

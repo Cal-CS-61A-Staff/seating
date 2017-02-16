@@ -68,14 +68,18 @@ class Student(db.Model):
     __tablename__ = 'students'
     id = db.Column(db.Integer, primary_key=True)
     exam_id = db.Column(db.ForeignKey('exams.id'), index=True, nullable=False)
-    email = db.Column(db.String(255), index=True)
-    name = db.Column(db.String(255))
+    email = db.Column(db.String(255), index=True, nullable=False)
+    name = db.Column(db.String(255), nullable=False)
     sid = db.Column(db.String(255))
     photo = db.Column(db.String(255))
     wants = db.Column(StringSet, nullable=False)
     avoids = db.Column(StringSet, nullable=False)
 
     exam = db.relationship('Exam', backref='students')
+
+    @property
+    def first_name(self):
+        return self.name.rsplit(',', 1)[-1].strip().title()
 
 class SeatAssignment(db.Model):
     __tablename__ = 'seat_assignments'

@@ -1,4 +1,5 @@
 import itertools
+import os
 import random
 import re
 
@@ -6,10 +7,11 @@ from apiclient import discovery, errors
 from flask import abort, redirect, render_template, request, send_file, session, url_for
 from flask_login import current_user
 from flask_wtf import FlaskForm
+import sendgrid
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
-from wtforms import HiddenField, StringField, SubmitField
-from wtforms.validators import InputRequired, URL
+from wtforms import HiddenField, StringField, SubmitField, TextAreaField
+from wtforms.validators import Email, InputRequired, URL
 
 from server import app
 from server.auth import google_oauth, ok_oauth
@@ -114,8 +116,8 @@ def validate_room(exam, room_form):
         else:
             x += 1
         last_row = seat.row
-        x_override = row.pop('x')
-        y_override = row.pop('y')
+        x_override = row.pop('x', None)
+        y_override = row.pop('y', None)
         try:
             if x_override:
                 x = float(x_override)
@@ -158,6 +160,8 @@ def validate_students(exam, form):
     headers, rows = read_csv(form.sheet_url.data, form.sheet_range.data)
     if 'email' not in headers:
         raise Validation('Missing "email" column')
+    elif 'name' not in headers:
+        raise Validation('Missing "name" column')
     students = []
     for row in rows:
         email = row.pop('email')
@@ -167,8 +171,8 @@ def validate_students(exam, form):
         if not student:
             student = Student(exam_id=exam.id, email=email)
         student.name = row.pop('name')
-        student.sid = row.pop('student id')
-        student.photo = row.pop('photo')
+        student.sid = row.pop('student id', None)
+        student.photo = row.pop('photo', None)
         student.wants = { k for k, v in row.items() if v.lower() == 'true' }
         student.avoids = { k for k, v in row.items() if v.lower() == 'false' }
         students.append(student)
@@ -254,6 +258,82 @@ def assign(exam):
         db.session.commit()
         return redirect(url_for('students', exam=exam))
     return render_template('assign.html.j2', exam=exam, form=form)
+
+class EmailForm(FlaskForm):
+    from_email = StringField('from_email', [Email()])
+    from_name = StringField('from_name', [InputRequired()])
+    subject = StringField('subject', [InputRequired()])
+    bcc = StringField('bcc', [Email()])
+    additional_text = TextAreaField('additional_text')
+    submit = SubmitField('submit')
+
+def email_students(exam, form):
+    """Emails students in batches of 900"""
+    sg = sendgrid.SendGridAPIClient(apikey=app.config['SENDGRID_API_KEY'])
+    while True:
+        assignments = SeatAssignment.query.join(SeatAssignment.seat).join(Seat.room).filter(
+            Room.exam_id == exam.id,
+            SeatAssignment.emailed == False,
+        ).limit(900).all()
+        if not assignments:
+            break
+
+        data = {
+            'personalizations': [
+                {
+                    'to': [
+                        {
+                            'email': assignment.student.email,
+                        }
+                    ],
+                    'substitutions': {
+                        '-name-': assignment.student.first_name,
+                        '-room-': assignment.seat.room.display_name,
+                        '-seat-': assignment.seat.name,
+                    },
+                }
+                for assignment in assignments
+            ],
+            'from': {
+                'email': form.from_email.data,
+                'name': form.from_name.data,
+            },
+            'subject': form.subject.data,
+            'content': [
+                {
+                    'type': 'text/plain',
+                    'value': '''
+Hi -name-,
+
+Here's your assigned seat for {}:
+
+Room: -room-
+
+Seat: -seat-
+
+{}
+'''.format(exam.display_name, form.additional_text.data)
+                },
+            ],
+        }
+
+        response = sg.client.mail.send.post(request_body=data)
+        if response.status_code < 200 or response.status_code >= 400:
+            raise Exception('Could not send mail. Status: {}. Body: {}'.format(
+                response.status_code, response.body
+            ))
+
+        for assignment in assignments:
+            assignment.emailed = True
+        db.session.commit()
+
+@app.route('/<exam:exam>/students/email/', methods=['GET', 'POST'])
+def email(exam):
+    form = EmailForm()
+    if form.validate_on_submit():
+        email_students(exam, form)
+        return redirect(url_for('students', exam=exam))
+    return render_template('email.html.j2', exam=exam, form=form)
 
 @app.route('/')
 def index():
