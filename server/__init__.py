@@ -28,7 +28,7 @@ app.config.update(
     OK_CLIENT_SECRET=os.getenv('OK_CLIENT_SECRET'),
     GOOGLE_OAUTH2_CLIENT_ID=os.getenv('GOOGLE_CLIENT_ID'),
     GOOGLE_OAUTH2_CLIENT_SECRET=os.getenv('GOOGLE_CLIENT_SECRET'),
-    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URI').replace('mysql://', 'mysql+pymysql://'),
+    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL').replace('mysql://', 'mysql+pymysql://'),
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
 
