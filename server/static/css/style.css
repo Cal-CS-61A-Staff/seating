@@ -7,6 +7,20 @@ header a {
   font-weight: inherit;
 }
 
+@media (max-width: 400px) {
+  .hidden-small {
+    display: none;
+  }
+}
+
+.center-section {
+  max-width: 620px;
+}
+
+.rooms li {
+  padding-left: 0;
+}
+
 .room {
   padding: 50px;
 }
