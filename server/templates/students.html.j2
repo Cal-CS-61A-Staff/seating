@@ -1,6 +1,8 @@
 {% extends 'base.html.j2' %}
 {% import 'macros.html.j2' as macros with context %}
 
+{% block title %}Students | {{ super() }}{% endblock %}
+
 {% block body %}
 <section id="student-table" class="students mdl-grid">
   <div class="mdl-cell mdl-cell--12-col">
