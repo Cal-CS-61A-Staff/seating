@@ -1,3 +1,12 @@
+a {
+  text-decoration: none;
+}
+
+header a {
+  color: inherit;
+  font-weight: inherit;
+}
+
 .room {
   padding: 50px;
 }

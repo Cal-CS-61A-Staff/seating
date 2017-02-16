@@ -6,13 +6,41 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="Exam Seat Assignments">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-yellow.min.css">
-    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.min.css">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
     <title>{% block title %}{% endblock %}</title>
   </head>
   <body>
-    {% block body %}{% endblock %}
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+      <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+          <span class="mdl-layout__title">
+            <a href="{{ url_for('exam', exam=exam) }}">{{ exam.display_name }}</a>
+          </span>
+          <div class="mdl-layout-spacer"></div>
+          <nav class="mdl-navigation">
+            <a id="room-menu" class="mdl-navigation__link" href="#">
+              Rooms <i class="material-icons">expand_more</i>
+            </a>
+            <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" for="room-menu">
+            {% for room in exam.rooms %}
+            <li class="mdl-menu__item">
+              <a href="{{ url_for('room', exam=exam, name=room.name) }}">
+                {{ room.display_name }}
+              </a>
+            </li>
+            {% endfor %}
+            </ul>
+            <a class="mdl-navigation__link" href="{{ url_for('students', exam=exam) }}">Students</a>
+          </nav>
+        </div>
+      </header>
+      <main class="mdl-layout__content">
+        {% block body %}{% endblock %}
+      </main>
+    </div>
+    <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
   </body>
 </html>

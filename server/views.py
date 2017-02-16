@@ -96,12 +96,12 @@ def validate_room(exam, room_form):
         seat.name = seat.row + seat.seat
         if not seat.name:
             continue
-        if seat_row != last_row:
+        if seat.row != last_row:
             x = 0
             y += 1
         else:
             x += 1
-        last_row = seat_row
+        last_row = seat.row
         x_override = row.pop('x')
         y_override = row.pop('y')
         try:
@@ -134,7 +134,7 @@ def new_room(exam):
         if form.create_room.data:
             db.session.add(room)
             db.session.commit()
-            return redirect(url_for('room', exam=exam, room=room.name))
+            return redirect(url_for('room', exam=exam, name=room.name))
     return render_template('new_room.html.j2', form=form, room=room)
 
 class StudentForm(FlaskForm):

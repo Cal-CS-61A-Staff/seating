@@ -1,0 +1,62 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+<h1>Rooms</h1>
+{% for room in exam.rooms %}
+  <a href="{{ url_for('room', exam=exam, name=room.name) }}">{{ room.display_name }}</a>
+{% endfor %}
+<h1>Assigned Students</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Name</th>
+      <th>Student ID</th>
+      <th>Seat</th>
+      <th>Emailed</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for student in exam.students|selectattr('assignment') %}
+    {% set seat = student.assignment.seat %}
+    <tr>
+      <td><a href="{{ url_for('student', exam=exam, email=student.email) }}">
+        {{ student.email }}
+      </a></td>
+      <td>{{ student.name }}</td>
+      <td>{{ student.student_id }}</td>
+      <td><a href="url_for('room', exam=exam, name=seat.room.display_name, seat=seat.name)">
+        {{ seat.room.display_name }} {{ seat.name }}
+      </a></td>
+      <td>{{ student.assignment.emailed }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<h1>Unassigned Students</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Name</th>
+      <th>Student ID</th>
+      <th>Assign To</th>
+      <th>Do Not Assign To</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for student in exam.students|rejectattr('assignment') %}
+    <tr>
+      <td><a href="{{ url_for('student', exam=exam, email=student.email) }}">
+        {{ student.email }}
+      </a></td>
+      <td>{{ student.name }}</td>
+      <td>{{ student.student_id }}</td>
+      <td>{{ student.wants|map('upper')|join(', ') }}</td>
+      <td>{{ student.rejects|map('upper')|join(', ') }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

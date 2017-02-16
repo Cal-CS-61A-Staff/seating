@@ -38,7 +38,7 @@ class Room(db.Model):
     name = db.Column(db.String(255), nullable=False, index=True)
     display_name = db.Column(db.String(255), nullable=False)
 
-    exam = db.relationship('Exam', backref='rooms')
+    exam = db.relationship('Exam', backref=backref('rooms', order_by='Room.display_name'))
 
 class Seat(db.Model):
     __tablename__ = 'seats'
