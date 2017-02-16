@@ -1,4 +1,5 @@
 google-api-python-client
+gunicorn
 flask
 flask-login
 flask-oauthlib
