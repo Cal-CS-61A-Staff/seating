@@ -2,17 +2,24 @@
 {% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
-Email: {{ student.email }}
-Name: {{ student.name }}
-SID: {{ student.sid }}
-Photo:
-{% if student.photo %}
-<object class="photo" data="{{ student.photo }}" type="image/jpeg">
-  Could not load photo. Make sure you are logged in to CalCentral.
-</object>
-{% else %}
-<div class="photo">
-  No photo available.
-</div>
-{% endif %}
+<section class="student mdl-grid">
+  <div class="mdl-cell mdl-cell--12-col">
+    <object class="photo" data="{{ student.photo }}" type="image/jpeg">
+      <img src="{{ url_for('static', filename='img/photo-placeholder.png') }}">
+    </object>
+    <h6>{{ student.name }}</h6>
+    <p>{{ student.email }}</p>
+    <p>{{ student.sid }}</p>
+    <p>
+    {% if student.assignment %}
+      {% set seat = student.assignment.seat %}
+      <a href="url_for('room', exam=exam, name=seat.room.display_name, seat=seat.name)">
+        {{ seat.room.display_name }} {{ seat.name }}
+      </a>
+    {% else %}
+      No Assigned Seat
+    {% endif %}
+    </p>
+  </div>
+</section>
 {% endblock %}

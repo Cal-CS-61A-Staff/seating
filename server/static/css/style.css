@@ -77,9 +77,15 @@ header a {
   text-overflow: ellipsis;
 }
 
+.student {
+  max-width: 620px;
+  text-align: center;
+}
+
 .photo {
   width: 187px;
   height: 250px;
+  margin: auto;
 }
 
 .sort {
