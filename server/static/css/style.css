@@ -21,7 +21,7 @@ header a {
   padding-left: 0;
 }
 
-.room h4 {
+.room h1,h2,h3,h4,h5,h6 {
   text-align: center;
 }
 
@@ -46,6 +46,8 @@ header a {
   height: 22px;
   line-height: 22px;
   text-align: center;
+  font-weight: bold;
+  font-size: 22px;
 }
 
 .seat.highlight {

@@ -135,7 +135,7 @@ def new_room(exam):
             db.session.add(room)
             db.session.commit()
             return redirect(url_for('room', exam=exam, name=room.name))
-    return render_template('new_room.html.j2', form=form, room=room)
+    return render_template('new_room.html.j2', exam=exam, form=form, room=room)
 
 class StudentForm(FlaskForm):
     sheet_url = StringField('sheet_url', [URL()])
@@ -174,7 +174,7 @@ def new_students(exam):
             return redirect(url_for('exam', exam=exam))
         except ValidationError as e:
             form.sheet_url.errors.append(str(e))
-    return render_template('new_students.html.j2', form=form)
+    return render_template('new_students.html.j2', exam=exam, form=form)
 
 @app.route('/')
 def index():

@@ -20,19 +20,19 @@
 {% if room.seats %}
 <div class="room">
   <h4>{{ room.display_name }}</h4>
+  <h6>Front</h6>
   {% set x_min = room.seats|map(attribute='x')|min %}
   {% set x_max = room.seats|map(attribute='x')|max %}
   {% set y_min = room.seats|map(attribute='y')|min %}
   {% set y_max = room.seats|map(attribute='y')|max %}
   {% set scale = 23 %}
-  {% set label_spacing = 35 %}
   <div class="seats" style="width:{{ scale * (x_max - x_min + 1) }}px;height:{{ scale * (y_max - y_min + 1) }}px">
   {% for row in room.rows %}
   {% for seat in row %}
     {% set x = scale * (x_max - seat.x) %}
     {% set y = scale * (seat.y - y_min) %}
     {% if loop.first %}
-      <div class="seat-label" style="left:{{ x + label_spacing }}px;top:{{ y }}px">{{ seat.name }}</div>
+      <div class="seat-label" style="left:{{ x + 30 }}px;top:{{ y }}px">{{ seat.name }}</div>
     {% endif %}
     <div id="{{ seat.name }}" class="seat {% if seat.name == highlight_name %}highlight{% endif %}"
       style="left:{{ x }}px;top:{{ y }}px">
@@ -46,11 +46,12 @@
       {% endif %}
     </div>
     {% if loop.last %}
-      <div class="seat-label" style="left:{{ x - label_spacing }}px;top:{{ y }}px">{{ seat.name }}</div>
+      <div class="seat-label" style="left:{{ x - 50 }}px;top:{{ y }}px">{{ seat.name }}</div>
     {% endif %}
   {% endfor %}
   {% endfor %}
   </div>
+  <h6>Back</h6>
 </div>
 {% endif %}
 {% endmacro %}

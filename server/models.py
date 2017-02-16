@@ -44,7 +44,7 @@ class Room(db.Model):
 
     @property
     def rows(self):
-        seats = Seat.query.filter_by(room_id=self.id).order_by(Seat.row).all()
+        seats = natsorted(self.seats, key=lambda seat: seat.row)
         return [
             natsorted(g, key=lambda seat: seat.seat)
             for _, g in itertools.groupby(seats, lambda seat: seat.row)
