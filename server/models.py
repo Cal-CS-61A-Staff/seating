@@ -1,3 +1,4 @@
+import click
 import itertools
 from natsort import natsorted
 import re
@@ -100,8 +101,17 @@ seed_exam = Exam(
 
 @app.cli.command('initdb')
 def init_db():
-    print('Initializing database...')
-    db.drop_all()
+    click.echo('Creating database...')
     db.create_all()
-    db.session.add(seed_exam)
-    db.session.commit()
+    existing = Exam.query.filter_by(offering=seed_exam.offering, name=seed_exam.name).first()
+    if not existing:
+        click.echo('Adding seed exam...')
+        db.session.add(seed_exam)
+        db.session.commit()
+
+@app.cli.command('dropdb')
+def init_db():
+    doit = click.confirm('Are you sure you want to delete all data?')
+    if doit:
+        click.echo('Dropping database...')
+        db.drop_all()
