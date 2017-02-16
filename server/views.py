@@ -3,9 +3,10 @@ import random
 import re
 
 from apiclient import discovery, errors
-from flask import abort, redirect, render_template, request, send_file, url_for
-from flask_login import current_user, login_required
+from flask import abort, redirect, render_template, request, send_file, session, url_for
+from flask_login import current_user
 from flask_wtf import FlaskForm
+from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
 from wtforms import HiddenField, StringField, SubmitField
 from wtforms.validators import InputRequired, URL
@@ -16,11 +17,21 @@ from server.models import db, Exam, Room, Seat, SeatAssignment, Student, seed_ex
 
 name_part = '[^/]+'
 
+class Redirect(HTTPException):
+    code = 302
+    def __init__(self, url):
+        self.url = url
+
+    def get_response(self, environ=None):
+        return redirect(self.url)
+
 class ExamConverter(BaseConverter):
     regex = name_part + '/' + name_part + '/' + name_part + '/' + name_part
 
-    @login_required
     def to_python(self, value):
+        if not current_user.is_authenticated:
+            session['after_login'] = request.url
+            raise Redirect(url_for('login'))
         offering, name = value.rsplit('/', 1)
         if offering not in current_user.offerings:
             abort(404)
