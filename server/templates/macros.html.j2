@@ -19,7 +19,7 @@
 {% macro photo(photo) %}
   {% if photo %}
   <object class="photo" data="{{ photo }}" type="image/jpeg">
-    <img src="{{ url_for('static', filename='img/photo-placeholder.png') }}">
+    <img class="photo" src="{{ url_for('static', filename='img/photo-placeholder.png') }}">
   </object>
   {% else %}
   <img class="photo" src="{{ url_for('static', filename='img/photo-placeholder.png') }}">
@@ -47,9 +47,14 @@
     {% if seat.assignment %}
     <a href="{{ url_for('student', exam=exam, email=seat.assignment.student.email) }}">
     {% endif %}
-      <div id="{{ seat.name }}" class="seat{% if seat.name == highlight_seat %} highlight{% endif %}"
-        style="left:{{ x }}px;top:{{ y }}px">
-      </div>
+      {% if seat.name == highlight_seat %}
+        {% set class = 'seat highlight' %}
+      {% elif seat.assignment %}
+        {% set class = 'seat occupied' %}
+      {% else %}
+        {% set class = 'seat' %}
+      {% endif %}
+      <div id="{{ seat.name }}" class="{{ class }}" style="left:{{ x }}px;top:{{ y }}px"></div>
     {% if seat.assignment %}
     </a>
     {% endif %}

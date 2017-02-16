@@ -45,6 +45,18 @@ header a {
   outline: 0;
 }
 
+.seat.highlight {
+  background-color: #c00;
+}
+
+.seat.occupied {
+  background-color: #0cc;
+}
+
+.seat:hover {
+  background-color: #c00;
+}
+
 .seat-label {
   position: absolute;
   width: 22px;
@@ -53,14 +65,6 @@ header a {
   text-align: center;
   font-weight: bold;
   font-size: 22px;
-}
-
-.seat.highlight {
-  background-color: #0c0;
-}
-
-.seat:hover {
-  background-color: #c00;
 }
 
 .seat-tooltip:not(.is-active) {
