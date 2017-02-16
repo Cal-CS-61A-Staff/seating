@@ -63,6 +63,17 @@ header a {
   background-color: #c00;
 }
 
+.seat-tooltip:not(.is-active) {
+  display: none;
+}
+
+.seat-tooltip .photo {
+  display: inline-block;
+  width: 94px;
+  height: 125px;
+  margin: 5px;
+}
+
 .students {
   max-width: 960px;
 }
@@ -82,7 +93,7 @@ header a {
   text-align: center;
 }
 
-.photo {
+.student .photo {
   width: 187px;
   height: 250px;
   margin: auto;

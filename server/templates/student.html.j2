@@ -4,9 +4,7 @@
 {% block body %}
 <section class="student mdl-grid">
   <div class="mdl-cell mdl-cell--12-col">
-    <object class="photo" data="{{ student.photo }}" type="image/jpeg">
-      <img src="{{ url_for('static', filename='img/photo-placeholder.png') }}">
-    </object>
+    {{ macros.photo(student.photo) }}
     <h6>{{ student.name }}</h6>
     <p>{{ student.email }}</p>
     <p>{{ student.sid }}</p>

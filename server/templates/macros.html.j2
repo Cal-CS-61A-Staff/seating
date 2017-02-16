@@ -16,6 +16,16 @@
   {% endif %}
 {% endmacro %}
 
+{% macro photo(photo) %}
+  {% if photo %}
+  <object class="photo" data="{{ photo }}" type="image/jpeg">
+    <img src="{{ url_for('static', filename='img/photo-placeholder.png') }}">
+  </object>
+  {% else %}
+  <img class="photo" src="{{ url_for('static', filename='img/photo-placeholder.png') }}">
+  {% endif %}
+{% endmacro %}
+
 {% macro room(room, highlight_seat=none, show_attributes=false) %}
 {% if room.seats %}
 <div class="room">
@@ -34,15 +44,25 @@
     {% if loop.first %}
       <div class="seat-label" style="left:{{ x + 30 }}px;top:{{ y }}px">{{ seat.name }}</div>
     {% endif %}
-    <div id="{{ seat.name }}" class="seat{% if seat.name == highlight_seat %} highlight{% endif %}"
-      style="left:{{ x }}px;top:{{ y }}px">
-    </div>
-    <div class="mdl-tooltip" for="{{ seat.name }}">
+    {% if seat.assignment %}
+    <a href="{{ url_for('student', exam=exam, email=seat.assignment.student.email) }}">
+    {% endif %}
+      <div id="{{ seat.name }}" class="seat{% if seat.name == highlight_seat %} highlight{% endif %}"
+        style="left:{{ x }}px;top:{{ y }}px">
+      </div>
+    {% if seat.assignment %}
+    </a>
+    {% endif %}
+    <div class="seat-tooltip mdl-tooltip mdl-tooltip--large" for="{{ seat.name }}">
       {{ seat.name }}
       {% if show_attributes %}
       {% for attribute in seat.attributes %}
         <br>{{ attribute|upper }}
       {% endfor %}
+      {% endif %}
+      {% if seat.assignment %}
+        <br>{{ seat.assignment.student.name }}
+        <br>{{ photo(seat.assignment.student.photo) }}
       {% endif %}
     </div>
     {% if loop.last %}
