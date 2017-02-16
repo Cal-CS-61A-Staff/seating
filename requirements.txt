@@ -6,3 +6,4 @@ flask-oauthlib
 flask-sqlalchemy
 flask-wtf
 natsort
+pymysql
