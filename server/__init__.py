@@ -37,12 +37,6 @@ app.jinja_env.filters.update(
     max=max,
 )
 
-@app.after_request
-def after(response):
-  print(response.status)
-  print(response.headers)
-  return response
-
 import server.auth
 import server.models
 import server.views
