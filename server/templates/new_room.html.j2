@@ -10,6 +10,6 @@
   {{ macros.field(form.create_room) }}
 {% endcall %}
 {% if room %}
-  {{ macros.room(room) }}
+  {{ macros.room(room, show_attributes=true) }}
 {% endif %}
 {% endblock %}

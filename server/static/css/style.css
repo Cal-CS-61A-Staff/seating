@@ -21,22 +21,31 @@ header a {
   padding-left: 0;
 }
 
-.room {
-  padding: 50px;
+.room h4 {
+  text-align: center;
 }
 
 .seats {
   position: relative;
+  margin: 10px auto;
 }
 
 .seat {
   position: absolute;
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border: 2px solid #555;
   background-color: #ddd;
   outline: 0;
+}
+
+.seat-label {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
 }
 
 .seat.highlight {

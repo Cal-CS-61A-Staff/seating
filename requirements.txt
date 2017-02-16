@@ -4,3 +4,4 @@ flask-login
 flask-oauthlib
 flask-sqlalchemy
 flask-wtf
+natsort

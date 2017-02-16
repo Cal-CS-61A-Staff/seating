@@ -2,5 +2,5 @@
 {% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
-{{ macros.room(room, seat) }}
+{{ macros.room(room, highlight_seat=seat) }}
 {% endblock %}

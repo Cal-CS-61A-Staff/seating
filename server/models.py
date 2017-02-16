@@ -1,3 +1,5 @@
+import itertools
+from natsort import natsorted
 import re
 
 from flask_login import UserMixin
@@ -39,6 +41,14 @@ class Room(db.Model):
     display_name = db.Column(db.String(255), nullable=False)
 
     exam = db.relationship('Exam', backref=backref('rooms', order_by='Room.display_name'))
+
+    @property
+    def rows(self):
+        seats = Seat.query.filter_by(room_id=self.id).order_by(Seat.row).all()
+        return [
+            natsorted(g, key=lambda seat: seat.seat)
+            for _, g in itertools.groupby(seats, lambda seat: seat.row)
+        ]
 
 class Seat(db.Model):
     __tablename__ = 'seats'

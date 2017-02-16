@@ -16,25 +16,39 @@
   {% endif %}
 {% endmacro %}
 
-{% macro room(room, highlight_name=none) %}
+{% macro room(room, highlight_seat=none, show_attributes=false) %}
 {% if room.seats %}
 <div class="room">
+  <h4>{{ room.display_name }}</h4>
   {% set x_min = room.seats|map(attribute='x')|min %}
   {% set x_max = room.seats|map(attribute='x')|max %}
   {% set y_min = room.seats|map(attribute='y')|min %}
   {% set y_max = room.seats|map(attribute='y')|max %}
-  {% set scale = 20 %}
+  {% set scale = 23 %}
+  {% set label_spacing = 35 %}
   <div class="seats" style="width:{{ scale * (x_max - x_min + 1) }}px;height:{{ scale * (y_max - y_min + 1) }}px">
-  {% for seat in room.seats %}
+  {% for row in room.rows %}
+  {% for seat in row %}
+    {% set x = scale * (x_max - seat.x) %}
+    {% set y = scale * (seat.y - y_min) %}
+    {% if loop.first %}
+      <div class="seat-label" style="left:{{ x + label_spacing }}px;top:{{ y }}px">{{ seat.name }}</div>
+    {% endif %}
     <div id="{{ seat.name }}" class="seat {% if seat.name == highlight_name %}highlight{% endif %}"
-      style="left:{{ scale * (x_max - seat.x) }}px;top:{{ scale * (seat.y - y_min) }}px">
+      style="left:{{ x }}px;top:{{ y }}px">
     </div>
     <div class="mdl-tooltip" for="{{ seat.name }}">
       {{ seat.name }}
+      {% if show_attributes %}
       {% for attribute in seat.attributes %}
         <br>{{ attribute|upper }}
       {% endfor %}
+      {% endif %}
     </div>
+    {% if loop.last %}
+      <div class="seat-label" style="left:{{ x - label_spacing }}px;top:{{ y }}px">{{ seat.name }}</div>
+    {% endif %}
+  {% endfor %}
   {% endfor %}
   </div>
 </div>
