@@ -1,4 +1,5 @@
 import itertools
+import random
 import re
 
 from apiclient import discovery, errors
@@ -11,7 +12,7 @@ from wtforms.validators import InputRequired, URL
 
 from server import app
 from server.auth import google_oauth, ok_oauth
-from server.models import db, Exam, Room, Seat, Student, seed_exam, slug
+from server.models import db, Exam, Room, Seat, SeatAssignment, Student, seed_exam, slug
 
 name_part = '[^/]+'
 
@@ -175,6 +176,73 @@ def new_students(exam):
         except ValidationError as e:
             form.sheet_url.errors.append(str(e))
     return render_template('new_students.html.j2', exam=exam, form=form)
+
+class AssignForm(FlaskForm):
+    submit = SubmitField('submit')
+
+def collect(s, key=lambda x: x):
+    d = {}
+    for x in s:
+        k = key(x)
+        if k in d:
+            d[k].append(x)
+        else:
+            d[k] = [x]
+    return d
+
+def assign_students(exam):
+    """The strategy: look for students whose requirements are the most
+    restrictive (i.e. have the fewest possible seats). Randomly assign them
+    a seat. Repeat.
+    """
+    students = set(Student.query.filter_by(
+        exam_id=exam.id, assignment=None
+    ).all())
+    seats = set(Seat.query.join(Seat.room).filter(
+        Room.exam_id == exam.id,
+        Seat.assignment == None,
+    ).all())
+
+    def seats_available(preference):
+        wants, avoids = preference
+        return [
+            seat for seat in seats
+            if all(a in seat.attributes for a in wants)
+            and all(a not in seat.attributes for a in avoids)
+        ]
+
+    assignments = []
+    while students:
+        students_by_preference = collect(students, key=
+            lambda student: (frozenset(student.wants), frozenset(student.avoids)))
+        seats_by_preference = {
+            preference: seats_available(preference)
+            for preference in students_by_preference
+        }
+        min_preference = min(seats_by_preference, key=lambda k: len(seats_by_preference[k]))
+        min_students = students_by_preference[min_preference]
+        min_seats = seats_by_preference[min_preference]
+        if not min_seats:
+            raise ValueError('No more seats for preference {}'.format(min_preference))
+
+        student = random.choice(min_students)
+        seat = random.choice(min_seats)
+
+        students.remove(student)
+        seats.remove(seat)
+
+        assignments.append(SeatAssignment(student=student, seat=seat))
+    return assignments
+
+@app.route('/<exam:exam>/students/assign/', methods=['GET', 'POST'])
+def assign(exam):
+    form = AssignForm()
+    if form.validate_on_submit():
+        assignments = assign_students(exam)
+        db.session.add_all(assignments)
+        db.session.commit()
+        return redirect(url_for('students', exam=exam))
+    return render_template('assign.html.j2', exam=exam, form=form)
 
 @app.route('/')
 def index():
