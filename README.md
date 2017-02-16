@@ -15,6 +15,13 @@
 	dokku run seating flask initdb
 	dokku letsencrypt seating
 
+In addition, add the following to `/home/dokku/seating/nginx.conf`:
+```
+proxy_buffer_size   128k;
+proxy_buffers   4 256k;
+proxy_busy_buffers_size   256k;
+```
+
 ## Environment variables
 
 ```
