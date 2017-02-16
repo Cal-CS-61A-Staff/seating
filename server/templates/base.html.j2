@@ -16,21 +16,23 @@
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
       <header class="mdl-layout__header">
         <div class="mdl-layout__header-row">
-          <span class="hidden-small mdl-layout__title">
-            <a href="{{ url_for('exam', exam=exam) }}">{{ exam.display_name }}</a>
-          </span>
+          <a href="{{ url_for('exam', exam=exam) }}">
+            <span class="hidden-small mdl-layout__title">
+              {{ exam.display_name }}
+            </span>
+          </a>
           <div class="hidden-small mdl-layout-spacer"></div>
           <nav class="mdl-navigation">
             <a id="room-menu" class="mdl-navigation__link" href="#">
               Rooms <i class="material-icons">expand_more</i>
             </a>
-            <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" for="room-menu">
+            <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu" for="room-menu">
             {% for room in exam.rooms %}
-            <li class="mdl-menu__item">
-              <a href="{{ url_for('room', exam=exam, name=room.name) }}">
-                {{ room.display_name }}
-              </a>
-            </li>
+            <a href="{{ url_for('room', exam=exam, name=room.name) }}">
+              <li class="mdl-menu__item">
+                  {{ room.display_name }}
+              </li>
+            </a>
             {% endfor %}
             </ul>
             <a class="mdl-navigation__link" href="{{ url_for('students', exam=exam) }}">Students</a>
