@@ -34,7 +34,7 @@
     {% if loop.first %}
       <div class="seat-label" style="left:{{ x + 30 }}px;top:{{ y }}px">{{ seat.name }}</div>
     {% endif %}
-    <div id="{{ seat.name }}" class="seat {% if seat.name == highlight_name %}highlight{% endif %}"
+    <div id="{{ seat.name }}" class="seat{% if seat.name == highlight_seat %} highlight{% endif %}"
       style="left:{{ x }}px;top:{{ y }}px">
     </div>
     <div class="mdl-tooltip" for="{{ seat.name }}">

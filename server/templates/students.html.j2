@@ -32,7 +32,7 @@
           <td class="mdl-data-table__cell--non-numeric">
           {% if student.assignment %}
             {% set seat = student.assignment.seat %}
-            <a class="assignment" href="url_for('room', exam=exam, name=seat.room.display_name, seat=seat.name)">
+            <a class="assignment" href="{{ url_for('room', exam=exam, name=seat.room.name, seat=seat.name) }}">
               {{ seat.room.display_name }} {{ seat.name }}
             </a>
           {% else %}
