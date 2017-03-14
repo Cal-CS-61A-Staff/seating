@@ -171,8 +171,8 @@ def validate_students(exam, form):
         if not student:
             student = Student(exam_id=exam.id, email=email)
         student.name = row.pop('name')
-        student.sid = row.pop('student id', None)
-        student.photo = row.pop('photo', None)
+        student.sid = row.pop('student id', None) or student.sid
+        student.photo = row.pop('photo', None) or student.photo
         student.wants = { k for k, v in row.items() if v.lower() == 'true' }
         student.avoids = { k for k, v in row.items() if v.lower() == 'false' }
         students.append(student)
