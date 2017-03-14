@@ -192,6 +192,30 @@ def new_students(exam):
             form.sheet_url.errors.append(str(e))
     return render_template('new_students.html.j2', exam=exam, form=form)
 
+class DeleteStudentForm(FlaskForm):
+    emails = TextAreaField('emails')
+    submit = SubmitField('submit')
+
+@app.route('/<exam:exam>/students/delete/', methods=['GET', 'POST'])
+def delete_students(exam):
+    form = DeleteStudentForm()
+    deleted, did_not_exist = set(), set()
+    if form.validate_on_submit():
+        for email in re.split(r'\s|,', form.emails.data):
+            if not email:
+                continue
+            student = Student.query.filter_by(exam_id=exam.id, email=email).first()
+            if student:
+                deleted.add(email)
+                if student.assignment:
+                    db.session.delete(student.assignment)
+                db.session.delete(student)
+            else:
+                did_not_exist.add(email)
+        db.session.commit()
+    return render_template('delete_students.html.j2',
+        exam=exam, form=form, deleted=deleted, did_not_exist=did_not_exist)
+
 class AssignForm(FlaskForm):
     submit = SubmitField('submit')
 

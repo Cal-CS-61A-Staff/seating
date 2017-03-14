@@ -1,0 +1,11 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+{% call macros.form(form) %}
+  Emails: {{ macros.field(form.emails) }}
+  {{ macros.field(form.submit) }}
+{% endcall %}
+<p>Deleted: {{ deleted|sort|join(', ') }}</p>
+<p>Did not exist: {{ did_not_exist|sort|join(', ') }}</p>
+{% endblock %}
