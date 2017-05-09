@@ -19,7 +19,10 @@ class StringSet(types.TypeDecorator):
         return ','.join(set(value))
 
     def process_result_value(self, value, engine):
-        return set(value.split(','))
+        if not value:
+            return set()
+        else:
+            return set(value.split(','))
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
