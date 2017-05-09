@@ -99,28 +99,10 @@ class SeatAssignment(db.Model):
 def slug(display_name):
     return re.sub(r'[^A-Za-z0-9._-]', '', display_name.lower())
 
-seed_exams = [
-    Exam(
-        offering='cal/cs61a/sp17',
-        name=slug('Midterm 1'),
-        display_name='Midterm 1',
-    ),
-    Exam(
-        offering='cal/cs61a/sp17',
-        name=slug('Midterm 2'),
-        display_name='Midterm 2',
-    ),
-]
-
 @app.cli.command('initdb')
 def init_db():
     click.echo('Creating database...')
     db.create_all()
-    for seed_exam in seed_exams:
-        existing = Exam.query.filter_by(offering=seed_exam.offering, name=seed_exam.name).first()
-        if not existing:
-            click.echo('Adding seed exam {}...'.format(seed_exam.name))
-            db.session.add(seed_exam)
     db.session.commit()
 
 @app.cli.command('dropdb')

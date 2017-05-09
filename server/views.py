@@ -15,7 +15,7 @@ from wtforms.validators import Email, InputRequired, URL
 
 from server import app
 from server.auth import google_oauth, ok_oauth
-from server.models import db, Exam, Room, Seat, SeatAssignment, Student, seed_exams, slug
+from server.models import db, Exam, Room, Seat, SeatAssignment, Student, slug
 
 name_part = '[^/]+'
 
@@ -361,7 +361,7 @@ def email(exam):
 
 @app.route('/')
 def index():
-    return redirect(url_for('exam', exam=seed_exams[-1]))
+    return redirect('/cal/cs61a/sp17/final/')
 
 @app.route('/favicon.ico')
 def favicon():
