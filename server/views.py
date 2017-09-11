@@ -360,7 +360,7 @@ def email(exam):
 
 @app.route('/')
 def index():
-    return redirect('/cal/cs61a/sp17/final/')
+    return redirect('/cal/cs61a/fa17/midterm1/')
 
 @app.route('/favicon.ico')
 def favicon():
