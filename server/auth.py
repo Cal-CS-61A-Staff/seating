@@ -54,7 +54,11 @@ def authorized():
 
     info = ok_oauth.get('user').data['data']
     email = info['email']
-    if info['role'] == 'student' or info['role'] == 'lab assistant':
+    is_staff = False
+    for p in info['participations']:
+        if p['role'] != 'student' and p['role'] != 'lab assistant':
+            is_staff = True
+    if not is_staff:
         return 'Access denied: {}'.format(request.args.get('error', 'unknown error'))
         
     user = User.query.filter_by(email=email).one_or_none()
