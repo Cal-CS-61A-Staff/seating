@@ -58,7 +58,7 @@
       {% if seat.assignment %}
         <br>{{ seat.assignment.student.name }}
         <br>
-          <img class="photo" src="{{ seat.assignment.student.email }}/photo"/>
+          <img class="photo" src="../../{{ seat.assignment.student.email }}/photo"/>
       {% endif %}
     </div>
     {% if loop.last %}
