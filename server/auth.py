@@ -54,6 +54,9 @@ def authorized():
 
     info = ok_oauth.get('user').data['data']
     email = info['email']
+    if info['role'] == 'student' or info['role'] == 'lab assistant':
+        return 'Access denied: {}'.format(request.args.get('error', 'unknown error'))
+        
     user = User.query.filter_by(email=email).one_or_none()
     if not user:
         user = User(email=email)
