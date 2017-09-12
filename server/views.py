@@ -172,7 +172,7 @@ def validate_students(exam, form):
             student = Student(exam_id=exam.id, email=email)
         student.name = row.pop('name')
         student.sid = row.pop('student id', None) or student.sid
-        student.photo = row.pop('photo', None) or student.photo
+        student.bcourses_id = row.pop('bcourses id', None) or student.bcourses_id
         student.wants = { k for k, v in row.items() if v.lower() == 'true' }
         student.avoids = { k for k, v in row.items() if v.lower() == 'false' }
         students.append(student)
@@ -360,7 +360,7 @@ def email(exam):
 
 @app.route('/')
 def index():
-    return redirect('/cal/cs61a/fa17/midterm1/')
+    return redirect('/' + app.config['DEFAULT_EXAM'])
 
 @app.route('/favicon.ico')
 def favicon():
@@ -386,3 +386,10 @@ def students(exam):
 def student(exam, email):
     student = Student.query.filter_by(exam_id=exam.id, email=email).first_or_404()
     return render_template('student.html.j2', exam=exam, student=student)
+
+@app.route('/<exam:exam>/students/<string:email>/photo')
+def photo(exam, email):
+    student = Student.query.filter_by(exam_id=exam.id, email=email).first_or_404()
+    photo_path = '{}/{}/{}.jpeg'.format(app.config['PHOTO_DIRECTORY'], 
+        exam.offering, student.bcourses_id)
+    return send_file(photo_path, mimetype='image/jpeg')

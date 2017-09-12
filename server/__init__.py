@@ -31,6 +31,8 @@ app.config.update(
     SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL').replace('mysql://', 'mysql+pymysql://'),
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     SENDGRID_API_KEY=os.getenv('SENDGRID_API_KEY'),
+    PHOTO_DIRECTORY=os.getenv('PHOTO_DIRECTORY'),
+    DEFAULT_EXAM=os.getenv('DEFAULT_EXAM')
 )
 
 app.jinja_env.filters.update(

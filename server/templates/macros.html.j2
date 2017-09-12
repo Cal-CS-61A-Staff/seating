@@ -16,16 +16,6 @@
   {% endif %}
 {% endmacro %}
 
-{% macro photo(photo) %}
-  {% if photo %}
-  <object class="photo" data="{{ photo }}" type="image/jpeg">
-    <img class="photo" src="{{ url_for('static', filename='img/photo-placeholder.png') }}">
-  </object>
-  {% else %}
-  <img class="photo" src="{{ url_for('static', filename='img/photo-placeholder.png') }}">
-  {% endif %}
-{% endmacro %}
-
 {% macro room(room, highlight_seat=none, show_attributes=false) %}
 {% if room.seats %}
 <div class="room">
@@ -67,7 +57,8 @@
       {% endif %}
       {% if seat.assignment %}
         <br>{{ seat.assignment.student.name }}
-        <br>{{ photo(seat.assignment.student.photo) }}
+        <br>
+          <img class="photo" src="{{ seat.assignment.student.email }}/photo"/>
       {% endif %}
     </div>
     {% if loop.last %}

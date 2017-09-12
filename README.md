@@ -4,13 +4,15 @@ This app assigns seats to students, taking some basic preferences into account,
 It emails those seats to students, and creates seating charts that can be
 used by staff, or projected to be used by students.
 
-## CalCentral photos
+## Roster Photos
 
-One of the main reasons for writing this app was to display student photos, to
-help staff identify students. At one point, it showed CalCentral photos in an
-iframe, but CalCentral has since blocked this and we now need a different
-solution. The photo URLs are of the form
-`https://calcentral.berkeley.edu/canvas/<course_id>/photo/<bcourses_user_id>`.
+To allow for roster photos to appear in the app, set the `PHOTO_DIRECTORY` env
+variable to a directory containing files at the path:
+
+	{PHOTO_DIRECTORY}/{Course Offering}/{bCourses ID}.jpeg
+
+The bCourses ID column is used to determine which photo to display for which
+student.
 
 ## Using the app
 
@@ -49,13 +51,13 @@ Google Sheets URL, and sheet name. Create the room when you're sure it's ready.
 ### Assigning students
 
 Create a spreadsheet with one row for each student that will be assigned a seat.
-It should have columns "Name", "Student ID", "Email", and "Photo" (a URL to an
-image). The remaining columns are arbitrary attributes that express student
-preferences. For example, if a student has LEFTY=TRUE, they will be assigned a
-seat with the LEFTY attribute. If a student has LEFTY=FALSE, they will be
-assigned a seat without the LEFTY attribute. If a student's LEFTY attribute is
-blank, i.e. TRUE nor FALSE, then they will could be assigned to either a LEFTY
-or non-LEFTY seat as if they don't care.
+It should have columns "Name", "Student ID", "Email", and "bCourses ID". The
+remaining columns are arbitrary attributes that express student preferences. For
+example, if a student has LEFTY=TRUE, they will be assigned a seat with the
+LEFTY attribute. If a student has LEFTY=FALSE, they will be assigned a seat
+without the LEFTY attribute. If a student's LEFTY attribute is blank, i.e. TRUE
+nor FALSE, then they will could be assigned to either a LEFTY or non-LEFTY seat
+as if they don't care.
 
 Import students by going to (e.g.)
 
@@ -132,4 +134,5 @@ OK_CLIENT_ID
 OK_CLIENT_SECRET
 GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
+PHOTO_DIRECTORY=/app/storage
 ```

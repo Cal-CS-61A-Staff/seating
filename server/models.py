@@ -74,7 +74,7 @@ class Student(db.Model):
     email = db.Column(db.String(255), index=True, nullable=False)
     name = db.Column(db.String(255), nullable=False)
     sid = db.Column(db.String(255))
-    photo = db.Column(db.String(255))
+    bcourses_id = db.Column(db.String(255))
     wants = db.Column(StringSet, nullable=False)
     avoids = db.Column(StringSet, nullable=False)
 
