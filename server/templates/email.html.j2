@@ -3,9 +3,10 @@
 
 {% block body %}
 {% call macros.form(form) %}
-  From Email: {{ macros.field(form.from_email) }}
-  From Name: {{ macros.field(form.from_name) }}
-  Subject: {{ macros.field(form.subject) }}
+  From Email: {{ macros.field(form.from_email) }}<br>
+  From Name: {{ macros.field(form.from_name) }}<br>
+  Subject: {{ macros.field(form.subject) }}<br>
+  Test Email (blank to send to students) {{ macros.field(form.test_email) }}<br>
   Additional Text: {{ macros.field(form.additional_text) }}
   {{ macros.field(form.submit) }}
 {% endcall %}

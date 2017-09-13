@@ -287,17 +287,20 @@ class EmailForm(FlaskForm):
     from_email = StringField('from_email', [Email()])
     from_name = StringField('from_name', [InputRequired()])
     subject = StringField('subject', [InputRequired()])
+    subject = StringField('test_email', [Email()])
     additional_text = TextAreaField('additional_text')
     submit = SubmitField('submit')
 
 def email_students(exam, form):
     """Emails students in batches of 900"""
     sg = sendgrid.SendGridAPIClient(apikey=app.config['SENDGRID_API_KEY'])
+    test = form.test_email.data
     while True:
+        limit = 1 if test else 900
         assignments = SeatAssignment.query.join(SeatAssignment.seat).join(Seat.room).filter(
             Room.exam_id == exam.id,
             SeatAssignment.emailed == False,
-        ).limit(900).all()
+        ).limit(limit).all()
         if not assignments:
             break
 
@@ -306,7 +309,7 @@ def email_students(exam, form):
                 {
                     'to': [
                         {
-                            'email': assignment.student.email,
+                            'email': test if test else assignment.student.email,
                         }
                     ],
                     'substitutions': {
@@ -349,7 +352,8 @@ https://seating.cs61a.org/seat/-seatid-/
             raise Exception('Could not send mail. Status: {}. Body: {}'.format(
                 response.status_code, response.body
             ))
-
+        if test:
+            return
         for assignment in assignments:
             assignment.emailed = True
         db.session.commit()
