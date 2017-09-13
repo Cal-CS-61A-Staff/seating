@@ -316,7 +316,7 @@ def email_students(exam, form):
                         '-name-': assignment.student.first_name,
                         '-room-': assignment.seat.room.display_name,
                         '-seat-': assignment.seat.name,
-                        '-seatid-': assignment.seat.id,
+                        '-seatid-': str(assignment.seat.id),
                     },
                 }
                 for assignment in assignments
