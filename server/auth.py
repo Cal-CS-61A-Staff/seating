@@ -5,7 +5,7 @@ from oauth2client.contrib.flask_util import UserOAuth2
 from werkzeug import security
 
 from server import app
-from server.models import db, User
+from server.models import db, User, Student
 
 login_manager = LoginManager(app=app)
 
