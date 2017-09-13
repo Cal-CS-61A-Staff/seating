@@ -62,7 +62,7 @@ def authorized():
             student = Student.query.filter_by(exam_id=4, email=email).first_or_404()
             if student:
                 seat = SeatAssignment.query.filter_by(student_id=student.id).first_or_404()
-                return redirect('/seat/{}'.format(seat.id))
+                return redirect('/seat/{}'.format(seat.seat_id))
             
     if not is_staff:
         return 'Access denied: {}'.format(request.args.get('error', 'unknown error'))
