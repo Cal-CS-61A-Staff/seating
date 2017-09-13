@@ -19,6 +19,24 @@ student.
 It's janky. Many steps involve directly poking the database. The only way to
 correct errors is to manually edit the database, so be careful.
 
+### Authentication
+
+Viewing full seating charts requires logging in as a TA or tutor through Ok.
+
+Importing spreadsheets requires a separate Google OAuth login.
+
+All paths at an exam route (e.g. `/cal/cs61a/fa17/midterm1`) require a proper
+staff login.
+
+The `/seat/<id>` routes are publicly accessible, and highlight a single seat on
+a room's full seating chart without displaying any student info or info about
+seat assignments.
+
+When a student attempts to log in, they will be redirected to their assigned
+seat page if it exists. Right now this is hardcoded for `cal/cs61a/fa17` and
+Midterm 1, but I'll link it to environment variables soon. A 404 error after
+login means the student does not have an assigned seat. 
+
 ### Creating exams
 
 Create an exam by adding a row to the `exams` table. The exam that the home page
@@ -88,6 +106,9 @@ Here's your assigned seat for -exam-:
 Room: -room-
 
 Seat: -seat-
+
+You can view this seat's position on the seating chart at:
+https://seating.cs61a.org/seat/-seatid-/
 
 -additional text-
 ```
