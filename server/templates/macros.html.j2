@@ -16,7 +16,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro room(room, highlight_seat=none, show_attributes=false) %}
+{% macro room(room, highlight_seat=none, show_attributes=false, staff=true) %}
 {% if room.seats %}
 <div class="room">
   <h4>{{ room.display_name }}</h4>
@@ -34,18 +34,18 @@
     {% if loop.first %}
       <div class="seat-label" style="left:{{ x + 30 }}px;top:{{ y }}px">{{ seat.name }}</div>
     {% endif %}
-    {% if seat.assignment %}
+    {% if staff and seat.assignment %}
     <a href="{{ url_for('student', exam=exam, email=seat.assignment.student.email) }}">
     {% endif %}
       {% if seat.name == highlight_seat %}
         {% set class = 'seat highlight' %}
-      {% elif seat.assignment %}
+      {% elif staff and seat.assignment %}
         {% set class = 'seat occupied' %}
       {% else %}
         {% set class = 'seat' %}
       {% endif %}
       <div id="{{ seat.name }}" class="{{ class }}" style="left:{{ x }}px;top:{{ y }}px"></div>
-    {% if seat.assignment %}
+    {% if staff and seat.assignment %}
     </a>
     {% endif %}
     <div class="seat-tooltip mdl-tooltip mdl-tooltip--large" for="{{ seat.name }}">
@@ -55,7 +55,7 @@
         <br>{{ attribute|upper }}
       {% endfor %}
       {% endif %}
-      {% if seat.assignment %}
+      {% if staff and seat.assignment %}
         <br>{{ seat.assignment.student.name }}
         <br>
           <img class="photo" src="../../students/{{ seat.assignment.student.email }}/photo"/>

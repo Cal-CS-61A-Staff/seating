@@ -393,3 +393,8 @@ def photo(exam, email):
     photo_path = '{}/{}/{}.jpeg'.format(app.config['PHOTO_DIRECTORY'], 
         exam.offering, student.bcourses_id)
     return send_file(photo_path, mimetype='image/jpeg')
+
+@app.route('/seat/<int:seat_id>/')
+def single_seat(seat_id):
+    seat = Seat.query.filter_by(id=seat_id).first_or_404()
+    return render_template('seat.html.j2', room=seat.room, seat=seat)
