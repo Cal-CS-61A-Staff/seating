@@ -313,6 +313,7 @@ def email_students(exam, form):
                         '-name-': assignment.student.first_name,
                         '-room-': assignment.seat.room.display_name,
                         '-seat-': assignment.seat.name,
+                        '-seatid-': assignment.seat.id,
                     },
                 }
                 for assignment in assignments
@@ -333,6 +334,9 @@ Here's your assigned seat for {}:
 Room: -room-
 
 Seat: -seat-
+
+You can view this seat's position on the seating chart at:
+https://seating.cs61a.org/seat/-seatid-/
 
 {}
 '''.format(exam.display_name, form.additional_text.data)

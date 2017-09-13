@@ -24,7 +24,7 @@
       </header>
       <main class="mdl-layout__content">
         {% block body %}
-        {{ macros.room(room, highlight_seat=seat, staff=false) }}
+        {{ macros.room(room, highlight_seat=seat.name, staff=false) }}
         {% endblock %}
       </main>
     </div>
