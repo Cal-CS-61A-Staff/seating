@@ -287,7 +287,7 @@ class EmailForm(FlaskForm):
     from_email = StringField('from_email', [Email()])
     from_name = StringField('from_name', [InputRequired()])
     subject = StringField('subject', [InputRequired()])
-    subject = StringField('test_email', [Email()])
+    test_email = StringField('test_email', [Email()])
     additional_text = TextAreaField('additional_text')
     submit = SubmitField('submit')
 
