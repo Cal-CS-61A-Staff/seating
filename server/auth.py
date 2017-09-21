@@ -81,6 +81,8 @@ def authorized():
     if not user:
         user = User(email=email)
     user.offerings = [p['course']['offering'] for p in info['participations']]
+    if email == app.config['TEST_LOGIN']:
+        user.offerings.append(app.config['COURSE'])
 
     db.session.add(user)
     db.session.commit()
