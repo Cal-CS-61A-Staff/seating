@@ -55,6 +55,9 @@ def authorized():
     info = ok_oauth.get('user').data['data']
     email = info['email']
     is_staff = False
+    # allow testing on other courses
+    if email == 'jthakar@berkeley.edu':
+        is_staff = True
     for p in info['participations']:
         if p['course']['offering'] != app.config['COURSE']:
             continue
