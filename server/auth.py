@@ -56,9 +56,11 @@ def authorized():
     email = info['email']
     is_staff = False
     # allow testing on other courses
-    if email == 'jthakar@berkeley.edu':
+    if email == app.config['TEST_LOGIN']:
         is_staff = True
     for p in info['participations']:
+        if is_staff:
+            break
         if p['course']['offering'] != app.config['COURSE']:
             continue
         if p['role'] == 'student':

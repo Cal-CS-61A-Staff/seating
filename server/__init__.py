@@ -34,7 +34,8 @@ app.config.update(
     PHOTO_DIRECTORY=os.getenv('PHOTO_DIRECTORY'),
     COURSE=os.getenv('COURSE'),
     EXAM=os.getenv('EXAM'),
-    DOMAIN=os.getenv('DOMAIN')
+    DOMAIN=os.getenv('DOMAIN'),
+    TEST_LOGIN=os.getenv('TEST_LOGIN')
 )
 
 app.jinja_env.filters.update(
