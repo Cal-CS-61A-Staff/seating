@@ -56,13 +56,19 @@ def authorized():
     email = info['email']
     is_staff = False
     for p in info['participations']:
-        if p['role'] != 'student' and p['role'] != 'lab assistant':
-            is_staff = True
-        if p['role'] == 'student' and p['course']['offering'] == 'cal/cs61a/fa17':
-            student = Student.query.filter_by(exam_id=4, email=email).first_or_404()
+        if p['course']['offering'] != app.config['COURSE']:
+            continue
+        if p['role'] == 'student':
+            student = Student.query.filter_by(email=email).join(Student.exam) \
+                .filter_by(offering=app.config['COURSE'],
+                           name=app.config['EXAM']).first_or_404()
             if student:
-                seat = SeatAssignment.query.filter_by(student_id=student.id).first_or_404()
+                seat = SeatAssignment.query.filter_by(student_id=student.id).one_or_none()
+                if not seat:
+                    return 'No seat found. Please contact the course staff.'
                 return redirect('/seat/{}'.format(seat.seat_id))
+        elif p['role'] != 'lab assistant':
+            is_staff = True
             
     if not is_staff:
         return 'Access denied: {}'.format(request.args.get('error', 'unknown error'))

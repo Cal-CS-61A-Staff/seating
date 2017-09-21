@@ -339,10 +339,10 @@ Room: -room-
 Seat: -seat-
 
 You can view this seat's position on the seating chart at:
-https://seating.cs61a.org/seat/-seatid-/
+{}/seat/-seatid-/
 
 {}
-'''.format(exam.display_name, form.additional_text.data)
+'''.format(exam.display_name, app.config['DOMAIN'], form.additional_text.data)
                 },
             ],
         }
@@ -368,7 +368,7 @@ def email(exam):
 
 @app.route('/')
 def index():
-    return redirect('/' + app.config['DEFAULT_EXAM'])
+    return redirect('/' + app.config['COURSE'] + '/' + app.config['EXAM'])
 
 @app.route('/favicon.ico')
 def favicon():

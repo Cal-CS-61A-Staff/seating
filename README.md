@@ -2,7 +2,7 @@
 
 This app assigns seats to students, taking some basic preferences into account,
 It emails those seats to students, and creates seating charts that can be
-used by staff, or projected to be used by students.
+used by staff, or projected to be used by students. 
 
 ## Roster Photos
 
@@ -13,6 +13,10 @@ variable to a directory containing files at the path:
 
 The bCourses ID column is used to determine which photo to display for which
 student.
+
+I've found that the easiest way to get all of these photos is using the
+DownThemAll extension in Firefox to grab all photos from the roster webpage on
+bCourses.
 
 ## Using the app
 
@@ -33,9 +37,8 @@ a room's full seating chart without displaying any student info or info about
 seat assignments.
 
 When a student attempts to log in, they will be redirected to their assigned
-seat page if it exists. Right now this is hardcoded for `cal/cs61a/fa17` and
-Midterm 1, but I'll link it to environment variables soon. A 404 error after
-login means the student does not have an assigned seat. 
+seat page if it exists. This only works for the current COURSE and EXAM as
+set in the environment variables.
 
 ### Creating exams
 
@@ -45,10 +48,9 @@ there should be an interface to CRUD exams.
 
 ### Creating a room
 
-Room data is entered from a Google Sheet. See these examples:
+Room data is entered from a Google Sheet. We'll store some existing rooms here:
 
-Sp17 midterm 1: https://docs.google.com/spreadsheets/d/1PzJER3Jp8d3FbfZoIci5zMKEMlDS-k8PNbPCFuvnBZc/edit#gid=481262635
-Sp17 final: https://docs.google.com/spreadsheets/d/1LVbUDtnTA56KfgvFN-ANsUTbNE1KdXbOR2L6jKa_Ids/edit#gid=0
+https://drive.google.com/drive/u/1/folders/0B7ZiW-W5STesMG50eDgxNlJBZ1E
 
 One row of the spreadsheet corresponds to one row. The "Row" and "Seat" columns
 specify the name of a seat. The "X" and "Y" are the coordinates in the seating
@@ -65,6 +67,9 @@ https://seating.cs61a.org/cal/cs61a/sp17/final/rooms/import/
 
 Here you can preview the seating chart for a room by specifying a room name,
 Google Sheets URL, and sheet name. Create the room when you're sure it's ready.
+
+Once your room is finalized, we would appreciate you adding the sheet to the
+Drive folder linked above so that other exams can use them.
 
 ### Assigning students
 
@@ -108,7 +113,7 @@ Room: -room-
 Seat: -seat-
 
 You can view this seat's position on the seating chart at:
-https://seating.cs61a.org/seat/-seatid-/
+<domain>/seat/-seatid-/
 
 -additional text-
 ```
@@ -155,5 +160,8 @@ OK_CLIENT_ID
 OK_CLIENT_SECRET
 GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
+COURSE
+EXAM
+DOMAIN
 PHOTO_DIRECTORY=/app/storage
 ```

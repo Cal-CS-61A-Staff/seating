@@ -32,7 +32,9 @@ app.config.update(
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     SENDGRID_API_KEY=os.getenv('SENDGRID_API_KEY'),
     PHOTO_DIRECTORY=os.getenv('PHOTO_DIRECTORY'),
-    DEFAULT_EXAM=os.getenv('DEFAULT_EXAM')
+    COURSE=os.getenv('COURSE'),
+    EXAM=os.getenv('EXAM'),
+    DOMAIN=os.getenv('DOMAIN')
 )
 
 app.jinja_env.filters.update(
