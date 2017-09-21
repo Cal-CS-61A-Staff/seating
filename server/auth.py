@@ -54,10 +54,7 @@ def authorized():
 
     info = ok_oauth.get('user').data['data']
     email = info['email']
-    is_staff = False
-    # allow testing on other courses
-    if email == app.config['TEST_LOGIN']:
-        is_staff = True
+    is_staff = email == app.config['TEST_LOGIN']
     for p in info['participations']:
         if is_staff:
             break
@@ -66,7 +63,9 @@ def authorized():
         if p['role'] == 'student':
             student = Student.query.filter_by(email=email).join(Student.exam) \
                 .filter_by(offering=app.config['COURSE'],
-                           name=app.config['EXAM']).first_or_404()
+                           name=app.config['EXAM']).one_or_none()
+            if not student:
+                return 'Your email is not registered. Please contact the course staff.'
             if student:
                 seat = SeatAssignment.query.filter_by(student_id=student.id).one_or_none()
                 if not seat:
