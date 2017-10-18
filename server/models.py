@@ -50,7 +50,7 @@ class Room(db.Model):
     def rows(self):
         seats = natsorted(self.seats, key=lambda seat: seat.row)
         return [
-            natsorted(g, key=lambda seat: seat.seat)
+            natsorted(g, key=lambda seat: seat.x)
             for _, g in itertools.groupby(seats, lambda seat: seat.row)
         ]
 
