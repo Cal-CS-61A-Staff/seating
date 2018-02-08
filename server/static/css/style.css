@@ -131,3 +131,9 @@ header a {
 .sort.desc:after {
   border-top: 5px solid #000;
 }
+
+@media (max-width: 767px) {
+  .mdl-layout__header-row {
+    padding: 0 16px 0 16px;
+  }
+}
