@@ -262,7 +262,7 @@ def assign_students(exam):
         min_students = students_by_preference[min_preference]
         min_seats = seats_by_preference[min_preference]
         if not min_seats:
-            raise ValueError('No more seats for preference {}'.format(min_preference))
+            return 'Assignment failed! No more seats for preference {}'.format(min_preference)
 
         student = random.choice(min_students)
         seat = random.choice(min_seats)
