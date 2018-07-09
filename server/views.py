@@ -278,6 +278,8 @@ def assign(exam):
     form = AssignForm()
     if form.validate_on_submit():
         assignments = assign_students(exam)
+        if type(assignments) == str:
+            return assignments
         db.session.add_all(assignments)
         db.session.commit()
         return redirect(url_for('students', exam=exam))
