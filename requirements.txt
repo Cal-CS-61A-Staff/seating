@@ -1,5 +1,5 @@
-oauth2client
 google-api-python-client
+google-auth
 gunicorn
 flask
 flask-login
