@@ -41,11 +41,11 @@ header a {
 }
 
 /*horizontal scrolling on mobile*/
-/*@media (max-width: 620px) {
-    .scroll{
-    overflow-x: hidden;     
+@media (max-width: 620px) {
+    .seats{
+    left: 50px;     
   }
-}*/
+}
 
 .seat {
   position: absolute;
