@@ -16,6 +16,9 @@ header a {
   .hidden-small {
     display: none;
   }
+  body {
+    overflow-y: auto;
+  }
 }
 
 .rooms {
