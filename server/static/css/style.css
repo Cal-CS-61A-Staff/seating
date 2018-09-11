@@ -22,13 +22,6 @@ header a {
   max-width: 620px;
 }
 
-/*horizontal scrolling on mobile*/
-@media (max-width: 620px) {
-    body {
-    overflow-y: scroll;     
-  }
-}
-
 .rooms li {
   padding-left: 0;
 }
@@ -45,6 +38,13 @@ header a {
 .seats {
   position: relative;
   margin: 10px auto;
+}
+
+/*horizontal scrolling on mobile*/
+@media (max-width: 620px) {
+    .seats {
+    overflow-y: scroll;     
+  }
 }
 
 .seat {
