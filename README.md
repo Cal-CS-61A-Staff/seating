@@ -137,7 +137,7 @@ cheaters.
 
 	dokku config:set seating <ENVIRONMENT VARIABLES>
 
-	git remote add dokku dokku@app.cs61a.org:seating
+	git remote add dokku dokku@apps.cs61a.org:seating
 	git push dokku master
 
 	dokku run seating flask initdb
