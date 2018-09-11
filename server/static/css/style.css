@@ -16,13 +16,17 @@ header a {
   .hidden-small {
     display: none;
   }
-  body {
-    overflow-y: auto;
-  }
 }
 
 .rooms {
   max-width: 620px;
+}
+
+/*horizontal scrolling on mobile*/
+@media (max-width: 620px) {
+    body {
+    overflow-x: auto;     
+  }
 }
 
 .rooms li {
