@@ -42,7 +42,7 @@ header a {
 
 /*horizontal scrolling on mobile*/
 @media (max-width: 620px) {
-    .scroll {
+    .scroll{
     overflow-x: hidden;     
   }
 }
