@@ -26,7 +26,7 @@
   {% set y_min = room.seats|map(attribute='y')|min %}
   {% set y_max = room.seats|map(attribute='y')|max %}
   {% set scale = 23 %}
-  <div class="seats" style="width:{{ scale * (x_max - x_min + 1) }}px;height:{{ scale * (y_max - y_min + 1) }}px">
+  <div class="seats">
   {% for row in room.rows %}
   {% for seat in row %}
     {% set x = scale * (x_max - seat.x) %}
