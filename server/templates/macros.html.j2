@@ -18,6 +18,7 @@
 
 {% macro room(room, highlight_seat=none, show_attributes=false, staff=true) %}
 {% if room.seats %}
+<div class="scroll">
 <div class="room">
   <h4>{{ room.display_name }}</h4>
   <h6>Front</h6>
@@ -69,6 +70,7 @@
   {% endfor %}
   </div>
   <h6>Back</h6>
+</div>
 </div>
 {% endif %}
 {% endmacro %}
