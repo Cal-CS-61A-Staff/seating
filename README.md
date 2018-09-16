@@ -1,8 +1,9 @@
-## About
+# Exam Seating App
 
 This app assigns seats to students, taking some basic preferences into account,
-It emails those seats to students, and creates seating charts that can be
-used by staff, or projected to be used by students. 
+It allows students to log in with their Ok account and/or for emails to be sent,
+and creates seating charts that can be used by staff, or projected to be used
+by students. 
 
 ## Roster Photos
 
@@ -137,7 +138,7 @@ cheaters.
 
 	dokku config:set seating <ENVIRONMENT VARIABLES>
 
-	git remote add dokku dokku@apps.cs61a.org:seating
+	git remote add dokku dokku@app.cs61a.org:seating
 	git push dokku master
 
 	dokku run seating flask initdb
@@ -165,3 +166,5 @@ EXAM
 DOMAIN
 PHOTO_DIRECTORY=/app/storage
 ```
+
+You can create an Ok OAuth client [here](https://okpy.org/admin/clients/), though it will need to be approved by an Ok admin before it can be used.
