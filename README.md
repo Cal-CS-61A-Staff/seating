@@ -5,20 +5,6 @@ It allows students to log in with their Ok account and/or for emails to be sent,
 and creates seating charts that can be used by staff, or projected to be used
 by students. 
 
-## Roster Photos
-
-To allow for roster photos to appear in the app, set the `PHOTO_DIRECTORY` env
-variable to a directory containing files at the path:
-
-	{PHOTO_DIRECTORY}/{Course Offering}/{bCourses ID}.jpeg
-
-The bCourses ID column is used to determine which photo to display for which
-student.
-
-I've found that the easiest way to get all of these photos is using the
-DownThemAll extension in Firefox to grab all photos from the roster webpage on
-bCourses.
-
 ## Using the app
 
 It's janky. Many steps involve directly poking the database. The only way to
@@ -121,6 +107,21 @@ You can view this seat's position on the seating chart at:
 
 The "additional text" is a good place to tell them what to do if they have an
 issue with their seat, and to sign the email (e.g. "- Cal CS 61A Staff").
+
+## Roster Photos
+
+To allow for roster photos to appear in the app, set the `PHOTO_DIRECTORY` env
+variable to a directory containing files at the path:
+
+	{PHOTO_DIRECTORY}/{Course Offering}/{bCourses ID}.jpeg
+
+The bCourses ID column is used to determine which photo to display for which
+student.
+
+In the past, we've used the DownThemAll Firefox extension to grab all of our
+roster photos from bCourses. That extension no longer works in Firefox Quantum,
+so you can either use an old version of Firefox with support for legacy add-ins,
+or use the script `download_bcourses_photos.py` in this repo.
 
 ### During the exam
 
