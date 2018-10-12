@@ -1,10 +1,14 @@
+a {
+  text-decoration: none;
+}
+
 body {
   color: #333;
   background-color: #f7f7f7;
 }
 
-a {
-  text-decoration: none;
+footer {
+  margin-bottom: 6em;
 }
 
 header a {
