@@ -18,8 +18,8 @@ header a {
   }
 }
 
-.mdl-layout__container {
-  margin-bottom: 10em;
+.mdl-layout__content {
+  padding-bottom: 10em;
 }
 
 .rooms {
