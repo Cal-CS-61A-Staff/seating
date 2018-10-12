@@ -1,9 +1,12 @@
 # Exam Seating App
 
-This app assigns seats to students, taking some basic preferences into account,
+This app assigns seats to students, taking some basic preferences into account. 
 It allows students to log in with their Ok account and/or for emails to be sent,
 and creates seating charts that can be used by staff, or projected to be used
 by students. 
+This app uses Ok to manage access. Even if you aren't using Ok for assignments, 
+you should create a course on Ok and enroll all of your staff, academic interns, 
+and students with the appropriate roles.
 
 ## Using the app
 
