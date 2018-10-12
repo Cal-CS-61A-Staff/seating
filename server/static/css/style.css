@@ -7,10 +7,6 @@ body {
   background-color: #f7f7f7;
 }
 
-footer {
-  margin-bottom: 6em;
-}
-
 header a {
   color: inherit;
   font-weight: inherit;
@@ -20,6 +16,10 @@ header a {
   .hidden-small {
     display: none;
   }
+}
+
+.mdl-layout__container {
+  margin-bottom: 10em;
 }
 
 .rooms {
