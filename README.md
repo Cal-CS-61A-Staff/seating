@@ -40,7 +40,7 @@ there should be an interface to CRUD exams.
 
 Room data is entered from a Google Sheet. We'll store some existing rooms here:
 
-https://drive.google.com/drive/u/1/folders/0B7ZiW-W5STesMG50eDgxNlJBZ1E
+https://drive.google.com/open?id=1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s
 
 One row of the spreadsheet corresponds to one row. The "Row" and "Seat" columns
 specify the name of a seat. The "X" and "Y" are the coordinates in the seating
