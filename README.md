@@ -38,9 +38,15 @@ there should be an interface to CRUD exams.
 
 ### Creating a room
 
-Room data is entered from a Google Sheet. We'll store some existing rooms here:
+Room data is entered from a Google Sheet.
+Copy a sheet from the room master sheet.
 
-https://drive.google.com/open?id=1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s
+Master: https://drive.google.com/open?id=1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s
+
+If it does not exist, you can try looking through the rooms used in the past years.
+https://drive.google.com/drive/u/1/folders/0B7ZiW-W5STesMG50eDgxNlJBZ1E
+
+If it cannot be found, please make a sheet for the room and and it to the master.
 
 One row of the spreadsheet corresponds to one row. The "Row" and "Seat" columns
 specify the name of a seat. The "X" and "Y" are the coordinates in the seating
