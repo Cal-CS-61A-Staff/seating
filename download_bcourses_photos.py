@@ -23,7 +23,7 @@ def urlopen(url, *args, **kwargs):
 
 def get_content_charset(headers):
 	try: get_param = headers.get_param  # Python 3
-	except AttributeError: get_param = headers.getparam  # Python 3
+	except AttributeError: get_param = headers.getparam  # Python 2
 	return get_param("charset") or 'utf-8'
 
 def read_http_response_as_json(response):
