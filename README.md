@@ -71,7 +71,7 @@ Drive folder linked above so that other exams can use them.
 
 Create a spreadsheet with one row for each student that will be assigned a seat.
 It should have columns "Name", "Student ID", "Email", and "bCourses ID". The
-remaining columns are arbitrary attributes that express student preferences. For
+remaining columns are arbitrary attributes (ex: LEFTY, RIGHTY, BROKEN) that express student preferences. For
 example, if a student has LEFTY=TRUE, they will be assigned a seat with the
 LEFTY attribute. If a student has LEFTY=FALSE, they will be assigned a seat
 without the LEFTY attribute. If a student's LEFTY attribute is blank, i.e. TRUE
