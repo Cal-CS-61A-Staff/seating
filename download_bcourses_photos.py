@@ -89,7 +89,7 @@ def main(program, bcourses_cookie):
 	for line in lines:
 		found = roster.get(line.strip())
 		if found is not None:
-			path = os.path.join("%s - %s" % ((list(map(lambda section: section['name'], found['sections'])) + [course_name])[0], course_id), found['first_name'] + " " + found['last_name'])
+			path = os.path.join("%s - %s" % ((list(map(lambda section: section['name'], found['sections'])) + [course_name])[0], course_id), found['id'])
 			sys.stdout.write("> " + path + "\n"); sys.stdout.flush()
 			q.put((server + found['photo'], bcourses_cookie, path))
 		else:
