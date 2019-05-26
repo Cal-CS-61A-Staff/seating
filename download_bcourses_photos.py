@@ -76,11 +76,7 @@ def main(program, *args):
 	argparser = argparse.ArgumentParser(
 		prog=program_name,
 		usage=None,
-		description="""stdin: you may instead pass a list of emails via stdin, e.g.:
-	python \"%s\" [...] < emails.txt
-or:
-	echo {oski,bear}@berkeley.edu | python \"%s\" [...]
-""" % (program_name, program_name),
+		description=None,
 		epilog="""FORMAT fields:
 %s
 
@@ -88,18 +84,16 @@ INSTRUCTIONS:
 
 1. Put all your students' emails into a text file (one email per line), let's call this "Student-Emails.txt".
 2. Go to the roster page on CalCentral.
-3. (if on Chrome)
-	Copy your _calcentral_session cookie's Content from here:
-		chrome://settings/cookies/detail?search=cookie&site=junction.berkeley.edu
+3. [Chrome] Copy your '_calcentral_session' cookie's Content from the following page:
+	chrome://settings/cookies/detail?search=cookie&site=junction.berkeley.edu
 	and replace XXXXX with it in the next step (below).
-3. (any browser)
-	Press F12 to open the debugging tools, go to the Network tab, and then navigate to the course roster.
+3. [Any browser] Press F12 to open the debugging tools, go to the Network tab, and then navigate to the course roster.
 	Find a GET request to junction.berkeley.edu and copy its "Cookie" field from the "Headers" tab (NOT the "Cookies" tab).
 	You need the cookie string beginning with "_calcentral_session".
 	(I used the "Cookie" field in the request headers, but you can also try the "Set-Cookie" field in the response headers.)
 4. Call this script and pass it all the above information as follows:
 	python "%s" "_calcentral_session=XXXXX" < "Student-Emails.txt"
-""" % ("  " + ", ".join(ROSTER_FIELDS), program_name,),
+""" % ("  " + ", ".join(ROSTER_FIELDS), program_name),
 		parents=[],
 		formatter_class=argparse.RawTextHelpFormatter,
 		add_help=True)
