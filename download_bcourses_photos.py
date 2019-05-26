@@ -61,11 +61,17 @@ def fetcher(q):
 
 def main(program, bcourses_cookie):
 	# 1. Put all your students' emails into a text file (one email per line), let's call this "Student-Emails.txt".
-	# 2. Now press F12 to open the debugging tools, go to the Network tab, and then navigate to the course roster.
-	# 3. Find a GET request to junction.berkeley.edu and copy its "Cookie" field from the "Headers" tab (NOT the "Cookies" tab). You need the cookie string beginning with "_calcentral_session".
-	#    (I used the "Cookie" field in the request headers, but you can also try the "Set-Cookie" field in the response headers.)
+	# 2. Go to the roster page on CalCentral.
+	# 3. [Chrome only]:
+	#        Copy your _calcentral_session cookie's Content from here:
+	#            chrome://settings/cookies/detail?search=cookie&site=junction.berkeley.edu
+	#        and replace XXXXX with it in the next step (below).
+	#    [Any browser]:
+	#        Now press F12 to open the debugging tools, go to the Network tab, and then navigate to the course roster.
+	#        Find a GET request to junction.berkeley.edu and copy its "Cookie" field from the "Headers" tab (NOT the "Cookies" tab). You need the cookie string beginning with "_calcentral_session".
+	#        (I used the "Cookie" field in the request headers, but you can also try the "Set-Cookie" field in the response headers.)
 	# 4. Call this script and pass it all the above information in the following order (notice that "Student-Emails.txt" is PIPED in):
-	#    python "this-script.py" "_calcentral_session=ABCDEFGHIJK" < "Student-Emails.txt"
+	#    python "this-script.py" "_calcentral_session=XXXXX" < "Student-Emails.txt"
 	nthreads = os.getenv('OMP_NUM_THREADS', None)
 	if not nthreads: nthreads = 16
 	nthreads = max(int(nthreads), 1)
