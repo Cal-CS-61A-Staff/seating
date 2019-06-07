@@ -22,21 +22,8 @@ class App(Flask):
         return UrlRequestContext(self, environ)
 
 app = App(__name__)
-app.config.update(
-    SECRET_KEY=os.getenv('SECRET_KEY'),
-    OK_CLIENT_ID=os.getenv('OK_CLIENT_ID'),
-    OK_CLIENT_SECRET=os.getenv('OK_CLIENT_SECRET'),
-    GOOGLE_OAUTH2_CLIENT_ID=os.getenv('GOOGLE_CLIENT_ID'),
-    GOOGLE_OAUTH2_CLIENT_SECRET=os.getenv('GOOGLE_CLIENT_SECRET'),
-    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL').replace('mysql://', 'mysql+pymysql://'),
-    SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    SENDGRID_API_KEY=os.getenv('SENDGRID_API_KEY'),
-    PHOTO_DIRECTORY=os.getenv('PHOTO_DIRECTORY'),
-    COURSE=os.getenv('COURSE'),
-    EXAM=os.getenv('EXAM'),
-    DOMAIN=os.getenv('DOMAIN'),
-    TEST_LOGIN=os.getenv('TEST_LOGIN')
-)
+
+app.config.from_object('config')
 
 app.jinja_env.filters.update(
     min=min,
