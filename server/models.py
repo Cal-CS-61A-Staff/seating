@@ -135,20 +135,19 @@ def reset_db(ctx):
     ctx.invoke(init_db)
     ctx.invoke(seed_db)
 
-
 seed_exams = [  
     Exam(   
-        offering='cal/test/fa18',  
+        offering=app.config['COURSE'],  
         name='midterm1', 
         display_name='Midterm 1',   
     ),  
     Exam(   
-        offering='cal/test/fa18',  
+        offering=app.config['COURSE'],  
         name='midterm2', 
         display_name='Midterm 2',   
     ),  
     Exam(   
-        offering='cal/test/fa18',  
+        offering=app.config['COURSE'],  
         name='final', 
         display_name='Final',   
     ),  
