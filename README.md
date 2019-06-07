@@ -117,7 +117,7 @@ You can view this seat's position on the seating chart at:
 The "additional text" is a good place to tell them what to do if they have an
 issue with their seat, and to sign the email (e.g. "- Cal CS 61A Staff").
 
-## Roster Photos
+### Roster Photos
 
 To allow for roster photos to appear in the app, set the `PHOTO_DIRECTORY` env
 variable to a directory containing files at the path:
@@ -137,8 +137,45 @@ or use the script `download_bcourses_photos.py` in this repo.
 Staff can project the seating chart, and use the seating chart to identity
 cheaters.
 
-## First Time Deployment
 
+## Setting Up
+1. Clone the repository and change directories into the repository.
+```
+	git clone https://github.com/Cal-CS-61A-Staff/seating.git
+	cd seating
+```
+
+2. Create and activate a virtual environment.
+``` 
+	python3 -m venv env 
+	source env/bin/activate
+```
+3. Use pip to install all the dependencies.
+```
+	pip install -r requirements.txt
+```
+
+## Development 
+1. Add yourself to `cal/test/fa18` course (both as student and instructor but with different emails). Development server uses `cal/test/fa18` as its test OKPY course. 
+
+2. Make sure your virtual environment is activated. Then set up the environment variables.
+```
+export FLASK_APP = server  (or server/__init__.py)
+export FLASK_ENV = development
+```
+
+3. Modify `config.py` as necessary. Set `OK_CLIENT_ID`, `OK_CLIENT_SECRET`, `GOOGLE_OAUTH2_CLIENT_ID`, `GOOGLE_OAUTH2_CLIENT_SECRET`, `SENDGRID_API_KEY`, `PHOTO_DIRECTORY`, `EXAM` as needed.
+
+4. Initialize tables and seed the data: `flask resetdb`
+This command drops previous tables, initializes tables and adds seeds the exams table. Students, rooms, etc. must be imported (see how in the previous section, Using the app). 
+
+5. Run the app: `flask run`
+This commands only needs to be run once.
+
+6. Open localhost:5000
+
+
+## Production (First Time Deployment on dokku)
 	dokku apps:create seating
 	dokku mysql:create seating
 	dokku mysql:link seating seating
@@ -162,7 +199,6 @@ proxy_busy_buffers_size   256k;
 ```
 
 ## Environment variables
-
 ```
 FLASK_APP=server/__init__.py
 SECRET_KEY
