@@ -117,7 +117,7 @@ You can view this seat's position on the seating chart at:
 The "additional text" is a good place to tell them what to do if they have an
 issue with their seat, and to sign the email (e.g. "- Cal CS 61A Staff").
 
-## Roster Photos
+### Roster Photos
 
 To allow for roster photos to appear in the app, set the `PHOTO_DIRECTORY` env
 variable to a directory containing files at the path:
