@@ -172,7 +172,7 @@ This command drops previous tables, initializes tables and adds seeds the exams 
 5. Run the app: `flask run`
 This commands only needs to be run once.
 
-6. Open localhost:5000
+6. Open [localhost:5000](https://localhost:5000)
 
 
 ## Production (First Time Deployment on dokku)
