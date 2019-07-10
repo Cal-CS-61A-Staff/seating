@@ -376,6 +376,10 @@ def index():
 def favicon():
     return send_file('static/img/favicon.ico')
 
+@app.route('/students-template.png')
+def students_template():
+    return send_file('static/img/students-template.png')
+
 @app.route('/<exam:exam>/')
 def exam(exam):
     return render_template('exam.html.j2', exam=exam)
