@@ -1,0 +1,71 @@
+{% extends 'base.html.j2' %}
+
+{% block body %}
+<main class="rooms mdl-grid">
+  <h3>Using the app</h3>
+  <div class="mdl-cell mdl-cell--12-col">
+    <h4><i class="material-icons help">room</i>Rooms.</h4>
+    <p>There are two options: import a room via Google Sheet or choose from our available rooms.</p> 
+    <p>Room data is entered from a Google Sheet. Copy a sheet from the room <a href="https://drive.google.com/open?id=1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s">master sheet</a>. If it does not exist, you can try looking through the <a href="https://drive.google.com/drive/u/1/folders/0B7ZiW-W5STesMG50eDgxNlJBZ1E">rooms</a> used in the past years.</p>
+    <p>If it cannot be found, please make a sheet for the room and add it to the master.</p>
+
+    <p>One row of the spreadsheet corresponds to one row. The "Row" and "Seat" columns
+    specify the name of a seat. The "X" and "Y" are the coordinates in the seating
+    chart. If "X" is left blank, it defaults to one space stage right (house left)
+    to the previous seat. If "Y" is left blank, it defaults to the Y coordinate of
+    the previous seat. The remaining columns are arbitrary TRUE/FALSE "attributes",
+    which can give labels to seats such as LEFTY, RIGHTY, AISLE, FRONT, or RESERVED.
+    A blank value is interpreted as FALSE. Student preferences are given in terms
+    of these labels, and are used to match students to seats.</p>
+
+    <p>Once your room is finalized, we would appreciate you adding the sheet to the
+    Drive folder linked above so that other exams can use them.</p>
+
+    <p>As of now, you can not yet delete rooms. Contact the Slack to have your room deleted.</p>
+  </div>
+   <div class="mdl-cell mdl-cell--12-col">
+    <h4><i class="material-icons help">person_add</i>Students.</h4>
+    <p>Create a spreadsheet with one row for each student that will be assigned a seat.
+    It should have columns "Name", "Student ID", "Email", and "bCourses ID". The
+    remaining columns are arbitrary attributes (ex: LEFTY, RIGHTY, BROKEN) that express student preferences. For
+    example, if a student has LEFTY=TRUE, they will be assigned a seat with the
+    LEFTY attribute. If a student has LEFTY=FALSE, they will be assigned a seat
+    without the LEFTY attribute. If a student's LEFTY attribute is blank, i.e. TRUE
+    nor FALSE, then they will could be assigned to either a LEFTY or non-LEFTY seat
+    as if they don't care.</p>
+    <p>You can add students to the spreadsheet and import them again later. Duplicates will be merged.</p>
+  </div>
+   <div class="mdl-cell mdl-cell--12-col">
+    <h4><i class="material-icons help">add_a_photo</i>Photos.</h4>
+    <p>Download this <a href="https://github.com/Cal-CS-61A-Staff/seating/blob/master/download_bcourses_photos.py">script</a>, follow the instructions, and DM the zip to whoever is in charge to have your photos added to your seating app.</p>
+  </div>
+   <div class="mdl-cell mdl-cell--12-col">
+    <h4><i class="material-icons help">assignment</i>Assign.</h4>
+    <p>It's easy to assign; simply click the Assign button. Only unassigned students will be assigned a seat. To reassign a student,
+    message the CS 61A software support slack.<\p>
+  </div>
+   <div class="mdl-cell mdl-cell--12-col">
+    <h4><i class="material-icons help">email</i>Email.</h4>
+    <p>
+    Students will receive an email that looks like
+```
+Hi -name-,
+
+Here's your assigned seat for -exam-:
+
+Room: -room-
+
+Seat: -seat-
+
+You can view this seat's position on the seating chart at:
+<domain>/seat/-seatid-/
+
+-additional text-
+```
+
+The "additional text" is a good place to tell them what to do if they have an
+issue with their seat, and to sign the email (e.g. "- Cal CS 61A Staff").
+    </p>
+  </div>
+</main>
+{% endblock %}

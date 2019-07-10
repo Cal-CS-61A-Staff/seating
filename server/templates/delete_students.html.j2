@@ -2,10 +2,42 @@
 {% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
-{% call macros.form(form) %}
-  Emails: {{ macros.field(form.emails) }}
-  {{ macros.field(form.submit) }}
-{% endcall %}
-<p>Deleted: {{ deleted|sort|join(', ') }}</p>
-<p>Did not exist: {{ did_not_exist|sort|join(', ') }}</p>
+<div class="mdl-grid">
+  <div class="mdl-cell mdl-cell--9-col delist">
+    {% call macros.form(form) %}
+    <div class="mdl-textfield mdl-js-textfield">
+      {{ form.emails(class="mdl-textfield__input", type="text", rows="10", id="delemails") }}
+      <label class="mdl-textfield__label" for="delemails">Emails...</label>
+    </div>
+
+    <div class="form-buttons">
+      {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+    </div>
+    {% endcall %}
+  </div>
+  <div class="mdl-cell mdl-cell--4-col delist"> 
+    <h5>Deleted:</h5>
+    <ul class="mdl-list">
+      {% for student in deleted|sort %}
+      <li class="mdl-list__item delitem">
+        <span class="mdl-list__item-primary-content">
+          {{ student }}
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="mdl-cell mdl-cell--4-col delist">
+    <h5>Did not exist:</h5>
+    <ul class="mdl-list">
+      {% for student in did_not_exist|sort %}
+      <li class="mdl-list__item delitem">
+        <span class="mdl-list__item-primary-content">
+          {{ student }}
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
 {% endblock %}

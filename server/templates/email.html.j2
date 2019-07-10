@@ -3,11 +3,43 @@
 
 {% block body %}
 {% call macros.form(form) %}
-  From Email: {{ macros.field(form.from_email) }}<br>
-  From Name: {{ macros.field(form.from_name) }}<br>
-  Subject: {{ macros.field(form.subject) }}<br>
-  Test Email (blank to send to students) {{ macros.field(form.test_email) }}<br>
-  Additional Text: {{ macros.field(form.additional_text) }}
-  {{ macros.field(form.submit) }}
+<main class="mdl-grid">
+  <div class="mdl-cell mdl-cell--10-col delist">
+    <h5>From</h5>
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+      {{ form.from_email(class="mdl-textfield__input", type="Email", id="fromemail") }}
+      <label class="mdl-textfield__label" for="fromemail">Email</label>
+    </div>
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+      {{ form.from_name(class="mdl-textfield__input", type="Name", id="fromname") }}
+      <label class="mdl-textfield__label" for="fromname">Name</label>
+    </div>
+  </div>
+  <div class="mdl-cell mdl-cell--3-col delist">
+    <h5>Subject</h5>
+    <div class="mdl-textfield mdl-js-textfield">
+      {{ form.subject(class="mdl-textfield__input", type="Subject", id="subject") }}
+      <label class="mdl-textfield__label" for="subject">Subject</label>
+    </div>
+  </div>
+  <div class="mdl-cell mdl-cell--3-col delist">
+    <h5>Test Email</h5>
+    <div class="mdl-textfield mdl-js-textfield">
+      {{ form.test_email(class="mdl-textfield__input", type="Test Email", id="testemail") }}
+      <label class="mdl-textfield__label" for="testemail">Leave blank to send to students</label>
+    </div>
+  </div>
+  <div class="mdl-cell mdl-cell--7-col delist">
+    <h5>Additional Text</h5>
+    <div class="mdl-textfield mdl-js-textfield">
+      {{ form.additional_text(class="mdl-textfield__input", type="text", rows="10", id="addtext") }}
+      <label class="mdl-textfield__label" for="addtext">Additional Text...</label>
+    </div>
+  <div>
+  <div class="form-buttons">
+    {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+  </div>
+  <div class="mdl-layout-spacer"></div>
+</main>
 {% endcall %}
 {% endblock %}

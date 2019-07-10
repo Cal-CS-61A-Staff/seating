@@ -3,11 +3,67 @@
 
 {% block body %}
 {% call macros.form(form) %}
-  Name: {{ macros.field(form.display_name) }}
-  Google Sheets URL: {{ macros.field(form.sheet_url) }}
-  Sheet Name: {{ macros.field(form.sheet_range) }}
-  {{ macros.field(form.preview_room) }}
-  {{ macros.field(form.create_room) }}
+
+<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+  <div class="mdl-tabs__tab-bar">
+    <a href="#sheet-panel" class="mdl-tabs__tab is-active">Import</a>
+    <a href="#choose-panel" class="mdl-tabs__tab">Choose</a>
+  </div>
+
+  <div class="mdl-tabs__panel is-active" id="sheet-panel">
+    <div class="mdl-grid">
+      <div class="mdl-layout-spacer"></div>
+      <div class="mdl-cell mdl-cell--3-col">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+          {{ form.display_name(class="mdl-textfield__input", type="Room Name", id="roomname") }}
+          <label class="mdl-textfield__label" for="roomname">Room Name</label>
+        </div>
+        <div class="errormsg">
+          {% if form.sheet_url.errors %}
+            {% for error in form.sheet_url.errors %}
+              <span>{{ form.sheet_url.errors }}</span>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--3-col">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+          {{ form.sheet_url(class="mdl-textfield__input", type="Google Sheet URL", id="gsurl") }}
+          <label class="mdl-textfield__label" for="gsurl">Google Sheet URL</label>
+        </div>
+        <div class="errormsg">
+          {% if form.sheet_url.errors %}
+            {% for error in form.sheet_url.errors %}
+              <span>{{ form.sheet_url.errors }}</span>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--3-col">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+          {{ form.sheet_range(class="mdl-textfield__input", type="Sheet Name", id="sheetname") }}
+          <label class="mdl-textfield__label" for="sheetname">Sheet Name</label>
+        </div>
+        <div class="errormsg">
+          {% if form.sheet_range.errors %}
+            {% for error in form.sheet_range.errors %}
+              <span>{{ form.sheet_range.errors }}</span>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="form-buttons">
+        {{ form.preview_room(class="mdl-button mdl-js-button") }}
+      </div>
+      <div class="form-buttons">
+        {{ form.create_room(class="mdl-button mdl-js-button mdl-button--raised") }}
+      </div>
+      <div class="mdl-layout-spacer"></div>
+    </div>
+  </div>
+
+  <div class="mdl-tabs__panel is-active" id="choice-panel"></div>
+</div>
 {% endcall %}
 {% if room %}
   {{ macros.room(room, show_attributes=true) }}

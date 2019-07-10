@@ -36,3 +36,6 @@ TEST_LOGIN = os.getenv('TEST_LOGIN')
 
 # Secret key for signing cookies
 SECRET_KEY = os.getenv('SECRET_KEY', 'development')
+
+# Admin user
+ADMIN = os.getenv('ADMIN')

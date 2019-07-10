@@ -16,6 +16,22 @@
         <label class="mdl-textfield__label" for="search-expandable">Search</label>
       </div>
     </div>
+    {% if current_user.email == config['ADMIN'] %}
+      <div id="tt5" class="material-icons std" onclick="location.href = '{{ url_for('email', exam=exam) }}';" style="float: right;">email</div>
+      <div class="mdl-tooltip" data-mdl-for="tt5">Email</div>
+
+      <div id="tt4" class="material-icons std" onclick="location.href = '{{ url_for('delete_students', exam=exam) }}';" style="float: right;">delete</div>
+      <div class="mdl-tooltip" data-mdl-for="tt4">Delete Students</div>
+
+      <div id="tt3" class="material-icons std" onclick="location.href = '{{ url_for('assign', exam=exam) }}';" style="float: right;">assignment</div>
+      <div class="mdl-tooltip" data-mdl-for="tt3">Assign</div>
+
+      <div id="tt2" class="material-icons std" onclick="location.href = '{{ url_for('new_photos', exam=exam) }}';" style="float: right;">add_a_photo</div>
+      <div class="mdl-tooltip" data-mdl-for="tt2">Add Photos</div>
+
+      <div id="tt1" class="material-icons std" onclick="location.href = '{{ url_for('new_students', exam=exam) }}';" style="float: right;">person_add</div>
+      <div class="mdl-tooltip" data-mdl-for="tt1">Add Students</div>
+    {% endif %}
     <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
       <thead>
         <tr>

@@ -52,8 +52,8 @@ class RoomForm(FlaskForm):
     display_name = StringField('display_name', [InputRequired()])
     sheet_url = StringField('sheet_url', [URL()])
     sheet_range = StringField('sheet_range', [InputRequired()])
-    preview_room = SubmitField('preview_room')
-    create_room = SubmitField('create_room')
+    preview_room = SubmitField('preview')
+    create_room = SubmitField('create')
 
 def read_csv(sheet_url, sheet_range):
     m = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', sheet_url)
@@ -154,7 +154,7 @@ def new_room(exam):
 class StudentForm(FlaskForm):
     sheet_url = StringField('sheet_url', [URL()])
     sheet_range = StringField('sheet_range', [InputRequired()])
-    submit = SubmitField('submit')
+    submit = SubmitField('import')
 
 def validate_students(exam, form):
     headers, rows = read_csv(form.sheet_url.data, form.sheet_range.data)
@@ -194,7 +194,7 @@ def new_students(exam):
 
 class DeleteStudentForm(FlaskForm):
     emails = TextAreaField('emails')
-    submit = SubmitField('submit')
+    submit = SubmitField('delete')
 
 @app.route('/<exam:exam>/students/delete/', methods=['GET', 'POST'])
 def delete_students(exam):
@@ -217,7 +217,7 @@ def delete_students(exam):
         exam=exam, form=form, deleted=deleted, did_not_exist=did_not_exist)
 
 class AssignForm(FlaskForm):
-    submit = SubmitField('submit')
+    submit = SubmitField('assign')
 
 def collect(s, key=lambda x: x):
     d = {}
@@ -291,11 +291,11 @@ class EmailForm(FlaskForm):
     subject = StringField('subject', [InputRequired()])
     test_email = StringField('test_email')
     additional_text = TextAreaField('additional_text')
-    submit = SubmitField('submit')
+    submit = SubmitField('send')
 
 def email_students(exam, form):
     """Emails students in batches of 900"""
-    sg = sendgrid.SendGridAPIClient(apikey=app.config['SENDGRID_API_KEY'])
+    sg = sendgrid.SendGridAPIClient(api_key=app.config['SENDGRID_API_KEY'])
     test = form.test_email.data
     while True:
         limit = 1 if test else 900
@@ -379,6 +379,14 @@ def favicon():
 @app.route('/<exam:exam>/')
 def exam(exam):
     return render_template('exam.html.j2', exam=exam)
+
+@app.route('/<exam:exam>/help/')
+def help(exam):
+    return render_template('help.html.j2', exam=exam)
+
+@app.route('/<exam:exam>/students/photos/', methods=['GET', 'POST'])
+def new_photos(exam):
+    return render_template('new_photos.html.j2', exam=exam)
 
 @app.route('/<exam:exam>/rooms/<string:name>/')
 def room(exam, name):
