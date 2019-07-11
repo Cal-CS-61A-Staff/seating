@@ -19,7 +19,7 @@ In summary, setting up the seating chart involves these steps:
 1. *Create an exam* (ex. Midterm 1 or Final). Or at least in the future you will be able to.
 For now, contact the slack to have your exam created for you if you did not set up the app.
 This step is already done for you if you can successfully view the seating app.
-2. *Add rooms.* Choose the available rooms from our selection, then customize your room by selecting whether you would like alternate seating or would like to leave the front and back rows empty, etc. If the room does not exist in our current selection, you may import a custom room.
+2. *Add rooms.* Choose your rooms from our selection or import your own custom room.
 3. *Import students.* Customize your student preferences (left seat, front/back, buildings, etc.)
 4. *Assign! Then email!* 
 
@@ -27,17 +27,15 @@ Read further for more details regarding each step.
 
 ### Choosing rooms
 #### Import a room
-Room data is entered from a Google Sheet. Copy a sheet from the room master sheet.
+Room data is entered from a Google Sheet. If you picked your rooms from our selection,
+those rooms are imported from the master room sheet.
 
 Master: https://drive.google.com/open?id=1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s
 
-If it does not exist, you can try looking through the [rooms](https://drive.google.com/drive/u/1/folders/0B7ZiW-W5STesMG50eDgxNlJBZ1E) used in the past years.
-
-On the `Import Rooms` page, you can preview the seating chart for a room by specifying a room name,
-Google Sheets URL, and sheet name. Create the room when you're sure it's ready.
+If the room you want does not exist, you can try looking through the [rooms](https://drive.google.com/drive/u/1/folders/0B7ZiW-W5STesMG50eDgxNlJBZ1E) used in the past years.
 
 #### Create a room
-You can create a room with a Google spreadsheet.
+You can also create and customize the room you want with a Google spreadsheet.
 
 One row of the spreadsheet corresponds to one row. The "Row" and "Seat" columns
 specify the name of a seat. The "X" and "Y" are the coordinates in the seating
@@ -48,6 +46,9 @@ which can give labels to seats such as LEFTY, RIGHTY, AISLE, FRONT, or RESERVED.
 A blank value is interpreted as FALSE. Student preferences are given in terms
 of these labels, and are used to match students to seats. It's helpful while
 creating your room to preview it on the `Import rooms` page.
+
+On the `Import Rooms` page, you can preview the seating chart for a room by specifying a room name,
+Google Sheets URL, and sheet name. Create the room when you're sure it's ready.
 
 If you created your own room sheet because it previously did not exist, we would appreciate
 you adding the sheet to the [master doc](https://drive.google.com/open?id=1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s).
