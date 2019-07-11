@@ -18,6 +18,10 @@ header a {
   border-bottom: 1px solid #e8e8e8;
 }
 
+.checkbox ul {
+  list-style-type: none;
+}
+
 .delist {
   padding-left: 40px;
 }

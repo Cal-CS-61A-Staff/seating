@@ -38,7 +38,7 @@
     <h4>Example</h4>
     <img src="{{ url_for('students_template') }}" alt="Students sheet example" style="max-width:100%;
     max-height:100%; padding-bottom: 50px;">
-    
+
     <p>To import students, create a Google spreadsheet with the columns "Name",
     "Student ID", "Email", and "bCourses ID". The remaining columns are arbitrary attributes
     (ex: LEFTY, RIGHTY, BROKEN) that express student preferences.</p> 
@@ -48,6 +48,11 @@
     without the LEFTY attribute. If a student's LEFTY attribute is blank, i.e. TRUE
     nor FALSE, then they will could be assigned to either a LEFTY or non-LEFTY seat
     as if they don't care.</p>
+
+    <p>Include the attributes that you want. For example, if you want alternate seating, you should include
+    an AlternateSeating column. It is recommended to have a Broken column, which indicates that students should
+    not be matched into known broken desks, and the Reserved column, which leaves the front row empty in case of
+    seating mishaps.</p>
 
     <p>You can add students to the spreadsheet and import them again later. Duplicates
     will be merged.</p>
