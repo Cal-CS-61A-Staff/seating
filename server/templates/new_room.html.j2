@@ -66,11 +66,15 @@
 
   <div class="mdl-tabs__panel" id="choice-panel">
     <div class="mdl-grid">
-      <form action="{{ url_for('mult_new_room', exam=exam) }}" method="post">
-        {{ choose_form.csrf_token }}
-        <div class="checkbox">{{ choose_form.rooms }}</div>
-        <div class="form-buttons">{{ choose_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}</div>
-      </form>
+      <div class="mdl-layout-spacer"></div>
+      <div class="mdl-cell mdl-cell--4-col">
+        <form action="{{ url_for('mult_new_room', exam=exam) }}" method="post">
+          {{ choose_form.csrf_token }}
+          <div class="checkbox">{{ choose_form.rooms }}</div>
+          <div class="form-buttons">{{ choose_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}</div>
+        </form>
+      </div>
+      <div class="mdl-layout-spacer"></div>
     </div>
   </div>
 
