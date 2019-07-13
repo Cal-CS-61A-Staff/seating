@@ -99,15 +99,56 @@ class SeatAssignment(db.Model):
 def slug(display_name):
     return re.sub(r'[^A-Za-z0-9._-]', '', display_name.lower())
 
+# Flask-CLI commands
+# Run with `flask <cmd>`
 @app.cli.command('initdb')
 def init_db():
+    "Initializes the database"
     click.echo('Creating database...')
     db.create_all()
     db.session.commit()
 
 @app.cli.command('dropdb')
-def init_db():
+def drop_db():
+    "Drops all tables"
     doit = click.confirm('Are you sure you want to delete all data?')
     if doit:
         click.echo('Dropping database...')
         db.drop_all()
+
+# For development purposes only
+@app.cli.command('seeddb')
+def seed_db():
+    "Seeds database with data"
+    for seed_exam in seed_exams:    
+        existing = Exam.query.filter_by(offering=seed_exam.offering, name=seed_exam.name).first()   
+        if not existing:    
+            click.echo('Adding seed exam {}...'.format(seed_exam.name)) 
+            db.session.add(seed_exam)
+            db.session.commit()
+
+@app.cli.command('resetdb')
+@click.pass_context
+def reset_db(ctx):
+    "Drops, initializes, then seeds tables with data"
+    ctx.invoke(drop_db)
+    ctx.invoke(init_db)
+    ctx.invoke(seed_db)
+
+seed_exams = [  
+    Exam(   
+        offering=app.config['COURSE'],  
+        name='midterm1', 
+        display_name='Midterm 1',   
+    ),  
+    Exam(   
+        offering=app.config['COURSE'],  
+        name='midterm2', 
+        display_name='Midterm 2',   
+    ),  
+    Exam(   
+        offering=app.config['COURSE'],  
+        name='final', 
+        display_name='Final',   
+    ),  
+]

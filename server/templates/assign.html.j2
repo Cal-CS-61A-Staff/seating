@@ -3,6 +3,10 @@
 
 {% block body %}
 {% call macros.form(form) %}
-  {{ macros.field(form.submit) }}
+<main class="mdl-grid">
+  <div class="form-buttons">
+    {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+  </div>
+</main>
 {% endcall %}
 {% endblock %}

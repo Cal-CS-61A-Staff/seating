@@ -2,13 +2,84 @@
 {% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
-{% call macros.form(form) %}
-  Name: {{ macros.field(form.display_name) }}
-  Google Sheets URL: {{ macros.field(form.sheet_url) }}
-  Sheet Name: {{ macros.field(form.sheet_range) }}
-  {{ macros.field(form.preview_room) }}
-  {{ macros.field(form.create_room) }}
-{% endcall %}
+
+<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+  <div class="mdl-tabs__tab-bar">
+    <a href="#sheet-panel" class="mdl-tabs__tab is-active">Import</a>
+    <a href="#choice-panel" class="mdl-tabs__tab">Choose</a>
+  </div>
+
+  <div class="mdl-tabs__panel is-active" id="sheet-panel">
+    <form action="{{ url_for('new_room', exam=exam) }}" method="post">
+      {{ new_form.hidden_tag() }}
+      <div class="mdl-grid">
+        <div class="mdl-layout-spacer"></div>
+        <div class="mdl-cell mdl-cell--3-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            {{ new_form.display_name(class="mdl-textfield__input", type="Room Name", id="roomname") }}
+            <label class="mdl-textfield__label" for="roomname">Room Name</label>
+          </div>
+          <div class="errormsg">
+            {% if new_form.sheet_url.errors %}
+              {% for error in new_form.sheet_url.errors %}
+                <span>{{ new_form.sheet_url.errors }}</span>
+              {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+        <div class="mdl-cell mdl-cell--3-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            {{ new_form.sheet_url(class="mdl-textfield__input", type="Google Sheet URL", id="gsurl") }}
+            <label class="mdl-textfield__label" for="gsurl">Google Sheet URL</label>
+          </div>
+          <div class="errormsg">
+            {% if new_form.sheet_url.errors %}
+              {% for error in new_form.sheet_url.errors %}
+                <span>{{ new_form.sheet_url.errors }}</span>
+              {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+        <div class="mdl-cell mdl-cell--3-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            {{ new_form.sheet_range(class="mdl-textfield__input", type="Sheet Name", id="sheetname") }}
+            <label class="mdl-textfield__label" for="sheetname">Sheet Name</label>
+          </div>
+          <div class="errormsg">
+            {% if new_form.sheet_range.errors %}
+              {% for error in new_form.sheet_range.errors %}
+                <span>{{ new_form.sheet_range.errors }}</span>
+              {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-buttons">
+          {{ new_form.preview_room(class="mdl-button mdl-js-button") }}
+        </div>
+        <div class="form-buttons">
+          {{ new_form.create_room(class="mdl-button mdl-js-button mdl-button--raised") }}
+        </div>
+        <div class="mdl-layout-spacer"></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="mdl-tabs__panel" id="choice-panel">
+    <div class="mdl-grid">
+      <div class="mdl-layout-spacer"></div>
+      <div class="mdl-cell mdl-cell--4-col">
+        <form action="{{ url_for('mult_new_room', exam=exam) }}" method="post">
+          {{ choose_form.hidden_tag() }}
+          <div class="checkbox">{{ choose_form.rooms }}</div>
+          <div class="form-buttons">{{ choose_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}</div>
+        </form>
+      </div>
+      <div class="mdl-layout-spacer"></div>
+    </div>
+  </div>
+
+</div>
+
 {% if room %}
   {{ macros.room(room, show_attributes=true) }}
 {% endif %}

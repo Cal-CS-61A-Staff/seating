@@ -3,8 +3,61 @@
 
 {% block body %}
 {% call macros.form(form) %}
-  Google Sheets URL: {{ macros.field(form.sheet_url) }}
-  Sheet Name: {{ macros.field(form.sheet_range) }}
-  {{ macros.field(form.submit) }}
+
+<div class="mdl-grid">
+  <div class="mdl-cell mdl-cell--3-col">
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+      {{ form.sheet_url(class="mdl-textfield__input", type="Google Sheet URL", id="gsurl") }}
+      <label class="mdl-textfield__label" for="gsurl">Google Sheet URL</label>
+    </div>
+    <div class="errormsg">
+      {% if form.sheet_url.errors %}
+        {% for error in form.sheet_url.errors %}
+          <span>{{ form.sheet_url.errors }}</span>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="mdl-cell mdl-cell--3-col">
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+      {{ form.sheet_range(class="mdl-textfield__input", type="Sheet Name", id="sheetname") }}
+      <label class="mdl-textfield__label" for="sheetname">Sheet Name</label>
+    </div>
+    <div class="errormsg">
+      {% if form.sheet_range.errors %}
+        {% for error in form.sheet_range.errors %}
+          <span>{{ form.sheet_range.errors }}</span>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="form-buttons">
+    {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+  </div>
+  <div class="mdl-cell mdl-cell--12-col">
+    <h4>Example</h4>
+    <img src="{{ url_for('students_template') }}" alt="Students sheet example" style="max-width:100%;
+    max-height:100%; padding-bottom: 50px;">
+
+    <p>To import students, create a Google spreadsheet with the columns "Name",
+    "Student ID", "Email", and "bCourses ID". The remaining columns are arbitrary attributes
+    (ex: LEFTY, RIGHTY, BROKEN) that express student preferences.</p> 
+
+    <p>For example, if a student has LEFTY=TRUE, they will be assigned a seat with the
+    LEFTY attribute. If a student has LEFTY=FALSE, they will be assigned a seat
+    without the LEFTY attribute. If a student's LEFTY attribute is blank, i.e. TRUE
+    nor FALSE, then they will could be assigned to either a LEFTY or non-LEFTY seat
+    as if they don't care.</p>
+
+    <p>Include the attributes that you want. For example, if you want alternate seating, you should include
+    an AlternateSeating column. It is recommended to have a Broken column, which indicates that students should
+    not be matched into known broken desks, and the Reserved column, which leaves the front row empty in case of
+    seating mishaps.</p>
+
+    <p>You can add students to the spreadsheet and import them again later. Duplicates
+    will be merged.</p>
+  </div>
+</div> 
+
 {% endcall %}
 {% endblock %}

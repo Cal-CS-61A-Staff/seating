@@ -1,4 +1,5 @@
 a {
+  color: #1976D2;
   text-decoration: none;
 }
 
@@ -12,10 +13,48 @@ header a {
   font-weight: inherit;
 }
 
-@media (max-width: 400px) {
-  .hidden-small {
-    display: none;
-  }
+.add-item {
+  /* Dropdown menu: creating new items */
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.checkbox ul {
+  list-style-type: none;
+}
+
+.delist {
+  padding-left: 40px;
+}
+
+.delitem {
+  font-size: 14px;
+  line-height: 2px;
+  min-height: 0px;
+}
+
+.errormsg {
+  color: #ff0000;
+}
+
+.form-buttons {
+  padding: 20px 10px 5px 10px;
+}
+
+.material-icons.help {
+  margin-right: 30px;
+  padding-bottom: 0px;
+}
+
+.material-icons.std {
+  font-size: 30px;
+  margin-left: 30px;
+  padding-bottom: 0px;
+}
+
+.material-icons.std:hover {
+    cursor: pointer;
+    background-color: rgba(0,0,0,.12);
+    border-radius: 5px;
 }
 
 .mdl-layout__content {
@@ -27,6 +66,10 @@ header a {
 }
 
 .rooms li {
+  padding-left: 0;
+}
+
+.roomspg-add-room-button {
   padding-left: 0;
 }
 
@@ -141,6 +184,12 @@ header a {
 
 .sort.desc:after {
   border-top: 5px solid #000;
+}
+
+@media (max-width: 400px) {
+  .hidden-small {
+    display: none;
+  }
 }
 
 @media (max-width: 767px) {

@@ -15,5 +15,11 @@
     {% endfor %}
     </ul>
   </div>
+  {% if current_user.email == config['ADMIN'] %}
+  <button class="mdl-button mdl-js-button roomspg-add-room-button" onclick="location.href = '{{ url_for('new_room', exam=exam) }}';">
+    <i class="material-icons">add</i>
+    Add rooms
+  </button>
+  {% endif %}
 </section>
 {% endblock %}
