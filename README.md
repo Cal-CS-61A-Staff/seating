@@ -16,12 +16,12 @@ It's janky. Many steps involve directly poking the database. The only way to
 correct errors is to manually edit the database, so be careful.
 
 In summary, setting up the seating chart involves these steps:
-1. *Create an exam* (ex. Midterm 1 or Final). Or at least in the future you will be able to.
+1. **Create an exam** (ex. Midterm 1 or Final). Or at least in the future you will be able to.
 For now, contact the slack to have your exam created for you if you did not set up the app.
 This step is already done for you if you can successfully view the seating app.
-2. *Add rooms.* Choose your rooms from our selection or import your own custom room.
-3. *Import students.* Customize your student preferences (left seat, front/back, buildings, etc.)
-4. *Assign! Then email!* 
+2. **Add rooms.** Choose your rooms from our selection or import your own custom room.
+3. **Import students.** Customize your student preferences (left seat, front/back, buildings, etc.)
+4. **Assign! Then email!**
 
 Read further for more details regarding each step.
 
