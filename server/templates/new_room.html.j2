@@ -62,6 +62,9 @@
         <div class="mdl-layout-spacer"></div>
       </div>
     </form>
+    {% if room %}
+      {{ macros.room(room, show_attributes=true) }}
+    {% endif %}
   </div>
 
   <div class="mdl-tabs__panel" id="choice-panel">
@@ -77,10 +80,5 @@
       <div class="mdl-layout-spacer"></div>
     </div>
   </div>
-
 </div>
-
-{% if room %}
-  {{ macros.room(room, show_attributes=true) }}
-{% endif %}
 {% endblock %}

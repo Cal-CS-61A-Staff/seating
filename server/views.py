@@ -186,7 +186,7 @@ def new_room(exam):
             db.session.add(room)
             db.session.commit()
             return redirect(url_for('exam', exam=exam))
-    return render_template('new_room.html.j2', exam=exam, new_form=new_form, choose_form=choose_form)
+    return render_template('new_room.html.j2', exam=exam, new_form=new_form, choose_form=choose_form, room=room)
 
 @app.route('/<exam:exam>/rooms/import/choose/', methods=['GET', 'POST'])
 def mult_new_room(exam):
@@ -201,6 +201,31 @@ def mult_new_room(exam):
             db.session.commit()
         return redirect(url_for('exam', exam=exam))
     return render_template('new_room.html.j2', exam=exam, new_form=new_form, choose_form=choose_form)
+
+@app.route('/<exam:exam>/rooms/update/<room_name>', methods=['POST'])
+def update_room(exam, room_name):
+    # ask if want to delete
+    # if assigned ask if they are sure they want to delete seat assignments
+    room = Room.query.filter_by(exam_id=exam.id, name=room_name).first()
+    if room:
+        room.name = new_room_name
+        db.session.commit()
+    return render_template('exam.html.j2', exam=exam)
+
+@app.route('/<exam:exam>/rooms/delete/<room_name>', methods=['POST'])
+def delete_room(exam, room_name):
+    # ask if want to delete
+    # if assigned ask if they are sure they want to delete seat assignments
+    room = Room.query.filter_by(exam_id=exam.id, name=room_name).first()
+    if room:
+        seats = Seat.query.filter_by(room_id=room.id).all()
+        for seat in seats:
+            if seat.assignment:
+                db.session.delete(seat.assignment)
+            db.session.delete(seat)
+        db.session.delete(room)
+        db.session.commit()
+    return render_template('exam.html.j2', exam=exam)
 
 class StudentForm(FlaskForm):
     sheet_url = StringField('sheet_url', [URL()])
