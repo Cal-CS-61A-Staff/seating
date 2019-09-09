@@ -147,7 +147,7 @@ INSTRUCTIONS:
 		lines = sorted(roster.keys())
 	for line in lines:
 		found = roster.get(line.strip())
-		if found is not None:
+		if found is not None and "photo" in found:
 			path = os.path.join("%s - %s" % ((list(map(lambda section: section['name'], found['sections'])) + [course_name])[0], course_id), format_string.format(**found))
 			sys.stdout.write("> " + path + "\n"); sys.stdout.flush()
 			q.put((server_with_protocol + found['photo'], bcourses_cookie, path))
