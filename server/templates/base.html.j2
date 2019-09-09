@@ -30,11 +30,9 @@
               Rooms <i class="material-icons">expand_more</i>
             </a>
             <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu" for="room-menu">
-              {% if current_user.email == config['ADMIN'] %}
               <a class="mdl-menu__item add-item" href="{{ url_for('new_room', exam=exam) }}"><i class="material-icons">add</i>
                 <span>Add rooms...</span>
               </a>
-              {% endif %}
             {% for room in exam.rooms %}
             <a href="{{ url_for('room', exam=exam, name=room.name) }}">
               <li class="mdl-menu__item">
@@ -44,9 +42,7 @@
             {% endfor %}
             </ul>
             <a class="mdl-navigation__link" href="{{ url_for('students', exam=exam) }}">Students</a>
-            {% if current_user.email == config['ADMIN'] %}
             <a class="mdl-navigation__link" href="{{ url_for('help', exam=exam) }}">Help</a>
-            {% endif %}
           </nav>
         </div>
       </header>

@@ -16,7 +16,6 @@
         <label class="mdl-textfield__label" for="search-expandable">Search</label>
       </div>
     </div>
-    {% if current_user.email == config['ADMIN'] %}
       <div id="tt5" class="material-icons std" onclick="location.href = '{{ url_for('email', exam=exam) }}';" style="float: right;">email</div>
       <div class="mdl-tooltip" data-mdl-for="tt5">Email</div>
 
@@ -31,7 +30,6 @@
 
       <div id="tt1" class="material-icons std" onclick="location.href = '{{ url_for('new_students', exam=exam) }}';" style="float: right;">person_add</div>
       <div class="mdl-tooltip" data-mdl-for="tt1">Add Students</div>
-    {% endif %}
     <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
       <thead>
         <tr>
