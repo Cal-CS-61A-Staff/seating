@@ -68,11 +68,13 @@ class MultRoomForm(FlaskForm):
                                         ('100 GPB', '100 GPB'),
                                         ('A1 Hearst Field Annex', 'A1 Hearst Field Annex'),
                                         ('Hearst Gym', 'Hearst Gym'),
+                                        ('120 Latimer', '120 Latimer'),
                                         ('1 LeConte', '1 LeConte'),
                                         ('2 LeConte', '2 LeConte'),
                                         ('4 LeConte', '4 LeConte'),
-                                        ('120 Latimer', '120 Latimer'),
+                                        ('100 Lewis', '100 Lewis'),
                                         ('245 Li Ka Shing', '245 Li Ka Shing'),
+                                        ('159 Mulford', '159 Mulford'),
                                         ('105 North Gate', '105 North Gate'),
                                         ('1 Pimentel', '1 Pimentel'),
                                         ('RSF FH ', 'RSF FH '),
@@ -203,7 +205,7 @@ def mult_new_room(exam):
         return redirect(url_for('exam', exam=exam))
     return render_template('new_room.html.j2', exam=exam, new_form=new_form, choose_form=choose_form)
 
-@app.route('/<exam:exam>/rooms/update/<room_name>', methods=['POST'])
+@app.route('/<exam:exam>/rooms/update/<room_name>/', methods=['POST'])
 def update_room(exam, room_name):
     # ask if want to delete
     # if assigned ask if they are sure they want to delete seat assignments
@@ -213,7 +215,7 @@ def update_room(exam, room_name):
         db.session.commit()
     return render_template('exam.html.j2', exam=exam)
 
-@app.route('/<exam:exam>/rooms/delete/<room_name>', methods=['POST'])
+@app.route('/<exam:exam>/rooms/delete/<room_name>/', methods=['GET','POST'])
 def delete_room(exam, room_name):
     # ask if want to delete
     # if assigned ask if they are sure they want to delete seat assignments
