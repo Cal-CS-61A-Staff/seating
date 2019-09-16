@@ -175,6 +175,7 @@ def import_room(exam):
     return render_template('new_room.html.j2', exam=exam, new_form=new_form, choose_form=choose_form)
 
 @app.route('/<exam:exam>/rooms/import/new/', methods=['GET', 'POST'])
+@google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def new_room(exam):
     new_form = RoomForm()
     choose_form = MultRoomForm()
