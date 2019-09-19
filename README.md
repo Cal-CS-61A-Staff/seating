@@ -187,7 +187,8 @@ This commands only needs to be run once.
 
 	git remote add dokku dokku@apps.cs61a.org:seating
 	git push dokku master
-
+	
+	dokku run export FLASK_APP = server 
 	dokku run seating flask initdb
 	dokku letsencrypt seating
 
