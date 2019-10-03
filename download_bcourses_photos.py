@@ -73,45 +73,64 @@ ROSTER_FIELDS = ['id', 'first_name', 'last_name', 'student_id', 'email', 'login_
 
 def main(program, *args):
 	program_name = os.path.basename(program)
+	browser_cookie_module_name = 'browser_cookie3' if sys.version_info[0] >= 3 else 'browsercookie'
+	PYTHON = os.path.basename(os.path.splitext(sys.executable)[0])
+	DEFAULT_FORMAT_FIELD = "{id}"
+	cookie_name = '_calcentral_session'
 	argparser = argparse.ArgumentParser(
 		prog=program_name,
 		usage=None,
 		description=None,
 		epilog="""FORMAT fields:
-%s
+{roster_fields}
 
 INSTRUCTIONS:
 
 1. Put all your students' emails into a text file (one email per line), let's call this "Student-Emails.txt".
-2. Go to the roster page on CalCentral.
-3. [Chrome] Copy your '_calcentral_session' cookie's Content from the following page:
-	chrome://settings/cookies/detail?search=cookie&site=junction.berkeley.edu
-	and replace XXXXX with it in the next step (below).
-3. [Any browser] Press F12 to open the debugging tools, go to the Network tab, and then navigate to the course roster.
+2. Navigate to the roster page on CalCentral. Don't quit your browser.
+3. Look at the FORMAT fields above and adjust the file names via passing --format="{default_format_field}" as desired, below.
+4a. [Chrome/Firefox, default profile only]
+	Run the following:
+		{python} -m pip install browser_cookie3
+		{python} "{program_name}" --format="{default_format_field}" < "Student-Emails.txt"
+	If you're lucky, this works. If not, try the alternate method below.
+4b. [Any Browser]
+	Press F12 to open the debugging tools, go to the Network tab, and then navigate to the course roster.
 	Find a GET request to junction.berkeley.edu and copy its "Cookie" field from the "Headers" tab (NOT the "Cookies" tab).
-	You need the cookie string beginning with "_calcentral_session".
-	(I used the "Cookie" field in the request headers, but you can also try the "Set-Cookie" field in the response headers.)
-4. Call this script and pass it all the above information as follows:
-	python "%s" "_calcentral_session=XXXXX" < "Student-Emails.txt"
-""" % ("  " + ", ".join(ROSTER_FIELDS), program_name),
+	You need the cookie string beginning with "{cookie_name}".
+	(You can also instead try the "Set-Cookie" field in the response headers.)
+	Call this script and pass it all the above information as follows:
+		{python} "{program_name}" --format="{default_format_field}" "{cookie_name}=XXXXX" < "Student-Emails.txt"
+""".format(python=PYTHON, cookie_name=cookie_name, roster_fields="  " + ", ".join(ROSTER_FIELDS), default_format_field=DEFAULT_FORMAT_FIELD, program_name=program_name),
 		parents=[],
 		formatter_class=argparse.RawTextHelpFormatter,
 		add_help=True)
 	server = "junction.berkeley.edu"
 	server_with_protocol = "https://" + server
-	cookie_name = '_calcentral_session'
-	argparser.add_argument('--format', required=False, help="the photo file name format string (default: \"%%(default)s\")\n(example: \"%s\")" % ('{id} - {first_name} {last_name} - {student_id} - {email}',), default="{id}")
+	argparser.add_argument('--format', required=False, help="the photo file name format string (default: \"%%(default)s\")\n(example: \"%s\")" % ('{id} - {first_name} {last_name} - {student_id} - {email}',), default=DEFAULT_FORMAT_FIELD)
 	argparser.add_argument('--file', required=False, action='store_true', help="indicates cookie parameter is a file name rather than the cookie string itself")
-	argparser.add_argument('bcourses_cookie', help="bCourses cookie string (default) or cookie file (if --file is specified)\r\ncontaining the %s cookie for %s" % (repr(cookie_name), server))
-	argparser.add_argument('emails', metavar='emails.txt', nargs='?', type=argparse.FileType('r'), default=sys.stdin, help="name of text file containing student emails, 1 per line (default: stdin)")
+	argparser.add_argument('bcourses_cookie', nargs='?', help="bCourses cookie string (default) or cookie file (if --file is specified)\r\ncontaining the %s cookie for %s" % (repr(cookie_name), server))
 
 	if 'COLUMNS' not in os.environ:
 		os.environ['COLUMNS'] = str(128)
 	parsed_args = argparser.parse_args(args)
 	format_string = parsed_args.format
 	bcourses_cookie = parsed_args.bcourses_cookie
-	emails = parsed_args.emails
-	if parsed_args.file:
+	emails = sys.stdin
+	if bcourses_cookie is None:
+		sys.stderr.write("Automatically extracting %r cookies from the browser..." % (server,)); sys.stderr.flush()
+		try:
+			try: browser_cookie_module = __import__(browser_cookie_module_name)
+			except ImportError: browser_cookie_module = None
+			if browser_cookie_module is None:
+				msg = "failed to import {module}; please install it: {python} -m pip install {package}".format(python=PYTHON, module=browser_cookie_module_name, package=browser_cookie_module_name)
+				raise ImportError(msg)
+			bcourses_cookie = "; ".join(map(lambda cookie: "%s=%s" % (cookie.name, cookie.value), browser_cookie_module.load(server) if browser_cookie_module_name == 'browser_cookie3' else filter(lambda cookie: cookie.domain == server, browser_cookie_module.load())))
+		finally:
+			if bcourses_cookie: sys.stderr.write(" success! %s" % (bcourses_cookie,))
+			else: sys.stderr.write(" failed!")
+			sys.stderr.write("\n")
+	elif parsed_args.file:
 		with open(bcourses_cookie, 'r') as f:
 			bcourses_cookie = "; ".join(find_cookies_in_cookies_txt(server, f.read()))
 	else:
@@ -127,7 +146,7 @@ INSTRUCTIONS:
 	course_info = read_http_response_as_json(urlopen(server_with_protocol + "/api/academics/rosters/canvas/embedded", cookie=bcourses_cookie))
 	canvas_course = course_info.get('canvas_course')
 	if canvas_course is None:
-		msg = "failed to retrieve course information; please verify the %s cookie is correctly specified here: %s" % (repr(cookie_name), repr(bcourses_cookie))
+		msg = "failed to retrieve course information; please verify the %s cookie is correct: %s" % (repr(cookie_name), repr(bcourses_cookie))
 		raise ValueError(msg)
 	course_id = canvas_course['id']
 	course_name = canvas_course['name']
