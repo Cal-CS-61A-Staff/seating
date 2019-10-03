@@ -87,7 +87,7 @@ def main(program, *args):
 INSTRUCTIONS:
 
 1. Put all your students' emails into a text file (one email per line), let's call this "Student-Emails.txt".
-2. Navigate to the roster page on CalCentral. Don't quit your browser.
+2. Navigate to the roster page on bCourses. Don't quit your browser.
 3. Look at the FORMAT fields above and adjust the file names via passing --format="{default_format_field}" as desired, below.
 4a. [Chrome/Firefox, default profile only]
 	Run the following:
