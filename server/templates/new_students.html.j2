@@ -1,4 +1,4 @@
-{% extends 'base.html.j2' %}
+{% extends 'exam_base.html.j2' %}
 {% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
@@ -41,7 +41,7 @@
 
     <p>To import students, create a Google spreadsheet with the columns "Name",
     "Student ID", "Email", and "bCourses ID". The remaining columns are arbitrary attributes
-    (ex: LEFTY, RIGHTY, BROKEN) that express student preferences.</p> 
+    (ex: LEFTY, RIGHTY, BROKEN) that express student preferences.</p>
 
     <p>For example, if a student has LEFTY=TRUE, they will be assigned a seat with the
     LEFTY attribute. If a student has LEFTY=FALSE, they will be assigned a seat
@@ -57,7 +57,7 @@
     <p>You can add students to the spreadsheet and import them again later. Duplicates
     will be merged.</p>
   </div>
-</div> 
+</div>
 
 {% endcall %}
 {% endblock %}

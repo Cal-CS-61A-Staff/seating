@@ -1,0 +1,19 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+<section class="rooms mdl-grid">
+  <div class="mdl-cell mdl-cell--12-col">
+    <h4>Exams</h4>
+    <ul class="mdl-list">
+    {% for exam in exams %}
+      <li class="mdl-list__item">
+        <a class="mdl-list__item-primary-content" href="{{ url_for('exam', exam=exam) }}">
+          {{ exam.display_name }}
+        </a>
+      </li>
+    {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

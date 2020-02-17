@@ -150,4 +150,9 @@ seed_exams = [
         name='final',
         display_name='Final',
     ),
+    Exam(
+        offering="cal/eecs16a/sp20",
+        name='test',
+        display_name='Test',
+    ),
 ]

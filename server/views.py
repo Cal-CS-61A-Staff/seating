@@ -4,7 +4,6 @@ import re
 
 import requests
 import sendgrid
-from apiclient import discovery, errors
 from flask import abort, redirect, render_template, request, send_file, session, url_for
 from flask_login import current_user
 from flask_wtf import FlaskForm
@@ -464,7 +463,8 @@ def email(exam):
 
 @app.route('/')
 def index():
-    return redirect('/' + app.config['COURSE'] + '/' + app.config['EXAM'])
+    exams = Exam.query.filter(Exam.offering=="cal/cs61a/sp20")
+    return render_template("select_exam.j2", title="CS 61A Exam Seating", exams=exams)
 
 
 @app.route('/favicon.ico')

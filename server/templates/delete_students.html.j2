@@ -1,4 +1,4 @@
-{% extends 'base.html.j2' %}
+{% extends 'exam_base.html.j2' %}
 {% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
@@ -15,7 +15,7 @@
     </div>
     {% endcall %}
   </div>
-  <div class="mdl-cell mdl-cell--4-col delist"> 
+  <div class="mdl-cell mdl-cell--4-col delist">
     <h5>Deleted:</h5>
     <ul class="mdl-list">
       {% for student in deleted|sort %}

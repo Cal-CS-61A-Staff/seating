@@ -29,8 +29,8 @@ DOMAIN = os.getenv('DOMAIN', 'https://seating.test.org')
 PHOTO_DIRECTORY = os.getenv('PHOTO_DIRECTORY')
 
 # Used for redirects and auth: <domain>/COURSE/EXAM
-COURSE = os.getenv('COURSE', 'cal/test/fa18')
-EXAM = os.getenv('EXAM')
+COURSE = os.getenv('COURSE', 'cal/cs61a/sp20')
+EXAM = os.getenv('EXAM', "midterm1")
 
 TEST_LOGIN = os.getenv('TEST_LOGIN')
 
