@@ -11,7 +11,6 @@ from sqlalchemy.orm import backref
 from server import app
 
 db = SQLAlchemy(app=app)
-
 class StringSet(types.TypeDecorator):
     impl = types.Text
 
@@ -120,10 +119,10 @@ def drop_db():
 @app.cli.command('seeddb')
 def seed_db():
     "Seeds database with data"
-    for seed_exam in seed_exams:    
-        existing = Exam.query.filter_by(offering=seed_exam.offering, name=seed_exam.name).first()   
-        if not existing:    
-            click.echo('Adding seed exam {}...'.format(seed_exam.name)) 
+    for seed_exam in seed_exams:
+        existing = Exam.query.filter_by(offering=seed_exam.offering, name=seed_exam.name).first()
+        if not existing:
+            click.echo('Adding seed exam {}...'.format(seed_exam.name))
             db.session.add(seed_exam)
             db.session.commit()
 
@@ -135,20 +134,20 @@ def reset_db(ctx):
     ctx.invoke(init_db)
     ctx.invoke(seed_db)
 
-seed_exams = [  
-    Exam(   
-        offering=app.config['COURSE'],  
-        name='midterm1', 
-        display_name='Midterm 1',   
-    ),  
-    Exam(   
-        offering=app.config['COURSE'],  
-        name='midterm2', 
-        display_name='Midterm 2',   
-    ),  
-    Exam(   
-        offering=app.config['COURSE'],  
-        name='final', 
-        display_name='Final',   
-    ),  
+seed_exams = [
+    Exam(
+        offering=app.config['COURSE'],
+        name='midterm1',
+        display_name='Midterm 1',
+    ),
+    Exam(
+        offering=app.config['COURSE'],
+        name='midterm2',
+        display_name='Midterm 2',
+    ),
+    Exam(
+        offering=app.config['COURSE'],
+        name='final',
+        display_name='Final',
+    ),
 ]

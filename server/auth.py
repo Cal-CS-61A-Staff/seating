@@ -1,11 +1,10 @@
 from flask import redirect, request, session, url_for
-from flask_login import LoginManager, login_required, login_user, logout_user
-from flask_oauthlib.client import OAuth, OAuthException
-from oauth2client.contrib.flask_util import UserOAuth2
+from flask_login import LoginManager, login_user, logout_user
+from flask_oauthlib.client import OAuth
 from werkzeug import security
 
 from server import app
-from server.models import db, User, Student, SeatAssignment
+from server.models import SeatAssignment, Student, User, db
 
 login_manager = LoginManager(app=app)
 
@@ -29,8 +28,6 @@ ok_oauth = oauth.remote_app(
 @ok_oauth.tokengetter
 def get_access_token(token=None):
     return session.get('ok_token')
-
-google_oauth = UserOAuth2(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -73,10 +70,10 @@ def authorized():
                 return redirect('/seat/{}'.format(seat.seat_id))
         elif p['role'] != 'lab assistant':
             is_staff = True
-            
+
     if not is_staff:
         return 'Access denied: {}'.format(request.args.get('error', 'unknown error'))
-        
+
     user = User.query.filter_by(email=email).one_or_none()
     if not user:
         user = User(email=email)
