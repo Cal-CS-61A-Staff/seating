@@ -9,3 +9,4 @@ flask-wtf
 natsort
 pymysql
 sendgrid
+Werkzeug~=0.16.1
