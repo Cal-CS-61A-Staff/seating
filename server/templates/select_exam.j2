@@ -15,5 +15,9 @@
     {% endfor %}
     </ul>
   </div>
+  <button class="mdl-button mdl-js-button roomspg-add-room-button" onclick="location.href = '{{ url_for('new_exam') }}';">
+    <i class="material-icons">add</i>
+    Add exam
+  </button>
 </section>
 {% endblock %}

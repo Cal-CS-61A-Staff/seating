@@ -1,0 +1,40 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+{% call macros.form(form) %}
+
+<div class="mdl-grid">
+  <div class="mdl-cell mdl-cell--3-col">
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+      {{ form.name(class="mdl-textfield__input", type="Exam Name", id="name") }}
+      <label class="mdl-textfield__label" for="gsurl">Exam Name</label>
+    </div>
+    <div class="errormsg">
+      {% if form.name.errors %}
+        {% for error in form.name.errors %}
+          <span>{{ form.name.errors }}</span>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="mdl-cell mdl-cell--3-col">
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+      {{ form.display_name(class="mdl-textfield__input", type="Exam Display Name", id="displayname") }}
+      <label class="mdl-textfield__label" for="sheetname">Exam Display Name</label>
+    </div>
+    <div class="errormsg">
+      {% if form.display_name.errors %}
+        {% for error in form.display_name.errors %}
+          <span>{{ form.display_name.errors }}</span>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="form-buttons">
+    {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+  </div>
+</div>
+
+{% endcall %}
+{% endblock %}
