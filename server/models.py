@@ -35,6 +35,7 @@ class Exam(db.Model):
     offering = db.Column(db.String(255), nullable=False, index=True)
     name = db.Column(db.String(255), nullable=False, index=True)
     display_name = db.Column(db.String(255), nullable=False)
+    is_active = db.Column(db.BOOLEAN, nullable=False)
 
 class Room(db.Model):
     __tablename__ = 'rooms'
@@ -126,6 +127,7 @@ def seed_db():
             db.session.add(seed_exam)
             db.session.commit()
 
+
 @app.cli.command('resetdb')
 @click.pass_context
 def reset_db(ctx):
@@ -139,20 +141,24 @@ seed_exams = [
         offering="cal/cs61a/sp20",
         name='midterm1',
         display_name='Midterm 1',
+        is_active=False,
     ),
     Exam(
         offering="cal/cs61a/sp20",
         name='midterm2',
         display_name='Midterm 2',
+        is_active=False,
     ),
     Exam(
         offering="cal/cs61a/sp20",
         name='final',
         display_name='Final',
+        is_active=False,
     ),
     Exam(
         offering="cal/eecs16a/sp20",
         name='test',
         display_name='Test',
+        is_active=False,
     ),
 ]

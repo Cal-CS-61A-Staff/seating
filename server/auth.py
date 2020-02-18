@@ -4,7 +4,7 @@ from flask_oauthlib.client import OAuth
 from werkzeug import security
 
 from server import app
-from server.models import SeatAssignment, Student, User, db
+from server.models import SeatAssignment, Student, User, db, Exam
 from server.views import get_endpoint
 
 AUTHORIZED_ROLES = ["instructor", "staff", "grader"]
@@ -61,9 +61,10 @@ def authorized():
         if p['course']['offering'] != get_endpoint():
             continue
         if p['role'] == 'student':
-            student = Student.query.filter_by(email=email).join(Student.exam) \
-                .filter_by(offering=get_endpoint(),
-                           name=app.config['EXAM']).one_or_none()
+            active_exam = Exam.query.filter_by(is_active=True).one_or_none()
+            if active_exam is None:
+                return "No exams are currently active."
+            student = Student.query.filter_by(email=email, exam=active_exam).one_or_none()
             if not student:
                 return 'Your email is not registered. Please contact the course staff.'
             if student:

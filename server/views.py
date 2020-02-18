@@ -511,7 +511,7 @@ def offering(offering):
     if offering not in current_user.offerings:
         abort(401)
     exams = Exam.query.filter(Exam.offering==offering)
-    return render_template("select_exam.j2", title="{} Exam Seating".format(format_coursecode(get_course())), exams=exams, offering=offering)
+    return render_template("offering.j2", title="{} Exam Seating".format(format_coursecode(get_course())), exams=exams, offering=offering)
 
 
 @app.route('/favicon.ico')
@@ -538,7 +538,8 @@ class ExamForm(FlaskForm):
 def new_exam(offering):
     form = ExamForm()
     if form.validate_on_submit():
-        exam = Exam(offering=offering, name=form.name.data, display_name=form.display_name.data)
+        Exam.query.filter_by(offering=offering).update({"is_active": False})
+        exam = Exam(offering=offering, name=form.name.data, display_name=form.display_name.data, is_active=True)
         db.session.add(exam)
         db.session.commit()
 
@@ -553,6 +554,16 @@ def delete_exam(exam):
 
     return redirect(url_for("offering", offering=exam.offering))
 
+
+@app.route("/<exam:exam>/toggle/", methods=["GET", "POST"])
+def toggle_exam(exam):
+    if exam.is_active:
+        exam.is_active = False
+    else:
+        Exam.query.filter_by(offering=exam.offering).update({"is_active": False})
+        exam.is_active = True
+    db.session.commit()
+    return redirect(url_for("offering", offering=exam.offering))
 
 @app.route('/<exam:exam>/')
 def exam(exam):

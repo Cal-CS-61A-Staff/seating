@@ -8,6 +8,7 @@
     <ul class="mdl-list">
     {% for exam in exams %}
       <li class="mdl-list__item">
+        <div class="material-icons std" onclick="location.href = '{{ url_for('toggle_exam', exam=exam) }}';"  style="margin-left: 0">{{ "star" if exam.is_active else "star_border" }}</div>
         <a class="mdl-list__item-primary-content" href="{{ url_for('exam', exam=exam) }}">
           {{ exam.display_name }}
         </a>
