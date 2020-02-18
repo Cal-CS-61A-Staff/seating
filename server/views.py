@@ -594,6 +594,7 @@ def new_photos(exam):
                 continue
             secure_name = secure_filename(name)
             path = os.path.join(app.config["PHOTO_DIRECTORY"], exam.offering, secure_name)
+            print(path)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "wb+") as g:
                 g.write(zf.open(name, "r").read())
