@@ -17,6 +17,32 @@ from server.models import Exam, Room, Seat, SeatAssignment, Student, db, slug
 
 name_part = '[^/]+'
 
+DOMAIN_COURSES = {}
+COURSE_ENDPOINTS = {}
+
+
+def get_course(domain=None):
+    if not domain:
+        domain = request.headers["HOST"]
+    if domain not in DOMAIN_COURSES:
+        DOMAIN_COURSES[domain] = requests.post("https://auth.apps.cs61a.org/domains/get_course", json={
+            "domain": domain
+        }).json()
+    return DOMAIN_COURSES[domain]
+
+
+def get_endpoint(course=None):
+    if not course:
+        course = get_course()
+    if course not in COURSE_ENDPOINTS:
+        COURSE_ENDPOINTS[course] = requests.post(f"https://auth.apps.cs61a.org/api/{course}/get_endpoint").json()
+    return COURSE_ENDPOINTS[course]
+
+
+def format_coursecode(course):
+    m = re.match(r"([a-z]+)([0-9]+[a-z]?)", course)
+    return m and (m.group(1) + " " + m.group(2)).upper()
+
 
 class Redirect(HTTPException):
     code = 302
@@ -32,12 +58,10 @@ class ExamConverter(BaseConverter):
     regex = name_part + '/' + name_part + '/' + name_part + '/' + name_part
 
     def to_python(self, value):
-        if not current_user.is_authenticated:
+        offering, name = value.rsplit('/', 1)
+        if not current_user.is_authenticated or offering not in current_user.offerings:
             session['after_login'] = request.url
             raise Redirect(url_for('login'))
-        offering, name = value.rsplit('/', 1)
-        if offering not in current_user.offerings:
-            abort(404)
         exam = Exam.query.filter_by(offering=offering, name=name).first_or_404()
         return exam
 
@@ -45,7 +69,23 @@ class ExamConverter(BaseConverter):
         return exam.offering + '/' + exam.name
 
 
+class OfferingConverter(BaseConverter):
+    regex = name_part + '/' + name_part + '/' + name_part
+
+    def to_python(self, offering):
+        if offering != get_endpoint():
+            abort(404)
+        if not current_user.is_authenticated or offering not in current_user.offerings:
+            session['after_login'] = request.url
+            raise Redirect(url_for('login'))
+        return offering
+
+    def to_url(self, offering):
+        return offering
+
+
 app.url_map.converters['exam'] = ExamConverter
+app.url_map.converters['offering'] = OfferingConverter
 
 
 class ValidationError(Exception):
@@ -242,9 +282,9 @@ class StudentForm(FlaskForm):
 def validate_students(exam, form):
     headers, rows = read_csv(form.sheet_url.data, form.sheet_range.data)
     if 'email' not in headers:
-        raise Validation('Missing "email" column')
+        raise ValidationError('Missing "email" column')
     elif 'name' not in headers:
-        raise Validation('Missing "name" column')
+        raise ValidationError('Missing "name" column')
     students = []
     for row in rows:
         email = row.pop('email')
@@ -435,7 +475,7 @@ You can view this seat's position on the seating chart at:
 {}/seat/-seatid-/
 
 {}
-'''.format(exam.display_name, app.config['DOMAIN'], form.additional_text.data)
+'''.format(exam.display_name, request.url_root, form.additional_text.data)
                 },
             ],
         }
@@ -461,10 +501,17 @@ def email(exam):
     return render_template('email.html.j2', exam=exam, form=form)
 
 
-@app.route('/')
+@app.route("/")
 def index():
-    exams = Exam.query.filter(Exam.offering=="cal/cs61a/sp20")
-    return render_template("select_exam.j2", title="CS 61A Exam Seating", exams=exams)
+    return redirect(url_for("offering", offering=get_endpoint()))
+
+
+@app.route('/<offering:offering>/')
+def offering(offering):
+    if offering not in current_user.offerings:
+        abort(401)
+    exams = Exam.query.filter(Exam.offering==offering)
+    return render_template("select_exam.j2", title="{} Exam Seating".format(format_coursecode(get_course())), exams=exams, offering=offering)
 
 
 @app.route('/favicon.ico')
@@ -487,16 +534,16 @@ class ExamForm(FlaskForm):
             raise ValidationError('Exam name must be all lowercase with no spaces')
 
 
-@app.route("/new/", methods=["GET", "POST"])
-def new_exam():
+@app.route("/<offering:offering>/new/", methods=["GET", "POST"])
+def new_exam(offering):
     form = ExamForm()
     if form.validate_on_submit():
-        exam = Exam(offering=app.config["COURSE"], name=form.name.data, display_name=form.display_name.data)
+        exam = Exam(offering=offering, name=form.name.data, display_name=form.display_name.data)
         db.session.add(exam)
         db.session.commit()
 
-        return redirect(url_for("index"))
-    return render_template("new_exam.html.j2", title="CS 61A Exam Seating", form=form)
+        return redirect(url_for("offering", offering=offering))
+    return render_template("new_exam.html.j2", title="{} Exam Seating".format(format_coursecode(get_course())), form=form)
 
 
 @app.route("/<exam:exam>/delete/", methods=["GET", "POST"])
@@ -504,7 +551,7 @@ def delete_exam(exam):
     db.session.delete(exam)
     db.session.commit()
 
-    return redirect(url_for("index"))
+    return redirect(url_for("offering", offering=exam.offering))
 
 
 @app.route('/<exam:exam>/')

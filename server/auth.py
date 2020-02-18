@@ -5,6 +5,9 @@ from werkzeug import security
 
 from server import app
 from server.models import SeatAssignment, Student, User, db
+from server.views import get_endpoint
+
+AUTHORIZED_ROLES = ["instructor", "staff", "grader"]
 
 login_manager = LoginManager(app=app)
 
@@ -55,11 +58,11 @@ def authorized():
     for p in info['participations']:
         if is_staff:
             break
-        if p['course']['offering'] != app.config['COURSE']:
+        if p['course']['offering'] != get_endpoint():
             continue
         if p['role'] == 'student':
             student = Student.query.filter_by(email=email).join(Student.exam) \
-                .filter_by(offering=app.config['COURSE'],
+                .filter_by(offering=get_endpoint(),
                            name=app.config['EXAM']).one_or_none()
             if not student:
                 return 'Your email is not registered. Please contact the course staff.'
@@ -68,7 +71,7 @@ def authorized():
                 if not seat:
                     return 'No seat found. Please contact the course staff.'
                 return redirect('/seat/{}'.format(seat.seat_id))
-        elif p['role'] != 'lab assistant':
+        elif p['role'] in AUTHORIZED_ROLES:
             is_staff = True
 
     if not is_staff:
@@ -77,9 +80,7 @@ def authorized():
     user = User.query.filter_by(email=email).one_or_none()
     if not user:
         user = User(email=email)
-    user.offerings = [p['course']['offering'] for p in info['participations']]
-    if email == app.config['TEST_LOGIN']:
-        user.offerings.append(app.config['COURSE'])
+    user.offerings = [p['course']['offering'] for p in info['participations'] if p["role"] in AUTHORIZED_ROLES]
 
     db.session.add(user)
     db.session.commit()
@@ -87,6 +88,7 @@ def authorized():
     login_user(user, remember=True)
     after_login = session.pop('after_login', None) or url_for('index')
     return redirect(after_login)
+
 
 @app.route('/logout/')
 def logout():

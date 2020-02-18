@@ -136,17 +136,17 @@ def reset_db(ctx):
 
 seed_exams = [
     Exam(
-        offering=app.config['COURSE'],
+        offering="cal/cs61a/sp20",
         name='midterm1',
         display_name='Midterm 1',
     ),
     Exam(
-        offering=app.config['COURSE'],
+        offering="cal/cs61a/sp20",
         name='midterm2',
         display_name='Midterm 2',
     ),
     Exam(
-        offering=app.config['COURSE'],
+        offering="cal/cs61a/sp20",
         name='final',
         display_name='Final',
     ),
