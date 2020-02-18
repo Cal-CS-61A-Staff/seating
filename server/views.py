@@ -499,6 +499,14 @@ def new_exam():
     return render_template("new_exam.html.j2", title="CS 61A Exam Seating", form=form)
 
 
+@app.route("/<exam:exam>/delete/", methods=["GET", "POST"])
+def delete_exam(exam):
+    db.session.delete(exam)
+    db.session.commit()
+
+    return redirect(url_for("index"))
+
+
 @app.route('/<exam:exam>/')
 def exam(exam):
     return render_template('exam.html.j2', exam=exam)
