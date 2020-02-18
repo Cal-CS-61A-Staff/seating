@@ -35,7 +35,7 @@ def get_endpoint(course=None):
     if not course:
         course = get_course()
     if course not in COURSE_ENDPOINTS:
-        COURSE_ENDPOINTS[course] = requests.post(f"https://auth.apps.cs61a.org/api/{course}/get_endpoint").json()
+        COURSE_ENDPOINTS[course] = requests.post("https://auth.apps.cs61a.org/api/{}/get_endpoint".format(course)).json()
     return COURSE_ENDPOINTS[course]
 
 
