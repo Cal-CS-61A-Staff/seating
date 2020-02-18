@@ -1,6 +1,8 @@
 import itertools
+import os
 import random
 import re
+import zipfile
 
 import requests
 import sendgrid
@@ -9,7 +11,8 @@ from flask_login import current_user
 from flask_wtf import FlaskForm
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
-from wtforms import SelectMultipleField, StringField, SubmitField, TextAreaField, widgets
+from werkzeug.utils import secure_filename
+from wtforms import SelectMultipleField, StringField, SubmitField, TextAreaField, widgets, FileField
 from wtforms.validators import Email, InputRequired, URL
 
 from server import app
@@ -575,9 +578,26 @@ def help(exam):
     return render_template('help.html.j2', exam=exam)
 
 
+class PhotosForm(FlaskForm):
+    file = FileField("file", [InputRequired()])
+    submit = SubmitField('Submit')
+
+
 @app.route('/<exam:exam>/students/photos/', methods=['GET', 'POST'])
 def new_photos(exam):
-    return render_template('new_photos.html.j2', exam=exam)
+    form = PhotosForm()
+    if form.validate_on_submit():
+        f = form.file.data
+        zf = zipfile.ZipFile(f, mode="r")
+        for name in zf.namelist():
+            if name.endswith("/"):
+                continue
+            secure_name = secure_filename(name)
+            path = os.path.join(app.config["PHOTO_DIRECTORY"], exam.offering, secure_name)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "wb+") as g:
+                g.write(zf.open(name, "r").read())
+    return render_template('new_photos.html.j2', exam=exam, form=form)
 
 
 @app.route('/<exam:exam>/rooms/<string:name>/')
@@ -603,8 +623,7 @@ def student(exam, email):
 @app.route('/<exam:exam>/students/<string:email>/photo')
 def photo(exam, email):
     student = Student.query.filter_by(exam_id=exam.id, email=email).first_or_404()
-    photo_path = '{}/{}/{}.jpeg'.format(app.config['PHOTO_DIRECTORY'],
-                                        exam.offering, student.bcourses_id)
+    photo_path = os.path.join(app.config['PHOTO_DIRECTORY'], exam.offering, student.bcourses_id) + ".jpeg"
     return send_file(photo_path, mimetype='image/jpeg')
 
 

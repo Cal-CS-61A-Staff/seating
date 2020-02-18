@@ -24,9 +24,9 @@ AUTH_CLIENT_SECRET = os.getenv("AUTH_CLIENT_SECRET")
 
 # Email setup. Domain environment is for link in email.
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
-DOMAIN = os.getenv('DOMAIN', 'https://seating.test.org')
 
-PHOTO_DIRECTORY = os.getenv('PHOTO_DIRECTORY')
+# Must be an absolute path
+PHOTO_DIRECTORY = os.getenv('PHOTO_DIRECTORY', os.path.join(BASE_DIR, "storage"))
 
 TEST_LOGIN = os.getenv('TEST_LOGIN')
 
