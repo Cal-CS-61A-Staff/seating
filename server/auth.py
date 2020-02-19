@@ -1,11 +1,13 @@
 from flask import redirect, request, session, url_for
-from flask_login import LoginManager, login_required, login_user, logout_user
-from flask_oauthlib.client import OAuth, OAuthException
-from oauth2client.contrib.flask_util import UserOAuth2
+from flask_login import LoginManager, login_user, logout_user
+from flask_oauthlib.client import OAuth
 from werkzeug import security
 
 from server import app
-from server.models import db, User, Student, SeatAssignment
+from server.models import SeatAssignment, Student, User, db, Exam
+from server.views import get_endpoint
+
+AUTHORIZED_ROLES = ["instructor", "staff", "grader"]
 
 login_manager = LoginManager(app=app)
 
@@ -29,8 +31,6 @@ ok_oauth = oauth.remote_app(
 @ok_oauth.tokengetter
 def get_access_token(token=None):
     return session.get('ok_token')
-
-google_oauth = UserOAuth2(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -58,12 +58,13 @@ def authorized():
     for p in info['participations']:
         if is_staff:
             break
-        if p['course']['offering'] != app.config['COURSE']:
+        if p['course']['offering'] != get_endpoint():
             continue
         if p['role'] == 'student':
-            student = Student.query.filter_by(email=email).join(Student.exam) \
-                .filter_by(offering=app.config['COURSE'],
-                           name=app.config['EXAM']).one_or_none()
+            active_exam = Exam.query.filter_by(is_active=True).one_or_none()
+            if active_exam is None:
+                return "No exams are currently active."
+            student = Student.query.filter_by(email=email, exam=active_exam).one_or_none()
             if not student:
                 return 'Your email is not registered. Please contact the course staff.'
             if student:
@@ -71,18 +72,16 @@ def authorized():
                 if not seat:
                     return 'No seat found. Please contact the course staff.'
                 return redirect('/seat/{}'.format(seat.seat_id))
-        elif p['role'] != 'lab assistant':
+        elif p['role'] in AUTHORIZED_ROLES:
             is_staff = True
-            
+
     if not is_staff:
         return 'Access denied: {}'.format(request.args.get('error', 'unknown error'))
-        
+
     user = User.query.filter_by(email=email).one_or_none()
     if not user:
         user = User(email=email)
-    user.offerings = [p['course']['offering'] for p in info['participations']]
-    if email == app.config['TEST_LOGIN']:
-        user.offerings.append(app.config['COURSE'])
+    user.offerings = [p['course']['offering'] for p in info['participations'] if p["role"] in AUTHORIZED_ROLES]
 
     db.session.add(user)
     db.session.commit()
@@ -90,6 +89,7 @@ def authorized():
     login_user(user, remember=True)
     after_login = session.pop('after_login', None) or url_for('index')
     return redirect(after_login)
+
 
 @app.route('/logout/')
 def logout():

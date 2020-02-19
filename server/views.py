@@ -2,56 +2,103 @@ import itertools
 import os
 import random
 import re
-import sys
+import zipfile
 
-from apiclient import discovery, errors
+import requests
+import sendgrid
 from flask import abort, redirect, render_template, request, send_file, session, url_for
 from flask_login import current_user
 from flask_wtf import FlaskForm
-import sendgrid
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
-from wtforms import HiddenField, SelectMultipleField, StringField, SubmitField, TextAreaField, widgets
+from werkzeug.utils import secure_filename
+from wtforms import SelectMultipleField, StringField, SubmitField, TextAreaField, widgets, FileField
 from wtforms.validators import Email, InputRequired, URL
 
 from server import app
-from server.auth import google_oauth, ok_oauth
-from server.models import db, Exam, Room, Seat, SeatAssignment, Student, slug
+from server.models import Exam, Room, Seat, SeatAssignment, Student, db, slug
 
 name_part = '[^/]+'
 
+DOMAIN_COURSES = {}
+COURSE_ENDPOINTS = {}
+
+
+def get_course(domain=None):
+    if not domain:
+        domain = request.headers["HOST"]
+    if domain not in DOMAIN_COURSES:
+        DOMAIN_COURSES[domain] = requests.post("https://auth.apps.cs61a.org/domains/get_course", json={
+            "domain": domain
+        }).json()
+    return DOMAIN_COURSES[domain]
+
+
+def get_endpoint(course=None):
+    if not course:
+        course = get_course()
+    if course not in COURSE_ENDPOINTS:
+        COURSE_ENDPOINTS[course] = requests.post("https://auth.apps.cs61a.org/api/{}/get_endpoint".format(course)).json()
+    return COURSE_ENDPOINTS[course]
+
+
+def format_coursecode(course):
+    m = re.match(r"([a-z]+)([0-9]+[a-z]?)", course)
+    return m and (m.group(1) + " " + m.group(2)).upper()
+
+
 class Redirect(HTTPException):
     code = 302
+
     def __init__(self, url):
         self.url = url
 
     def get_response(self, environ=None):
         return redirect(self.url)
 
+
 class ExamConverter(BaseConverter):
     regex = name_part + '/' + name_part + '/' + name_part + '/' + name_part
 
     def to_python(self, value):
-        if not current_user.is_authenticated:
+        offering, name = value.rsplit('/', 1)
+        if not current_user.is_authenticated or offering not in current_user.offerings:
             session['after_login'] = request.url
             raise Redirect(url_for('login'))
-        offering, name = value.rsplit('/', 1)
-        if offering not in current_user.offerings:
-            abort(404)
         exam = Exam.query.filter_by(offering=offering, name=name).first_or_404()
         return exam
 
     def to_url(self, exam):
         return exam.offering + '/' + exam.name
 
+
+class OfferingConverter(BaseConverter):
+    regex = name_part + '/' + name_part + '/' + name_part
+
+    def to_python(self, offering):
+        if offering != get_endpoint():
+            abort(404)
+        if not current_user.is_authenticated or offering not in current_user.offerings:
+            session['after_login'] = request.url
+            raise Redirect(url_for('login'))
+        return offering
+
+    def to_url(self, offering):
+        return offering
+
+
 app.url_map.converters['exam'] = ExamConverter
+app.url_map.converters['offering'] = OfferingConverter
+
 
 class ValidationError(Exception):
     pass
 
+
 class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
+
 
 class RoomForm(FlaskForm):
     display_name = StringField('display_name', [InputRequired()])
@@ -60,11 +107,12 @@ class RoomForm(FlaskForm):
     preview_room = SubmitField('preview')
     create_room = SubmitField('create')
 
+
 class MultRoomForm(FlaskForm):
-    rooms = MultiCheckboxField(choices=[('277 Cory', '277 Cory'), 
-                                        ('145 Dwinelle', '145 Dwinelle'), 
+    rooms = MultiCheckboxField(choices=[('277 Cory', '277 Cory'),
+                                        ('145 Dwinelle', '145 Dwinelle'),
                                         ('155 Dwinelle', '155 Dwinelle'),
-                                        ('10 Evans', '10 Evans'), 
+                                        ('10 Evans', '10 Evans'),
                                         ('100 GPB', '100 GPB'),
                                         ('A1 Hearst Field Annex', 'A1 Hearst Field Annex'),
                                         ('Hearst Gym', 'Hearst Gym'),
@@ -87,23 +135,14 @@ class MultRoomForm(FlaskForm):
                                         ])
     submit = SubmitField('import')
 
-def read_csv(sheet_url, sheet_range):
-    m = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', sheet_url)
-    if not m:
-        raise ValidationError('Enter a Google Sheets URL')
-    spreadsheet_id = m.group(1)
-    http = google_oauth.http()
-    discoveryUrl = ('https://sheets.googleapis.com/$discovery/rest?'
-                    'version=v4')
-    service = discovery.build('sheets', 'v4', http=http,
-                              discoveryServiceUrl=discoveryUrl)
 
-    try:
-        result = service.spreadsheets().values().get(
-            spreadsheetId=spreadsheet_id, range=sheet_range).execute()
-    except errors.HttpError as e:
-        raise ValidationError(e._get_reason())
-    values = result.get('values', [])
+def read_csv(sheet_url, sheet_range):
+    values = requests.post("https://auth.apps.cs61a.org/google/read_spreadsheet", json={
+        "url": sheet_url,
+        "sheet_name": sheet_range,
+        "client_name": app.config["AUTH_KEY"],
+        "secret": app.config["AUTH_CLIENT_SECRET"],
+    }).json()
 
     if not values:
         raise ValidationError('Sheet is empty')
@@ -117,6 +156,7 @@ def read_csv(sheet_url, sheet_range):
     elif not all(re.match(r'[a-z0-9]+', h) for h in headers):
         raise ValidationError('Headers must consist of digits and numbers')
     return headers, rows
+
 
 def validate_room(exam, room_form):
     room = Room(
@@ -159,7 +199,7 @@ def validate_room(exam, room_form):
             raise ValidationError('xy coordinates must be floats')
         seat.x = x
         seat.y = y
-        seat.attributes = { k for k, v in row.items() if v.lower() == 'true' }
+        seat.attributes = {k for k, v in row.items() if v.lower() == 'true'}
         room.seats.append(seat)
     if len(set(seat.name for seat in room.seats)) != len(room.seats):
         raise ValidationError('Seats are not unique')
@@ -167,15 +207,15 @@ def validate_room(exam, room_form):
         raise ValidationError('Seat coordinates are not unique')
     return room
 
+
 @app.route('/<exam:exam>/rooms/import/')
-@google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def import_room(exam):
     new_form = RoomForm()
     choose_form = MultRoomForm()
     return render_template('new_room.html.j2', exam=exam, new_form=new_form, choose_form=choose_form)
 
+
 @app.route('/<exam:exam>/rooms/import/new/', methods=['GET', 'POST'])
-@google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def new_room(exam):
     new_form = RoomForm()
     choose_form = MultRoomForm()
@@ -191,20 +231,23 @@ def new_room(exam):
             return redirect(url_for('exam', exam=exam))
     return render_template('new_room.html.j2', exam=exam, new_form=new_form, choose_form=choose_form, room=room)
 
+
 @app.route('/<exam:exam>/rooms/import/choose/', methods=['GET', 'POST'])
-@google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def mult_new_room(exam):
     new_form = RoomForm()
     choose_form = MultRoomForm()
     if choose_form.validate_on_submit():
         for r in choose_form.rooms.data:
             # add error handling
-            f = RoomForm(display_name=r,sheet_url='https://docs.google.com/spreadsheets/d/1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s/edit?usp=sharing',sheet_range=r)
+            f = RoomForm(display_name=r,
+                         sheet_url='https://docs.google.com/spreadsheets/d/1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s/edit?usp=sharing',
+                         sheet_range=r)
             room = validate_room(exam, f)
             db.session.add(room)
             db.session.commit()
         return redirect(url_for('exam', exam=exam))
     return render_template('new_room.html.j2', exam=exam, new_form=new_form, choose_form=choose_form)
+
 
 @app.route('/<exam:exam>/rooms/update/<room_name>/', methods=['POST'])
 def update_room(exam, room_name):
@@ -216,7 +259,8 @@ def update_room(exam, room_name):
         db.session.commit()
     return render_template('exam.html.j2', exam=exam)
 
-@app.route('/<exam:exam>/rooms/delete/<room_name>/', methods=['GET','POST'])
+
+@app.route('/<exam:exam>/rooms/delete/<room_name>/', methods=['GET', 'POST'])
 def delete_room(exam, room_name):
     # ask if want to delete
     # if assigned ask if they are sure they want to delete seat assignments
@@ -231,17 +275,19 @@ def delete_room(exam, room_name):
         db.session.commit()
     return render_template('exam.html.j2', exam=exam)
 
+
 class StudentForm(FlaskForm):
     sheet_url = StringField('sheet_url', [URL()])
     sheet_range = StringField('sheet_range', [InputRequired()])
     submit = SubmitField('import')
 
+
 def validate_students(exam, form):
     headers, rows = read_csv(form.sheet_url.data, form.sheet_range.data)
     if 'email' not in headers:
-        raise Validation('Missing "email" column')
+        raise ValidationError('Missing "email" column')
     elif 'name' not in headers:
-        raise Validation('Missing "name" column')
+        raise ValidationError('Missing "name" column')
     students = []
     for row in rows:
         email = row.pop('email')
@@ -253,13 +299,13 @@ def validate_students(exam, form):
         student.name = row.pop('name')
         student.sid = row.pop('student id', None) or student.sid
         student.bcourses_id = row.pop('bcourses id', None) or student.bcourses_id
-        student.wants = { k for k, v in row.items() if v.lower() == 'true' }
-        student.avoids = { k for k, v in row.items() if v.lower() == 'false' }
+        student.wants = {k for k, v in row.items() if v.lower() == 'true'}
+        student.avoids = {k for k, v in row.items() if v.lower() == 'false'}
         students.append(student)
     return students
 
+
 @app.route('/<exam:exam>/students/import/', methods=['GET', 'POST'])
-@google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def new_students(exam):
     form = StudentForm()
     if form.validate_on_submit():
@@ -272,9 +318,11 @@ def new_students(exam):
             form.sheet_url.errors.append(str(e))
     return render_template('new_students.html.j2', exam=exam, form=form)
 
+
 class DeleteStudentForm(FlaskForm):
     emails = TextAreaField('emails')
     submit = SubmitField('delete')
+
 
 @app.route('/<exam:exam>/students/delete/', methods=['GET', 'POST'])
 def delete_students(exam):
@@ -294,10 +342,12 @@ def delete_students(exam):
                 did_not_exist.add(email)
         db.session.commit()
     return render_template('delete_students.html.j2',
-        exam=exam, form=form, deleted=deleted, did_not_exist=did_not_exist)
+                           exam=exam, form=form, deleted=deleted, did_not_exist=did_not_exist)
+
 
 class AssignForm(FlaskForm):
     submit = SubmitField('assign')
+
 
 def collect(s, key=lambda x: x):
     d = {}
@@ -308,6 +358,7 @@ def collect(s, key=lambda x: x):
         else:
             d[k] = [x]
     return d
+
 
 def assign_students(exam):
     """The strategy: look for students whose requirements are the most
@@ -327,13 +378,13 @@ def assign_students(exam):
         return [
             seat for seat in seats
             if all(a in seat.attributes for a in wants)
-            and all(a not in seat.attributes for a in avoids)
+               and all(a not in seat.attributes for a in avoids)
         ]
 
     assignments = []
     while students:
         students_by_preference = collect(students, key=
-            lambda student: (frozenset(student.wants), frozenset(student.avoids)))
+        lambda student: (frozenset(student.wants), frozenset(student.avoids)))
         seats_by_preference = {
             preference: seats_available(preference)
             for preference in students_by_preference
@@ -353,6 +404,7 @@ def assign_students(exam):
         assignments.append(SeatAssignment(student=student, seat=seat))
     return assignments
 
+
 @app.route('/<exam:exam>/students/assign/', methods=['GET', 'POST'])
 def assign(exam):
     form = AssignForm()
@@ -365,6 +417,7 @@ def assign(exam):
         return redirect(url_for('students', exam=exam))
     return render_template('assign.html.j2', exam=exam, form=form)
 
+
 class EmailForm(FlaskForm):
     from_email = StringField('from_email', [Email()])
     from_name = StringField('from_name', [InputRequired()])
@@ -372,6 +425,7 @@ class EmailForm(FlaskForm):
     test_email = StringField('test_email')
     additional_text = TextAreaField('additional_text')
     submit = SubmitField('send')
+
 
 def email_students(exam, form):
     """Emails students in batches of 900"""
@@ -424,7 +478,7 @@ You can view this seat's position on the seating chart at:
 {}/seat/-seatid-/
 
 {}
-'''.format(exam.display_name, app.config['DOMAIN'], form.additional_text.data)
+'''.format(exam.display_name, request.url_root, form.additional_text.data)
                 },
             ],
         }
@@ -440,6 +494,7 @@ You can view this seat's position on the seating chart at:
             assignment.emailed = True
         db.session.commit()
 
+
 @app.route('/<exam:exam>/students/email/', methods=['GET', 'POST'])
 def email(exam):
     form = EmailForm()
@@ -448,29 +503,102 @@ def email(exam):
         return redirect(url_for('students', exam=exam))
     return render_template('email.html.j2', exam=exam, form=form)
 
-@app.route('/')
+
+@app.route("/")
 def index():
-    return redirect('/' + app.config['COURSE'] + '/' + app.config['EXAM'])
+    return redirect(url_for("offering", offering=get_endpoint()))
+
+
+@app.route('/<offering:offering>/')
+def offering(offering):
+    if offering not in current_user.offerings:
+        abort(401)
+    exams = Exam.query.filter(Exam.offering==offering)
+    return render_template("offering.j2", title="{} Exam Seating".format(format_coursecode(get_course())), exams=exams, offering=offering)
+
 
 @app.route('/favicon.ico')
 def favicon():
     return send_file('static/img/favicon.ico')
 
+
 @app.route('/students-template.png')
 def students_template():
     return send_file('static/img/students-template.png')
+
+class ExamForm(FlaskForm):
+    display_name = StringField('display_name', [InputRequired()], render_kw={"placeholder": "Midterm 1"})
+    name = StringField('name', [InputRequired()], render_kw={"placeholder": "midterm1"})
+    submit = SubmitField('create')
+
+    def validate_name(form, field):
+        if " " in field.data or field.data != field.data.lower():
+            from wtforms.validators import ValidationError
+            raise ValidationError('Exam name must be all lowercase with no spaces')
+
+
+@app.route("/<offering:offering>/new/", methods=["GET", "POST"])
+def new_exam(offering):
+    form = ExamForm()
+    if form.validate_on_submit():
+        Exam.query.filter_by(offering=offering).update({"is_active": False})
+        exam = Exam(offering=offering, name=form.name.data, display_name=form.display_name.data, is_active=True)
+        db.session.add(exam)
+        db.session.commit()
+
+        return redirect(url_for("offering", offering=offering))
+    return render_template("new_exam.html.j2", title="{} Exam Seating".format(format_coursecode(get_course())), form=form)
+
+
+@app.route("/<exam:exam>/delete/", methods=["GET", "POST"])
+def delete_exam(exam):
+    db.session.delete(exam)
+    db.session.commit()
+
+    return redirect(url_for("offering", offering=exam.offering))
+
+
+@app.route("/<exam:exam>/toggle/", methods=["GET", "POST"])
+def toggle_exam(exam):
+    if exam.is_active:
+        exam.is_active = False
+    else:
+        Exam.query.filter_by(offering=exam.offering).update({"is_active": False})
+        exam.is_active = True
+    db.session.commit()
+    return redirect(url_for("offering", offering=exam.offering))
 
 @app.route('/<exam:exam>/')
 def exam(exam):
     return render_template('exam.html.j2', exam=exam)
 
+
 @app.route('/<exam:exam>/help/')
 def help(exam):
     return render_template('help.html.j2', exam=exam)
 
+
+class PhotosForm(FlaskForm):
+    file = FileField("file", [InputRequired()])
+    submit = SubmitField('Submit')
+
+
 @app.route('/<exam:exam>/students/photos/', methods=['GET', 'POST'])
 def new_photos(exam):
-    return render_template('new_photos.html.j2', exam=exam)
+    form = PhotosForm()
+    if form.validate_on_submit():
+        f = form.file.data
+        zf = zipfile.ZipFile(f, mode="r")
+        for name in zf.namelist():
+            if name.endswith("/"):
+                continue
+            secure_name = secure_filename(name)
+            path = os.path.join(app.config["PHOTO_DIRECTORY"], exam.offering, secure_name)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "wb+") as g:
+                g.write(zf.open(name, "r").read())
+    return render_template('new_photos.html.j2', exam=exam, form=form)
+
 
 @app.route('/<exam:exam>/rooms/<string:name>/')
 def room(exam, name):
@@ -478,23 +606,26 @@ def room(exam, name):
     seat = request.args.get('seat')
     return render_template('room.html.j2', exam=exam, room=room, seat=seat)
 
+
 @app.route('/<exam:exam>/students/')
 def students(exam):
     # TODO load assignment and seat at the same time?
     students = Student.query.filter_by(exam_id=exam.id).all()
     return render_template('students.html.j2', exam=exam, students=students)
 
+
 @app.route('/<exam:exam>/students/<string:email>/')
 def student(exam, email):
     student = Student.query.filter_by(exam_id=exam.id, email=email).first_or_404()
     return render_template('student.html.j2', exam=exam, student=student)
 
+
 @app.route('/<exam:exam>/students/<string:email>/photo')
 def photo(exam, email):
     student = Student.query.filter_by(exam_id=exam.id, email=email).first_or_404()
-    photo_path = '{}/{}/{}.jpeg'.format(app.config['PHOTO_DIRECTORY'], 
-        exam.offering, student.bcourses_id)
+    photo_path = os.path.join(app.config['PHOTO_DIRECTORY'], exam.offering, student.bcourses_id) + ".jpeg"
     return send_file(photo_path, mimetype='image/jpeg')
+
 
 @app.route('/seat/<int:seat_id>/')
 def single_seat(seat_id):

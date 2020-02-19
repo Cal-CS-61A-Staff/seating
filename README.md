@@ -12,13 +12,12 @@ and students with the appropriate roles.
 
 ## Usage (Admin TAs for Courses)
 
-It's janky. Many steps involve directly poking the database. The only way to
+It's janky. The only way to
 correct errors is to manually edit the database, so be careful.
 
 In summary, setting up the seating chart involves these steps:
-1. **Create an exam** (ex. Midterm 1 or Final). Or at least in the future you will be able to.
-For now, contact the slack to have your exam created for you if you did not set up the app.
-This step is already done for you if you can successfully view the seating app.
+0. **Register your course** on [auth.apps.cs61a.org], specifying your OKPy endpoint, and adding your desired domain for the seating app. Then contact us to activate the seating app for that domain.
+1. **Create an exam** (ex. Midterm 1 or Final).
 2. **Add rooms.** Choose your rooms from our selection or import your own custom room.
 3. **Import students.** Customize your student preferences (left seat, front/back, buildings, etc.)
 4. **Assign! Then email!**
@@ -57,7 +56,7 @@ you adding the sheet to the [master doc](https://drive.google.com/open?id=1cHKVh
 
 To import students, create a Google spreadsheet with the columns "Name",
 "Student ID", "Email", and "bCourses ID". The remaining columns are arbitrary attributes
-(ex: LEFTY, RIGHTY, BROKEN) that express student preferences. 
+(ex: LEFTY, RIGHTY, BROKEN) that express student preferences. This spreadsheet must be shared with the 61A service account [secure-links@ok-server.iam.gserviceaccount.com](mailto:secure-links@ok-server.iam.gserviceaccount.com).
 
 For example, if a student has LEFTY=TRUE, they will be assigned a seat with the
 LEFTY attribute. If a student has LEFTY=FALSE, they will be assigned a seat
@@ -117,8 +116,6 @@ cheaters.
 
 Viewing full seating charts requires logging in as a TA or tutor through Ok.
 
-Importing spreadsheets requires a separate Google OAuth login.
-
 All paths at an exam route (e.g. `/cal/cs61a/fa17/midterm1`) require a proper
 staff login.
 
@@ -127,14 +124,11 @@ a room's full seating chart without displaying any student info or info about
 seat assignments.
 
 When a student attempts to log in, they will be redirected to their assigned
-seat page if it exists. This only works for the current COURSE and EXAM as
-set in the environment variables.
+seat page if it exists.
 
 ### Creating exams
 
-Create an exam by adding a row to the `exams` table. The exam that the home page
-redirects to is hardcoded, so you may want to change that too. In the future,
-there should be an interface to CRUD exams.
+Create an exam by pressing `Add Exam` on the home page. Click the star next to an exam to mark it as `Active`, so students can see their seat for that exam.
 
 ## Setup (development)
 1. Clone the repository and change directories into the repository.
@@ -162,7 +156,7 @@ export FLASK_APP = server  (or server/__init__.py)
 export FLASK_ENV = development
 ```
 
-6. Modify `config.py` as necessary. Set `OK_CLIENT_ID`, `OK_CLIENT_SECRET`, `GOOGLE_OAUTH2_CLIENT_ID`, `GOOGLE_OAUTH2_CLIENT_SECRET`, `SENDGRID_API_KEY`, `PHOTO_DIRECTORY`, `EXAM`, `ADMIN` as needed.
+6. Modify `config.py` as necessary. Set `AUTH_KEY`, `AUTH_CLIENT_SECRET`, `SENDGRID_API_KEY`, `PHOTO_DIRECTORY`, `ADMIN` as needed.
 
 7. Import [demo data](https://docs.google.com/spreadsheets/d/1nC2vinn0k-_TLO0aLmLZtI9juEoSOVEvA3o40HGvXAw/edit?usp=drive_web&ouid=100612133541464602205) for students and rooms (photos TBA). 
 
@@ -205,11 +199,8 @@ SECRET_KEY
 DATABASE_URL
 OK_CLIENT_ID
 OK_CLIENT_SECRET
-GOOGLE_CLIENT_ID
-GOOGLE_CLIENT_SECRET
-COURSE
-EXAM
-DOMAIN
+AUTH_KEY
+AUTH_CLIENT_SECRET
 PHOTO_DIRECTORY=/app/storage
 ADMIN
 ```

@@ -11,7 +11,6 @@ from sqlalchemy.orm import backref
 from server import app
 
 db = SQLAlchemy(app=app)
-
 class StringSet(types.TypeDecorator):
     impl = types.Text
 
@@ -36,6 +35,7 @@ class Exam(db.Model):
     offering = db.Column(db.String(255), nullable=False, index=True)
     name = db.Column(db.String(255), nullable=False, index=True)
     display_name = db.Column(db.String(255), nullable=False)
+    is_active = db.Column(db.BOOLEAN, nullable=False)
 
 class Room(db.Model):
     __tablename__ = 'rooms'
@@ -120,12 +120,13 @@ def drop_db():
 @app.cli.command('seeddb')
 def seed_db():
     "Seeds database with data"
-    for seed_exam in seed_exams:    
-        existing = Exam.query.filter_by(offering=seed_exam.offering, name=seed_exam.name).first()   
-        if not existing:    
-            click.echo('Adding seed exam {}...'.format(seed_exam.name)) 
+    for seed_exam in seed_exams:
+        existing = Exam.query.filter_by(offering=seed_exam.offering, name=seed_exam.name).first()
+        if not existing:
+            click.echo('Adding seed exam {}...'.format(seed_exam.name))
             db.session.add(seed_exam)
             db.session.commit()
+
 
 @app.cli.command('resetdb')
 @click.pass_context
@@ -135,20 +136,29 @@ def reset_db(ctx):
     ctx.invoke(init_db)
     ctx.invoke(seed_db)
 
-seed_exams = [  
-    Exam(   
-        offering=app.config['COURSE'],  
-        name='midterm1', 
-        display_name='Midterm 1',   
-    ),  
-    Exam(   
-        offering=app.config['COURSE'],  
-        name='midterm2', 
-        display_name='Midterm 2',   
-    ),  
-    Exam(   
-        offering=app.config['COURSE'],  
-        name='final', 
-        display_name='Final',   
-    ),  
+seed_exams = [
+    Exam(
+        offering="cal/cs61a/sp20",
+        name='midterm1',
+        display_name='Midterm 1',
+        is_active=False,
+    ),
+    Exam(
+        offering="cal/cs61a/sp20",
+        name='midterm2',
+        display_name='Midterm 2',
+        is_active=False,
+    ),
+    Exam(
+        offering="cal/cs61a/sp20",
+        name='final',
+        display_name='Final',
+        is_active=False,
+    ),
+    Exam(
+        offering="cal/eecs16a/sp20",
+        name='test',
+        display_name='Test',
+        is_active=False,
+    ),
 ]

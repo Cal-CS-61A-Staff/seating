@@ -1,10 +1,54 @@
-{% extends 'base.html.j2' %}
+{% extends 'exam_base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
-<main class="rooms mdl-grid">
-  <section class="mdl-cell mdl-cell--12-col">
-  	<h4>🚧🚧🚧 Under Construction 🚧🚧🚧</h4>
-  	<p>This page is still under construction; however, you may follow these instructions to have your photos added to your seating app. Download this <a href="https://github.com/Cal-CS-61A-Staff/seating/blob/master/download_bcourses_photos.py">script</a> and follow the instructions. You should send the slack a zip of the photos in the format of bcoursesID.jpeg (make sure it's not .jpg!). Photos will be added to the seating app shortly. </p>  
-  </section>
-</main>
+{% call macros.form(form) %}
+    <main class="rooms mdl-grid">
+        <h4>Photos Upload</h4>
+        <p>First, download this <a
+                href="https://github.com/Cal-CS-61A-Staff/seating/blob/master/download_bcourses_photos.py">script</a>
+            and follow the instructions. Zip up the photos in the format of bcoursesID.jpeg (make sure it's not .jpg!).
+            Then upload that zip here. Photos may be cleared at the end of the semester, or as space constraints
+            dictate. </p>
+        <div class="form-buttons">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--file">
+                <input class="mdl-textfield__input" placeholder="File" type="text" id="uploadFile" readonly/>
+                <div class="mdl-button mdl-button--primary file-upload-button">
+                    Upload
+                    {{ form.file(id="uploadButton", accept=".zip") }}
+                </div>
+            </div>
+            {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+        </div>
+    </main>
+    <style>
+        #uploadFile {
+            height: 36px;
+        }
+        .file-upload-button input {
+            cursor: pointer;
+            height: 36px;
+            right: 0;
+            position: absolute;
+            top: 0;
+            width: 300px;
+            z-index: 4;
+        }
+
+        .mdl-textfield--file .mdl-textfield__input {
+            box-sizing: border-box;
+            width: calc(100% - 32px);
+        }
+
+        .mdl-textfield--file .file-upload-button {
+            right: 0;
+        }
+    </style>
+    <script>
+        document.querySelector("#uploadButton").addEventListener("change", (e) => {
+            document.querySelector("#uploadFile").value = e.target.files[0].name;
+        })
+    </script>
+
+{% endcall %}
 {% endblock %}
