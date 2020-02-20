@@ -524,7 +524,7 @@ def offering(offering):
     if offering not in current_user.offerings:
         abort(401)
     exams = Exam.query.filter(Exam.offering==offering)
-    return render_template("offering.j2", title="{} Exam Seating".format(format_coursecode(get_course())), exams=exams, offering=offering)
+    return render_template("offering.j2", title="{} Exam Seating".format(format_coursecode(get_course())), exams=exams, offering=offering, is_admin=is_admin())
 
 
 @app.route('/favicon.ico')
@@ -580,7 +580,7 @@ def toggle_exam(exam):
 
 @app.route('/<exam:exam>/')
 def exam(exam):
-    return render_template('exam.html.j2', exam=exam)
+    return render_template('exam.html.j2', exam=exam, is_admin=is_admin())
 
 
 @app.route('/<exam:exam>/help/')
