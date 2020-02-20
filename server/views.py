@@ -6,7 +6,7 @@ import zipfile
 
 import requests
 import sendgrid
-from flask import abort, redirect, render_template, request, send_file, session, url_for
+from flask import abort, redirect, render_template, request, send_file, session, url_for, g
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from werkzeug.exceptions import HTTPException
@@ -40,6 +40,16 @@ def get_endpoint(course=None):
     if course not in COURSE_ENDPOINTS:
         COURSE_ENDPOINTS[course] = requests.post("https://auth.apps.cs61a.org/api/{}/get_endpoint".format(course)).json()
     return COURSE_ENDPOINTS[course]
+
+
+def is_admin(course=None):
+    if not course:
+        course = get_course()
+    if g.get("is_admin") is None:
+        g.is_admin = requests.post("https://auth.apps.cs61a.org/admins/{}/is_admin".format(course), json={
+            "email": current_user.email
+        }).json()
+    return g.is_admin
 
 
 def format_coursecode(course):
@@ -611,7 +621,7 @@ def room(exam, name):
 def students(exam):
     # TODO load assignment and seat at the same time?
     students = Student.query.filter_by(exam_id=exam.id).all()
-    return render_template('students.html.j2', exam=exam, students=students)
+    return render_template('students.html.j2', exam=exam, students=students, is_admin=is_admin())
 
 
 @app.route('/<exam:exam>/students/<string:email>/')

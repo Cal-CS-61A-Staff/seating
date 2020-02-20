@@ -2,25 +2,32 @@
 {% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
-<section class="rooms mdl-grid">
-  <div class="mdl-cell mdl-cell--12-col">
-    <h4>Rooms</h4>
-    <ul class="mdl-list">
-    {% for room in exam.rooms %}
-      <li class="mdl-list__item">
-        <a class="mdl-list__item-primary-content" href="{{ url_for('room', exam=exam, name=room.name) }}">
-          {{ room.display_name }}
-        </a>
-        {% if current_user.email == config['ADMIN'] %}
-        <div class="material-icons std" onclick="location.href = '{{ url_for('delete_room', exam=exam, room_name=room.name) }}';" style="float: right;">clear</div>
+    <section class="rooms mdl-grid">
+        <div class="mdl-cell mdl-cell--12-col">
+            <h4>Rooms</h4>
+            <ul class="mdl-list">
+                {% for room in exam.rooms %}
+                    <li class="mdl-list__item">
+                        <a class="mdl-list__item-primary-content"
+                           href="{{ url_for('room', exam=exam, name=room.name) }}">
+                            {{ room.display_name }}
+                        </a>
+                        {% if is_admin %}
+                            <div class="material-icons std"
+                                 onclick="location.href = '{{ url_for('delete_room', exam=exam, room_name=room.name) }}';"
+                                 style="float: right;">clear
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% if is_admin %}
+            <button class="mdl-button mdl-js-button roomspg-add-room-button"
+                    onclick="location.href = '{{ url_for('new_room', exam=exam) }}';">
+                <i class="material-icons">add</i>
+                Add rooms
+            </button>
         {% endif %}
-      </li>
-    {% endfor %}
-    </ul>
-  </div>
-  <button class="mdl-button mdl-js-button roomspg-add-room-button" onclick="location.href = '{{ url_for('new_room', exam=exam) }}';">
-    <i class="material-icons">add</i>
-    Add rooms
-  </button>
-</section>
+    </section>
 {% endblock %}
