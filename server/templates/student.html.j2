@@ -16,6 +16,9 @@
       <a href="{{ url_for('room', exam=exam, name=seat.room.name, seat=seat.name) }}">
         {{ seat.room.display_name }} {{ seat.name }}
       </a><br><br>
+      <a href="{{ url_for('reassign_seat', exam=exam, email=student.email) }}">
+        Edit Seat Assignment
+      </a><br><br>
       <a target="_blank" href="{{ url_for('single_seat', seat_id=seat.id) }}">
         Sharable Link to This Seat
       </a>
