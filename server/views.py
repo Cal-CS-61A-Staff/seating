@@ -9,6 +9,7 @@ import sendgrid
 from flask import abort, redirect, render_template, request, send_file, session, url_for
 from flask_login import current_user
 from flask_wtf import FlaskForm
+from sqlalchemy import func
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
 from werkzeug.utils import secure_filename
@@ -635,7 +636,10 @@ def reassign_seat(exam, email):
 def room(exam, name):
     room = Room.query.filter_by(exam_id=exam.id, name=name).first_or_404()
     seat = request.args.get('seat')
-    return render_template('room.html.j2', exam=exam, room=room, seat=seat)
+    max_seatid = db.session.query(func.max(Seat.id)).filter_by(room_id=room.id)
+    min_seatid = db.session.query(func.min(Seat.id)).filter_by(room_id=room.id)
+    total = db.session.query(SeatAssignment).filter(SeatAssignment.seat_id<= max_seatid, SeatAssignment.seat_id>= min_seatid).count()
+    return render_template('room.html.j2', exam=exam, room=room, seat=seat, total=total)
 
 
 @app.route('/<exam:exam>/students/')
