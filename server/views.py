@@ -603,7 +603,6 @@ class SeatForm(FlaskForm):
     new_room = SelectField('New Room')
     new_seat = StringField('New Seat', [InputRequired()])
     submit = SubmitField('Submit')
-    exam = None
 
 @app.route('/<exam:exam>/students/<string:email>/reassign_seat', methods=['GET', 'POST'])
 def reassign_seat(exam, email):
