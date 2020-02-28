@@ -1,0 +1,39 @@
+{% extends 'exam_base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+{% call macros.form(form) %}
+    <main class="rooms mdl-grid">
+    <div class="mdl-cell mdl-cell--12-col">
+        <h4>Reassign Seat for {{ student.name }} </h4>
+        
+        {% set seat = student.assignment.seat %}
+        Current Seat: <a href="{{ url_for('room', exam=exam, name=seat.room.name, seat=seat.name) }}">
+          {{ seat.room.display_name }} {{ seat.name }}
+        </a>
+
+        <div class="form-buttons">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            {{ form.new_room(class="mdl-textfield__input", type="New Room", id="gsurl") }}
+            <label class="mdl-textfield__label" for="gsurl">New Room</label>
+          </div>
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            {{ form.new_seat(class="mdl-textfield__input", type="New Seat (Example: A13)", id="gsurl") }}
+            <label class="mdl-textfield__label" for="gsurl">New Seat</label>
+          </div>
+          <div class="form-buttons">
+              {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+          </div>
+        </div>
+        <div class="errormsg">
+          {% if form.new_seat.errors %}
+            {% for error in form.new_seat.errors %}
+              <span>{{ form.new_seat.errors }}</span>
+            {% endfor %}
+          {% endif %}
+        </div>
+        </div>
+    </main>
+
+{% endcall %}
+{% endblock %}

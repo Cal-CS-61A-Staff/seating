@@ -12,8 +12,8 @@ from flask_wtf import FlaskForm
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter
 from werkzeug.utils import secure_filename
-from wtforms import SelectMultipleField, StringField, SubmitField, TextAreaField, widgets, FileField
-from wtforms.validators import Email, InputRequired, URL
+from wtforms import SelectMultipleField, SelectField, StringField, SubmitField, TextAreaField, widgets, FileField
+from wtforms.validators import Email, InputRequired, URL, ValidationError
 
 from server import app
 from server.models import Exam, Room, Seat, SeatAssignment, Student, db, slug
@@ -23,6 +23,30 @@ name_part = '[^/]+'
 DOMAIN_COURSES = {}
 COURSE_ENDPOINTS = {}
 
+rooms = [('277 Cory', '277 Cory'),
+        ('145 Dwinelle', '145 Dwinelle'),
+        ('155 Dwinelle', '155 Dwinelle'),
+        ('10 Evans', '10 Evans'),
+        ('100 GPB', '100 GPB'),
+        ('A1 Hearst Field Annex', 'A1 Hearst Field Annex'),
+        ('Hearst Gym', 'Hearst Gym'),
+        ('120 Latimer', '120 Latimer'),
+        ('1 LeConte', '1 LeConte'),
+        ('2 LeConte', '2 LeConte'),
+        ('4 LeConte', '4 LeConte'),
+        ('100 Lewis', '100 Lewis'),
+        ('245 Li Ka Shing', '245 Li Ka Shing'),
+        ('159 Mulford', '159 Mulford'),
+        ('105 North Gate', '105 North Gate'),
+        ('1 Pimentel', '1 Pimentel'),
+        ('RSF FH ', 'RSF FH '),
+        ('306 Soda', '306 Soda'),
+        ('2040 VLSB', '2040 VLSB'),
+        ('2050 VLSB', '2050 VLSB'),
+        ('2060 VLSB', '2060 VLSB'),
+        ('150 Wheeler', '150 Wheeler'),
+        ('222 Wheeler', '222 Wheeler')
+        ]
 
 def get_course(domain=None):
     if not domain:
@@ -109,30 +133,7 @@ class RoomForm(FlaskForm):
 
 
 class MultRoomForm(FlaskForm):
-    rooms = MultiCheckboxField(choices=[('277 Cory', '277 Cory'),
-                                        ('145 Dwinelle', '145 Dwinelle'),
-                                        ('155 Dwinelle', '155 Dwinelle'),
-                                        ('10 Evans', '10 Evans'),
-                                        ('100 GPB', '100 GPB'),
-                                        ('A1 Hearst Field Annex', 'A1 Hearst Field Annex'),
-                                        ('Hearst Gym', 'Hearst Gym'),
-                                        ('120 Latimer', '120 Latimer'),
-                                        ('1 LeConte', '1 LeConte'),
-                                        ('2 LeConte', '2 LeConte'),
-                                        ('4 LeConte', '4 LeConte'),
-                                        ('100 Lewis', '100 Lewis'),
-                                        ('245 Li Ka Shing', '245 Li Ka Shing'),
-                                        ('159 Mulford', '159 Mulford'),
-                                        ('105 North Gate', '105 North Gate'),
-                                        ('1 Pimentel', '1 Pimentel'),
-                                        ('RSF FH ', 'RSF FH '),
-                                        ('306 Soda', '306 Soda'),
-                                        ('2040 VLSB', '2040 VLSB'),
-                                        ('2050 VLSB', '2050 VLSB'),
-                                        ('2060 VLSB', '2060 VLSB'),
-                                        ('150 Wheeler', '150 Wheeler'),
-                                        ('222 Wheeler', '222 Wheeler')
-                                        ])
+    rooms = MultiCheckboxField(choices=rooms)
     submit = SubmitField('import')
 
 
@@ -577,7 +578,6 @@ def exam(exam):
 def help(exam):
     return render_template('help.html.j2', exam=exam)
 
-
 class PhotosForm(FlaskForm):
     file = FileField("file", [InputRequired()])
     submit = SubmitField('Submit')
@@ -598,6 +598,35 @@ def new_photos(exam):
             with open(path, "wb+") as g:
                 g.write(zf.open(name, "r").read())
     return render_template('new_photos.html.j2', exam=exam, form=form)
+
+class SeatForm(FlaskForm):
+    new_room = SelectField('New Room')
+    new_seat = StringField('New Seat', [InputRequired()])
+    submit = SubmitField('Submit')
+    exam = None
+
+@app.route('/<exam:exam>/students/<string:email>/reassign_seat', methods=['GET', 'POST'])
+def reassign_seat(exam, email):
+    form = SeatForm()
+    form.exam = exam
+    available_rooms = Room.query.filter_by(exam_id=exam.id).all()
+    form.new_room.choices = [(r.name, r.display_name) for r in available_rooms]
+    student = Student.query.filter_by(exam_id=exam.id, email=email).first_or_404()
+    if form.validate_on_submit():
+        try:
+            room = Room.query.filter_by(exam_id=exam.id, name=form.new_room.data).first()
+            seat = Seat.query.filter_by(room_id=room.id, name=form.new_seat.data).first()
+            if not seat:
+                raise ValidationError('Seat does not exist')
+            if SeatAssignment.query.filter_by(seat_id=seat.id).first():
+                raise ValidationError('Seat is not empty. Please reassign the currently assigned student first')
+        except ValidationError as e:
+            form.new_seat.errors.append(str(e))
+        else:
+            db.session.query(SeatAssignment).filter_by(student_id=student.id).update({'seat_id':seat.id})
+            db.session.commit()
+            return redirect(url_for('room', exam=exam, name=room.name))
+    return render_template('reassign_seat.html.j2', exam=exam, student=student, form=form)
 
 
 @app.route('/<exam:exam>/rooms/<string:name>/')
