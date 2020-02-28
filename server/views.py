@@ -138,12 +138,15 @@ class MultRoomForm(FlaskForm):
 
 
 def read_csv(sheet_url, sheet_range):
-    values = requests.post("https://auth.apps.cs61a.org/google/read_spreadsheet", json={
-        "url": sheet_url,
-        "sheet_name": sheet_range,
-        "client_name": app.config["AUTH_KEY"],
-        "secret": app.config["AUTH_CLIENT_SECRET"],
-    }).json()
+    try:
+        values = requests.post("https://auth.apps.cs61a.org/google/read_spreadsheet", json={
+            "url": sheet_url,
+            "sheet_name": sheet_range,
+            "client_name": app.config["AUTH_KEY"],
+            "secret": app.config["AUTH_CLIENT_SECRET"],
+        }).json()
+    except:
+        raise ValidationError('Could not reach Google Sheet. Please make sure your sheet is shared with cs61a@berkeley.edu.')
 
     if not values:
         raise ValidationError('Sheet is empty')
