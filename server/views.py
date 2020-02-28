@@ -147,7 +147,7 @@ def read_csv(sheet_url, sheet_range):
             "secret": app.config["AUTH_CLIENT_SECRET"],
         }).json()
     except:
-        raise ValidationError('Could not reach Google Sheet. Please make sure your sheet is shared with cs61a@berkeley.edu.')
+        raise ValidationError('Could not reach Google Sheet. Please make sure your sheet is shared with secure-links@ok-server.iam.gserviceaccount.com')
 
     if not values:
         raise ValidationError('Sheet is empty')
