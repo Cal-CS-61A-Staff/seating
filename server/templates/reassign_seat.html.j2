@@ -7,11 +7,15 @@
     <div class="mdl-cell mdl-cell--12-col">
         <h4>Reassign Seat for {{ student.name }} </h4>
         
-        {% set seat = student.assignment.seat %}
-        Current Seat: <a href="{{ url_for('room', exam=exam, name=seat.room.name, seat=seat.name) }}">
-          {{ seat.room.display_name }} {{ seat.name }}
-        </a>
-
+        {% if student.assignment %}
+          {% set seat = student.assignment.seat %}
+          Current Seat: <a href="{{ url_for('room', exam=exam, name=seat.room.name, seat=seat.name) }}">
+            {{ seat.room.display_name }} {{ seat.name }}
+          </a>
+        {% else %}
+          No Assigned Seat
+        {% endif %}
+        
         <div class="form-buttons">
           <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
             {{ form.new_room(class="mdl-textfield__input", type="New Room", id="gsurl") }}
