@@ -168,6 +168,8 @@ This commands only needs to be run once.
 
 6. Open [localhost:5000](https://localhost:5000)
 
+## Production (Adding Another Class)
+	Update configs at https://auth.apps.cs61a.org/ where relevant
 
 ## Production (First Time Deployment on dokku)
 	dokku apps:create seating
@@ -185,12 +187,7 @@ This commands only needs to be run once.
 	dokku run seating flask initdb
 	dokku letsencrypt seating
 
-In addition, add the following to `/home/dokku/seating/nginx.conf`:
-```
-proxy_buffer_size   128k;
-proxy_buffers   4 256k;
-proxy_busy_buffers_size   256k;
-```
+Also update any necessary configurations on GCLOUD. (There will be a linked URL). 
 
 ## Environment variables
 ```
