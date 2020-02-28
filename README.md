@@ -12,9 +12,6 @@ and students with the appropriate roles.
 
 ## Usage (Admin TAs for Courses)
 
-It's janky. The only way to
-correct errors is to manually edit the database, so be careful.
-
 In summary, setting up the seating chart involves these steps:
 0. **Register your course** on [auth.apps.cs61a.org], specifying your OKPy endpoint, and adding your desired domain for the seating app. Then contact us to activate the seating app for that domain.
 1. **Create an exam** (ex. Midterm 1 or Final).
