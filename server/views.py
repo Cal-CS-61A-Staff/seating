@@ -635,8 +635,11 @@ def student(exam, email):
 @app.route('/<exam:exam>/students/<string:email>/photo')
 def photo(exam, email):
     student = Student.query.filter_by(exam_id=exam.id, email=email).first_or_404()
-    photo_path = os.path.join(app.config['PHOTO_DIRECTORY'], exam.offering, student.bcourses_id) + ".jpeg"
-    return send_file(photo_path, mimetype='image/jpeg')
+    photo_path = os.path.join(app.config['PHOTO_DIRECTORY'], exam.offering, student.bcourses_id)
+    if os.path.exists(photo_path + ".jpeg"):
+        return send_file(photo_path + ".jpeg", mimetype='image/jpeg')
+    else:
+        return send_file(photo_path + ".jpg", mimetype='image/jpeg')
 
 
 @app.route('/seat/<int:seat_id>/')
