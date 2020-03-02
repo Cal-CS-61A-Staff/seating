@@ -613,6 +613,7 @@ def new_photos(exam):
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "wb+") as g:
                 g.write(zf.open(name, "r").read())
+            print(path, name)
     return render_template('new_photos.html.j2', exam=exam, form=form)
 
 class SeatForm(FlaskForm):
