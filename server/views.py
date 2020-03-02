@@ -606,14 +606,19 @@ def new_photos(exam):
         f = form.file.data
         zf = zipfile.ZipFile(f, mode="r")
         for name in zf.namelist():
+            print(name)
             if name.endswith("/"):
                 continue
-            secure_name = secure_filename(name)
-            path = os.path.join(app.config["PHOTO_DIRECTORY"], exam.offering, secure_name)
+            if name.count("/") > 1:
+                continue
+            match = re.search(f"([0-9]+)\.jpe?g", name)
+            if not match:
+                continue
+            sid = match.group(1)
+            path = os.path.join(app.config["PHOTO_DIRECTORY"], exam.offering, sid + ".jpg")
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "wb+") as g:
                 g.write(zf.open(name, "r").read())
-            print(path, name)
     return render_template('new_photos.html.j2', exam=exam, form=form)
 
 class SeatForm(FlaskForm):
