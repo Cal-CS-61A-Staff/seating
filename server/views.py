@@ -611,7 +611,7 @@ def new_photos(exam):
                 continue
             if name.count("/") > 1:
                 continue
-            match = re.search(f"([0-9]+)\.jpe?g", name)
+            match = re.search(r"([0-9]+)\.jpe?g", name)
             if not match:
                 continue
             sid = match.group(1)
