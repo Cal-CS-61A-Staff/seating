@@ -71,10 +71,11 @@ def is_admin(course=None):
     if not course:
         course = get_course()
     if g.get("is_admin") is None:
-        g.is_admin = requests.post("https://auth.apps.cs61a.org/admins/{}/is_admin".format(course), json={
+        g.is_admin = requests.post("https://auth.apps.cs61a.org/admins/is_admin", json={
             "email": current_user.email,
             "client_name": app.config["AUTH_KEY"],
             "secret": app.config["AUTH_CLIENT_SECRET"],
+            "course": course,
         }).json()
     return g.is_admin
 
@@ -155,6 +156,7 @@ def read_csv(sheet_url, sheet_range):
         values = requests.post("https://auth.apps.cs61a.org/google/read_spreadsheet", json={
             "url": sheet_url,
             "sheet_name": sheet_range,
+            "course": "cs61a",
             "client_name": app.config["AUTH_KEY"],
             "secret": app.config["AUTH_CLIENT_SECRET"],
         }).json()
