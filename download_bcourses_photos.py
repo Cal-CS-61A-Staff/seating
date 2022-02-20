@@ -39,7 +39,7 @@ def get_content_charset(headers):
 
 
 def read_http_response_as_json(response):
-    return json.load(response, encoding=get_content_charset(response.headers))
+    return json.loads(response.read().decode(get_content_charset(response.headers)))
 
 
 def fetcher(q):
