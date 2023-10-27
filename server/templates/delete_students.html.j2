@@ -9,7 +9,9 @@
       {{ form.emails(class="mdl-textfield__input", type="text", rows="10", id="delemails") }}
       <label class="mdl-textfield__label" for="delemails">Emails...</label>
     </div>
-
+    <div class="checkbox" id="use_all_emails">{{ form.use_all_emails }}
+      <label class="" for="use_all_emails">Delete All</label>
+    </div>
     <div class="form-buttons">
       {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
     </div>

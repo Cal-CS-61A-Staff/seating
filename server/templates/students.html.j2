@@ -28,36 +28,42 @@
       <div id="tt2" class="material-icons std" onclick="location.href = '{{ url_for('new_photos', exam=exam) }}';" style="float: right;">add_a_photo</div>
       <div class="mdl-tooltip" data-mdl-for="tt2">Add Photos</div>
 
-      <div id="tt1" class="material-icons std" onclick="location.href = '{{ url_for('new_students', exam=exam) }}';" style="float: right;">person_add</div>
+      <div id="tt1" class="material-icons std" onclick="location.href = '{{ url_for('import_students', exam=exam) }}';" style="float: right;">person_add</div>
       <div class="mdl-tooltip" data-mdl-for="tt1">Add Students</div>
     <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
       <thead>
         <tr>
-          <th class="sort mdl-data-table__cell--non-numeric" data-sort="name">Name</th>
-          <th class="sort mdl-data-table__cell--non-numeric" data-sort="email">Email</th>
-          <th class="sort mdl-data-table__cell--non-numeric" data-sort="sid">Student ID</th>
-          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment">Seat</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="name" style="text-align: center;">Name</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="email" style="text-align: center;">Email</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="sid" style="text-align: center;">Student ID</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="canvas_id" style="text-align: center;">Canvas ID</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Seat</th>
+          <th class="mdl-data-table__cell--non-numeric" style="text-align: center;">Delete</th>
         </tr>
       </thead>
       <tbody class="list">
         {% for student in exam.students %}
         <tr>
-          <td class="mdl-data-table__cell--non-numeric">
-            <a class="name" href="{{ url_for('student', exam=exam, email=student.email) }}">
+          <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
+            <a class="name" href="{{ url_for('student', exam=exam, canvas_id=student.canvas_id) }}">
               {{ student.name }}
             </a>
           </td>
-          <td class="email mdl-data-table__cell--non-numeric">{{ student.email }}</td>
-          <td class="sid mdl-data-table__cell--non-numeric">{{ student.sid }}</td>
-          <td class="mdl-data-table__cell--non-numeric">
+          <td class="email mdl-data-table__cell--non-numeric" style="text-align: center;">{{ student.email.replace("@berkeley.edu", "@") }}</td>
+          <td class="sid mdl-data-table__cell--non-numeric" style="text-align: center;">{{ student.sid }}</td>
+          <td class="canvas_id mdl-data-table__cell--non-numeric" style="text-align: center;">{{ student.canvas_id }}</td>
+          <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
           {% if student.assignment %}
             {% set seat = student.assignment.seat %}
             <a class="assignment" href="{{ url_for('room', exam=exam, name=seat.room.name, seat=seat.name) }}">
               {{ seat.room.display_name }} {{ seat.name }}
             </a>
           {% else %}
-            <span class="assignment">&mdash;</span>
+            <span class="assignment" style="text-align: center;">&mdash;</span>
           {% endif %}
+          </td>
+          <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
+            <div class="material-icons" style="text-align: center; margin: 0; cursor: pointer;" onclick="location.href = '{{ url_for('delete_student', exam=exam, canvas_id=student.canvas_id) }}';" style="float: right;">clear</div>
           </td>
         </tr>
         {% endfor %}
@@ -68,7 +74,7 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
 <script>
 var options = {
-  valueNames: ['name', 'email', 'sid', 'assignment']
+  valueNames: ['name', 'email', 'sid', 'canvas_id', 'assignment']
 };
 
 var studentTable = new List('student-table', options);

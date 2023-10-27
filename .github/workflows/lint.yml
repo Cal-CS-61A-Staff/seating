@@ -1,0 +1,26 @@
+name: Lint
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-with-flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
+      - name: Lint with flake8
+        run: |
+          # specifically checks for syntax errors or undefined names
+          # only proceed further to check styles if there are no syntax errors
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # --exit-zero to treats all errors as warnings.
+          # this can pick up .flake8 config
+          flake8 . --exit-zero --count --statistics

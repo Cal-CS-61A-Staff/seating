@@ -1,5 +1,5 @@
 # Database
-app.db
+*.db
 
 # Secrets
 secrets.sh
@@ -52,6 +52,7 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
+.pytest_cache/
 
 # Translations
 *.mo
@@ -99,3 +100,9 @@ ENV/
 
 # configs
 config.py
+
+# coverage report
+reports/
+
+# bootstrap
+setup.sh

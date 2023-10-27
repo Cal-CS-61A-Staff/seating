@@ -1,0 +1,41 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+<section class="rooms mdl-grid">
+  <div class="mdl-cell mdl-cell--12-col">
+    <h4>Staff Offerings</h4>
+    <ul class="mdl-list">
+    {% for offering in staff_offerings %}
+      <li class="mdl-list__item">
+        {# <div class="material-icons std" onclick="location.href = '{{ url_for('toggle_exam', exam=exam) }}';" style="margin-left: 0">{{ "star" if exam.is_active else "star_border" }}</div> #}
+        <a class="mdl-list__item-primary-content" href="{{ url_for('offering', offering=offering) }}">
+          {{ offering.name }}
+        </a>
+        {# <div class="material-icons std" onclick="location.href = '{{ url_for('delete_exam', exam=exam) }}';" style="float: right">clear</div> #}
+      </li>
+    {% endfor %}
+    </ul>
+    <h4>Student Offerings</h4>
+    <ul class="mdl-list">
+    {% for offering in student_offerings %}
+      <li class="mdl-list__item">
+        {# <div class="material-icons std" onclick="location.href = '{{ url_for('toggle_exam', exam=exam) }}';" style="margin-left: 0">{{ "star" if exam.is_active else "star_border" }}</div> #}
+        <a class="mdl-list__item-primary-content" href="{{ url_for('offering', offering=offering) }}">
+          {{ offering.name }}
+        </a>
+        {# <div class="material-icons std" onclick="location.href = '{{ url_for('delete_exam', exam=exam) }}';" style="float: right">clear</div> #}
+      </li>
+    {% endfor %}
+    </ul>
+    <h4>Other Offerings</h4>
+    <ul class="mdl-list">
+    {% for offering in other_offerings %}
+      <li class="mdl-list__item">
+        {{ offering.name }}
+      </li>
+    {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

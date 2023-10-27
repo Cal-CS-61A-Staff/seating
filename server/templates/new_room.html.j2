@@ -5,12 +5,12 @@
 
 <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
   <div class="mdl-tabs__tab-bar">
-    <a href="#sheet-panel" class="mdl-tabs__tab is-active">Import</a>
-    <a href="#choice-panel" class="mdl-tabs__tab">Choose</a>
+    <a href="#sheet-panel" class="mdl-tabs__tab is-active">Import from Custom Sheet</a>
+    <a href="#choice-panel" class="mdl-tabs__tab">Import from Master Sheet</a>
   </div>
 
   <div class="mdl-tabs__panel is-active" id="sheet-panel">
-    <form action="{{ url_for('new_room', exam=exam) }}" method="post">
+    <form action="{{ url_for('import_room_from_custom_sheet', exam=exam) }}" method="post">
       {{ new_form.hidden_tag() }}
       <div class="mdl-grid">
         <div class="mdl-layout-spacer"></div>
@@ -71,7 +71,7 @@
     <div class="mdl-grid">
       <div class="mdl-layout-spacer"></div>
       <div class="mdl-cell mdl-cell--4-col">
-        <form action="{{ url_for('mult_new_room', exam=exam) }}" method="post">
+        <form action="{{ url_for('import_room_from_master_sheet', exam=exam) }}" method="post">
           {{ choose_form.hidden_tag() }}
           <div class="checkbox">{{ choose_form.rooms }}</div>
           <div class="form-buttons">{{ choose_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}</div>

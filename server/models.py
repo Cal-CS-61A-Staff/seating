@@ -7,10 +7,13 @@ from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, types
 from sqlalchemy.orm import backref
+from sqlalchemy import UniqueConstraint
+from sqlalchemy.ext.associationproxy import association_proxy
 
 from server import app
 
 db = SQLAlchemy(app=app)
+
 
 class StringSet(types.TypeDecorator):
     impl = types.Text
@@ -24,18 +27,66 @@ class StringSet(types.TypeDecorator):
         else:
             return set(value.split(','))
 
+
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), nullable=False, index=True)
-    offerings = db.Column(StringSet, nullable=False)
+    name = db.Column(db.String(255), index=True, nullable=False)
+    canvas_id = db.Column(db.String(255), nullable=False, index=True)
+    staff_offerings = db.Column(StringSet, nullable=False)
+    student_offerings = db.Column(StringSet, nullable=False)
+
+
+class Offering(db.Model):
+    __tablename__ = 'offerings'
+    id = db.Column(db.Integer, primary_key=True)
+    canvas_id = db.Column(db.String(255), nullable=False, index=True)
+    name = db.Column(db.String(255), nullable=False)
+    code = db.Column(db.String(255), nullable=False)
+
+    exams = db.relationship('Exam', uselist=True, cascade='all, delete-orphan',
+                            order_by='Exam.display_name',
+                            backref=backref('offering', uselist=False, single_parent=True))
+
+    def __repr__(self):
+        return '<Offering {}>'.format(self.name)
+
+    def mark_all_exams_as_inactive(self):
+        Exam.query.filter_by(offering_canvas_id=self.canvas_id).update({"is_active": False})
+
 
 class Exam(db.Model):
     __tablename__ = 'exams'
     id = db.Column(db.Integer, primary_key=True)
-    offering = db.Column(db.String(255), nullable=False, index=True)
+    offering_canvas_id = db.Column(db.ForeignKey(
+        'offerings.canvas_id'), index=True, nullable=False)
     name = db.Column(db.String(255), nullable=False, index=True)
     display_name = db.Column(db.String(255), nullable=False)
+    is_active = db.Column(db.BOOLEAN, nullable=False)
+
+    rooms = db.relationship('Room', uselist=True, cascade='all, delete-orphan',
+                            order_by='Room.display_name',
+                            backref=backref('exam', uselist=False, single_parent=True))
+    students = db.relationship('Student', uselist=True, cascade='all, delete-orphan',
+                               order_by='Student.name',
+                               backref=backref('exam', uselist=False, single_parent=True))
+    seats = association_proxy('rooms', 'seats')
+
+    __table_args__ = (
+        UniqueConstraint('offering_canvas_id', 'name', name='uq_offering_canvas_id_name'),
+    )
+
+    @property
+    def unassigned_seats(self):
+        return [seat for seat in itertools.chain(*self.seats) if seat.assignment == None]  # noqa
+
+    @property
+    def unassigned_students(self):
+        return [student for student in self.students if student.assignment == None]  # noqa
+
+    def __repr__(self):
+        return '<Exam {}>'.format(self.name)
+
 
 class Room(db.Model):
     __tablename__ = 'rooms'
@@ -44,7 +95,13 @@ class Room(db.Model):
     name = db.Column(db.String(255), nullable=False, index=True)
     display_name = db.Column(db.String(255), nullable=False)
 
-    exam = db.relationship('Exam', backref=backref('rooms', order_by='Room.display_name'))
+    seats = db.relationship('Seat', uselist=True, cascade='all, delete-orphan',
+                            order_by='Seat.name',
+                            backref=backref('room', uselist=False, single_parent=True))
+
+    __table_args__ = (
+        UniqueConstraint('exam_id', 'name', name='uq_exam_id_name'),
+    )
 
     @property
     def rows(self):
@@ -53,6 +110,10 @@ class Room(db.Model):
             natsorted(g, key=lambda seat: seat.x)
             for _, g in itertools.groupby(seats, lambda seat: seat.row)
         ]
+
+    def __repr__(self):
+        return '<Room {}>'.format(self.name)
+
 
 class Seat(db.Model):
     __tablename__ = 'seats'
@@ -65,24 +126,34 @@ class Seat(db.Model):
     y = db.Column(db.Float, nullable=False)
     attributes = db.Column(StringSet, nullable=False)
 
-    room = db.relationship('Room', backref='seats')
+    assignment = db.relationship('SeatAssignment', uselist=False, cascade='all, delete-orphan',
+                                 backref=backref('seat', uselist=False, single_parent=True))
+
+    def __repr__(self):
+        return '<Seat {}>'.format(self.name)
+
 
 class Student(db.Model):
     __tablename__ = 'students'
     id = db.Column(db.Integer, primary_key=True)
     exam_id = db.Column(db.ForeignKey('exams.id'), index=True, nullable=False)
+    canvas_id = db.Column(db.String(255), nullable=False, index=True)
     email = db.Column(db.String(255), index=True, nullable=False)
     name = db.Column(db.String(255), nullable=False)
     sid = db.Column(db.String(255))
-    bcourses_id = db.Column(db.String(255))
     wants = db.Column(StringSet, nullable=False)
     avoids = db.Column(StringSet, nullable=False)
 
-    exam = db.relationship('Exam', backref='students')
+    assignment = db.relationship('SeatAssignment', uselist=False, cascade='all, delete-orphan',
+                                 backref=backref('student', uselist=False, single_parent=True))
 
     @property
     def first_name(self):
         return self.name.rsplit(',', 1)[-1].strip().title()
+
+    def __repr__(self):
+        return '<Student {} ({})>'.format(self.name, self.canvas_id)
+
 
 class SeatAssignment(db.Model):
     __tablename__ = 'seat_assignments'
@@ -93,39 +164,46 @@ class SeatAssignment(db.Model):
     seat_id = db.Column(db.ForeignKey('seats.id'), index=True, nullable=False)
     emailed = db.Column(db.Boolean, default=False, index=True, nullable=False)
 
-    student = db.relationship('Student', backref=backref('assignment', uselist=False))
-    seat = db.relationship('Seat', backref=backref('assignment', uselist=False))
 
 def slug(display_name):
     return re.sub(r'[^A-Za-z0-9._-]', '', display_name.lower())
 
 # Flask-CLI commands
 # Run with `flask <cmd>`
+
+
 @app.cli.command('initdb')
 def init_db():
-    "Initializes the database"
+    """
+    Initializes the database
+    """
     click.echo('Creating database...')
     db.create_all()
     db.session.commit()
 
+
 @app.cli.command('dropdb')
 def drop_db():
-    "Drops all tables"
+    """
+    Drops all tables from the database
+    """
     doit = click.confirm('Are you sure you want to delete all data?')
     if doit:
         click.echo('Dropping database...')
         db.drop_all()
 
 # For development purposes only
+
+
 @app.cli.command('seeddb')
 def seed_db():
-    "Seeds database with data"
-    for seed_exam in seed_exams:    
-        existing = Exam.query.filter_by(offering=seed_exam.offering, name=seed_exam.name).first()   
-        if not existing:    
-            click.echo('Adding seed exam {}...'.format(seed_exam.name)) 
-            db.session.add(seed_exam)
-            db.session.commit()
+    """
+    Seeds the database with data
+    There is no need to seed even in development, since the database is
+    dynamically populated when app launches, see stub.py
+    """
+    pass
+
 
 @app.cli.command('resetdb')
 @click.pass_context
@@ -134,21 +212,3 @@ def reset_db(ctx):
     ctx.invoke(drop_db)
     ctx.invoke(init_db)
     ctx.invoke(seed_db)
-
-seed_exams = [  
-    Exam(   
-        offering=app.config['COURSE'],  
-        name='midterm1', 
-        display_name='Midterm 1',   
-    ),  
-    Exam(   
-        offering=app.config['COURSE'],  
-        name='midterm2', 
-        display_name='Midterm 2',   
-    ),  
-    Exam(   
-        offering=app.config['COURSE'],  
-        name='final', 
-        display_name='Final',   
-    ),  
-]

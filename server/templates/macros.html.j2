@@ -36,7 +36,7 @@
       <div class="seat-label" style="left:{{ x + 30 }}px;top:{{ y }}px">{{ seat.name }}</div>
     {% endif %}
     {% if staff and seat.assignment %}
-    <a href="{{ url_for('student', exam=exam, email=seat.assignment.student.email) }}">
+    <a href="{{ url_for('student', exam=exam, canvas_id=seat.assignment.student.canvas_id) }}">
     {% endif %}
       {% if seat.name == highlight_seat %}
         {% set class = 'seat highlight' %}

@@ -1,80 +1,112 @@
 # Exam Seating App
 
-The seating app assigns seats to students, taking some basic preferences into account. 
-Students can log in with their Ok account to view their seat in their room. 
-General course staff can project the seating chart during the beginning of the exam
-and help individual students find their seat. An admin TA (configured through config vars)
-will be able to choose rooms, assign seats, and mass email students their seat assignment.
+The seating app's primary goal is to assign seats to students for exams.
 
-This app uses Ok to manage access. Even if you aren't using Ok for assignments, 
-you should create a course on Ok and enroll all of your staff, academic interns, 
-and students with the appropriate roles.
+Table of Contents:
 
-## Usage (Admin TAs for Courses)
+- [Exam Seating App](#exam-seating-app)
+  - [Introduction](#introduction)
+  - [Features and Benefits](#features-and-benefits)
+  - [For Course Staff](#for-course-staff)
+    - [Quick Start](#quick-start)
+      - [Step 1: Work with Offerings](#step-1-work-with-offerings)
+      - [Step 2: Work with Exams](#step-2-work-with-exams)
+      - [Step 3: Work with Rooms and Students](#step-3-work-with-rooms-and-students)
+      - [Step 4: Setting Preferences, Assign Seats and Email Students](#step-4-setting-preferences-assign-seats-and-email-students)
+    - [Detailed Guide](#detailed-guide)
+      - [Creating Exams](#creating-exams)
+      - [Importing Rooms](#importing-rooms)
+      - [Google Sheets Format for Rooms](#google-sheets-format-for-rooms)
+      - [Importing Students](#importing-students)
+      - [Reviewing Data, Assigning Seats](#reviewing-data-assigning-seats)
+      - [Emailing students](#emailing-students)
+      - [Get Roster Photos](#get-roster-photos)
+      - [During the exam](#during-the-exam)
+  - [For Developers](#for-developers)
+    - [Local Setup](#local-setup)
+    - [Environment Variables](#environment-variables)
+    - [Available CLI Commands](#available-cli-commands)
+    - [Devops](#devops)
+      - [Testing](#testing)
+      - [CI/CD](#cicd)
+      - [Deployment](#deployment)
 
-It's janky. Many steps involve directly poking the database. The only way to
-correct errors is to manually edit the database, so be careful.
+## Introduction
 
-In summary, setting up the seating chart involves these steps:
-1. **Create an exam** (ex. Midterm 1 or Final). Or at least in the future you will be able to.
-For now, contact the slack to have your exam created for you if you did not set up the app.
-This step is already done for you if you can successfully view the seating app.
-2. **Add rooms.** Choose your rooms from our selection or import your own custom room.
-3. **Import students.** Customize your student preferences (left seat, front/back, buildings, etc.)
-4. **Assign! Then email!**
+The entire app is protected behind Canvas (bCourses) authentication and authorization, so only Berkeley students can access the app. Only individuals that are enrolled in a certain course can access the app for that course - the type of enrollment (student, staff, etc.) fetched from Canvas determines the level of access.
 
-Read further for more details regarding each step.
+Course staff can create, edit, and delete exams, rooms, students rosters and preferences, assign seats to students, and mass email students about their assignments. Students can view their available seat assignment.
 
-### Choosing rooms
-#### Import a room
-Room data is entered from a Google Sheet. If you picked your rooms from our selection,
-those rooms are imported from the master room sheet.
+## Features and Benefits
 
-Master: https://drive.google.com/open?id=1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s
+- Ensures fair seating arrangements for all students taking the exam, while taking into account student preferences (e.g. lefty chair, dsp accomodation etc.)
+- Securely stores sensitive student and exam data abide by FERPA and other privacy laws, allowing only authorized staff to access the data.
+- Streamlines the administrative process by automating seat assignment, reducing the workload on staff and minimizing errors in seating allocation.
+- Allowing exam seating email notification and seating chart projection during the exam, smoothing the logistical processes for both students and staff.
+- Allows staff to easily identify cheaters during exams by seating location, minimizing the possibility of academic misconduct or cheating during exams.
 
-If the room you want does not exist, you can try looking through the [rooms](https://drive.google.com/drive/u/1/folders/0B7ZiW-W5STesMG50eDgxNlJBZ1E) used in the past years.
+## For Course Staff
 
-#### Create a room
-You can also create and customize the room you want with a Google spreadsheet.
+### Quick Start
 
-One row of the spreadsheet corresponds to one row. The "Row" and "Seat" columns
-specify the name of a seat. The "X" and "Y" are the coordinates in the seating
-chart. If "X" is left blank, it defaults to one space stage right (house left)
-to the previous seat. If "Y" is left blank, it defaults to the Y coordinate of
-the previous seat. The remaining columns are arbitrary TRUE/FALSE "attributes",
-which can give labels to seats such as LEFTY, RIGHTY, AISLE, FRONT, or RESERVED.
-A blank value is interpreted as FALSE. Student preferences are given in terms
-of these labels, and are used to match students to seats. It's helpful while
-creating your room to preview it on the `Import rooms` page.
+#### Step 1: Work with Offerings
 
-On the `Import Rooms` page, you can preview the seating chart for a room by specifying a room name,
-Google Sheets URL, and sheet name. Create the room when you're sure it's ready.
+After logging in you will be able to see a list of enrolled courses (we call it "offerings"). Click into any offering listed under "Staff Offerings" you want to work with to start using the seating app for that offering.
 
-If you created your own room sheet because it previously did not exist, we would appreciate
-you adding the sheet to the [master doc](https://drive.google.com/open?id=1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s).
+#### Step 2: Work with Exams
 
-### Importing and Assigning students
+You will see a list of existing exams created for this offering. Click into any of them to start working with the exam. If you want to create a new exam, click the "Create" button. You can star or delete exams on this page too. Starring an exam won't do anything other than a visual effect.
 
-To import students, create a Google spreadsheet with the columns "Name",
-"Student ID", "Email", and "bCourses ID". The remaining columns are arbitrary attributes
-(ex: LEFTY, RIGHTY, BROKEN) that express student preferences. 
+#### Step 3: Work with Rooms and Students
 
-For example, if a student has LEFTY=TRUE, they will be assigned a seat with the
-LEFTY attribute. If a student has LEFTY=FALSE, they will be assigned a seat
-without the LEFTY attribute. If a student's LEFTY attribute is blank, i.e. TRUE
-nor FALSE, then they will could be assigned to either a LEFTY or non-LEFTY seat
-as if they don't care.
+After clicking into an exam, you will see a list of existing rooms and students already imported (or nothing, if this is a newly created exam). Naturally you will want to import rooms and students so you can start assigning seats. Click the "Import Rooms" or "Import Students" button to start importing. There are different options for importing rooms and students, which will be explained in the later section.
 
-You can add students to the spreadsheet and import them again later. Duplicates
-will be merged.
+#### Step 4: Setting Preferences, Assign Seats and Email Students
 
-Assign students by clicking on the `assign` button. Only unassigned students will
-be assigned a seat. To reassign a student, delete their corresponding row from the
-`seat_assignments` table.
+Student and email data could come from different sources (Google Sheets, csv upload, Canvas Roster etc.) but have to be consolidated within the app itself. You may need to tweak student preferences (e.g. lefty, righty, front, back, etc.) and review all data imported before you start assigning seats. If you are sure about your student and room data, click the "Assign" button to start assigning seats. You can also click the "Email" button to send out emails to students about their seat assignments.
 
-### Emailing students
+### Detailed Guide
+
+#### Creating Exams
+
+- `name` are `display_name` are different. `name` is like a unique id while `display_name` is what students see.
+
+#### Importing Rooms
+
+- All Room data are entered from a Google Sheet. Thus, you will need login to Google to import rooms. You can only use Google Sheets that you have access to from your Google account.
+- There is a [master room sheet](https://drive.google.com/open?id=1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s) containing some commonly used exam rooms and seat information. This sheet is already hardcoded into the seating app. To import a room from the master sheet, simply select the room name from the checkbox menu.
+- You can also create your own sheet and type in the sheet url and tab to import a custom room. You may reference [rooms](https://drive.google.com/drive/u/1/folders/0B7ZiW-W5STesMG50eDgxNlJBZ1E) used in the past years.
+- On the import page, you can preview the seating chart for a room by specifying a room name, Google Sheets URL, and sheet name. Create the room when you're sure it's ready.
+- If you created your own room sheet because it previously did not exist, consider adding the sheet to the master sheet.
+
+#### Google Sheets Format for Rooms
+
+- One row of the spreadsheet corresponds to one row.
+- The "Row" and "Seat" columns specify the name of a seat.
+- The "X" and "Y" are the coordinates in the seating chart. If "X" is left blank, it defaults to one space stage right (house left) to the previous seat. If "Y" is left blank, it defaults to the Y coordinate of the previous seat.
+- The remaining columns are arbitrary TRUE/FALSE "attributes", which can give labels to seats such as LEFTY, RIGHTY, AISLE, FRONT, or RESERVED. A blank value is interpreted as FALSE. Student preferences are given in terms of these labels, and are used to match students to seats.
+
+#### Importing Students
+
+- Student data can be imported from a Google Sheet. Thus, you will need login to Google to import students. You can only use Google Sheets that you have access to from your Google account.
+- To import students for an exam, create a Google spreadsheet with the columns "Name", "Student ID", "Email", and "Canvas ID". The remaining columns are arbitrary attributes (ex: LEFTY, RIGHTY, BROKEN) that express student preferences - check your room sheet for the available attributes.
+- For example, if a student has LEFTY=TRUE, they will be assigned a seat with the LEFTY attribute. If a student has LEFTY=FALSE, they will be assigned a seat without the LEFTY attribute. If a student's LEFTY attribute is blank, then they will could be assigned to either a LEFTY or non-LEFTY seat as if they don't care.
+- Student data can also be imported from Canvas Roster. Importing students this way results in all students from the roster being added to the database without any preferences/attributes. You can then manually add preferences/attributes to students.
+- Remember, data can come from different sources but must be consolidated within the app itself. Multiple imports of the same student will be merged according to their Canvas ID (other fields would be updated to the latest import, if they are different).
+
+#### Reviewing Data, Assigning Seats
+
+- After importing rooms and students, you might need to review data (especially student preferences) before assigning seats. If you see problems, just edit student datatable on the app. The workflow is pretty intuitive as it basically resembles a spreadsheet.
+- Any change of student preference attributes will make the student unassigned. You will need to reassign seats after making changes.
+- Assign students by clicking on the `assign` button. Only unassigned students will be assigned a seat.
+- You can mannually unassign students from the student table too.
+
+#### Emailing students
+
+(Under Construction; content might be outdated)
 
 Students will receive an email that looks like
+
 ```
 Hi -name-,
 
@@ -93,12 +125,14 @@ You can view this seat's position on the seating chart at:
 The "additional text" is a good place to tell them what to do if they have an
 issue with their seat, and to sign the email (e.g. "- Cal CS 61A Staff").
 
-### Roster Photos
+#### Get Roster Photos
+
+(Under Construction; content might be outdated)
 
 To allow for roster photos to appear in the app, set the `PHOTO_DIRECTORY` env
 variable to a directory containing files at the path:
 
-	{PHOTO_DIRECTORY}/{Course Offering}/{bCourses ID}.jpeg
+    {PHOTO_DIRECTORY}/{Course Offering}/{bCourses ID}.jpeg
 
 The bCourses ID column is used to determine which photo to display for which
 student.
@@ -108,110 +142,139 @@ roster photos from bCourses. That extension no longer works in Firefox Quantum,
 so you can either use an old version of Firefox with support for legacy add-ins,
 or use the script `download_bcourses_photos.py` in this repo.
 
-### During the exam
+#### During the exam
+
+(Under Construction; content might be outdated)
 
 Staff can project the seating chart, and use the seating chart to identity
 cheaters.
 
-### Authentication
+## For Developers
 
-Viewing full seating charts requires logging in as a TA or tutor through Ok.
+### Local Setup
 
-Importing spreadsheets requires a separate Google OAuth login.
+1. Clone Repo
 
-All paths at an exam route (e.g. `/cal/cs61a/fa17/midterm1`) require a proper
-staff login.
+Clone the repository and change directories into the repository.
 
-The `/seat/<id>` routes are publicly accessible, and highlight a single seat on
-a room's full seating chart without displaying any student info or info about
-seat assignments.
-
-When a student attempts to log in, they will be redirected to their assigned
-seat page if it exists. This only works for the current COURSE and EXAM as
-set in the environment variables.
-
-### Creating exams
-
-Create an exam by adding a row to the `exams` table. The exam that the home page
-redirects to is hardcoded, so you may want to change that too. In the future,
-there should be an interface to CRUD exams.
-
-## Setup (development)
-1. Clone the repository and change directories into the repository.
-```
-	git clone https://github.com/Cal-CS-61A-Staff/seating.git
+```bash
+	git clone git@github.com:berkeley-eecs/seating.git
 	cd seating
 ```
 
-2. Create and activate a virtual environment.
-``` 
-	python3 -m venv env 
+2. Setup Virtual Environment
+
+Create and activate a virtual environment and activate it.
+We are not using `virtualenv`.
+
+```bash
+	python3 -m venv venv
 	source env/bin/activate
 ```
 
-3. Use pip to install all the dependencies.
+3. Install Dependencies
+
+You should install from both `requirements.txt` and `requirements-dev.txt`.
+Make sure you are in the virtual environment.
+
 ```
 	pip install -r requirements.txt
+   pip install -r requirements-dev.txt
 ```
 
-4. Add yourself to `cal/test/fa18` course (both as student and instructor but with different emails). Development server uses `cal/test/fa18` as its test OKPY course. 
+4. Setup Environment Variables
 
-5. Make sure your virtual environment is activated. Then set up the environment variables.
-```
-export FLASK_APP = server  (or server/__init__.py)
-export FLASK_ENV = development
-```
+Copy the `.env.example` file to `.env` and fill in the environment variables.
+You will need a few API keys and secrets. See the section on environment variables for details.
+Make sure you are in the virtual environment.
 
-6. Modify `config.py` as necessary. Set `OK_CLIENT_ID`, `OK_CLIENT_SECRET`, `GOOGLE_OAUTH2_CLIENT_ID`, `GOOGLE_OAUTH2_CLIENT_SECRET`, `SENDGRID_API_KEY`, `PHOTO_DIRECTORY`, `EXAM`, `ADMIN` as needed.
+5. Setup Database
 
-7. Import [demo data](https://docs.google.com/spreadsheets/d/1nC2vinn0k-_TLO0aLmLZtI9juEoSOVEvA3o40HGvXAw/edit?usp=drive_web&ouid=100612133541464602205) for students and rooms (photos TBA). 
+For development, we are using a local `sqlite3` database. Hence, no need to configure any server or connection string.
+You only need to initialize the database once.
 
-4. Initialize tables and seed the data: `flask resetdb`
-This command drops previous tables, initializes tables and adds seeds the exams table. Students, rooms, etc. must be imported (see how in the previous section, Using the app). 
-
-5. Run the app: `flask run`
-This commands only needs to be run once.
-
-6. Open [localhost:5000](https://localhost:5000)
-
-
-## Production (First Time Deployment on dokku)
-	dokku apps:create seating
-	dokku mysql:create seating
-	dokku mysql:link seating seating
-	# Set DNS record
-	dokku domains:add seating seating.cs61a.org
-	# Change OK OAuth to support the domain
-
-	dokku config:set seating <ENVIRONMENT VARIABLES>
-
-	git remote add dokku dokku@apps.cs61a.org:seating
-	git push dokku master
-
-	dokku run seating flask initdb
-	dokku letsencrypt seating
-
-In addition, add the following to `/home/dokku/seating/nginx.conf`:
-```
-proxy_buffer_size   128k;
-proxy_buffers   4 256k;
-proxy_busy_buffers_size   256k;
+```bash
+   flask resetdb
 ```
 
-## Environment variables
-```
-FLASK_APP=server/__init__.py
-SECRET_KEY
-DATABASE_URL
-OK_CLIENT_ID
-OK_CLIENT_SECRET
-GOOGLE_CLIENT_ID
-GOOGLE_CLIENT_SECRET
-COURSE
-EXAM
-DOMAIN
-PHOTO_DIRECTORY=/app/storage
-ADMIN
+6. Spin up the Server
+
+```bash
+   flask run
 ```
 
-You can create an Ok OAuth client [here](https://okpy.org/admin/clients/), though it will need to be approved by an Ok admin before it can be used.
+Open [localhost:5000](https://localhost:5000). You should be able to see the app running locally.
+
+7. Navigate the App
+
+Try clicking into a course offering and create an exam.
+Use this [demo Google Sheet](https://docs.google.com/spreadsheets/d/1nC2vinn0k-_TLO0aLmLZtI9juEoSOVEvA3o40HGvXAw/edit?usp=drive_web&ouid=100612133541464602205) to import rooms and students, and trying out assigning seatings.
+
+### Environment Variables
+
+```bash
+# env flag. available values: development, production, testing
+FLASK_ENV=development
+
+# whether to mock canvas. false to use real canvas api, true to use mock canvas api
+MOCK_CANVAS=false
+
+# google oauth client id and secrets, follow the normal gcp oauth flow to get it
+# remember to setup the redirect and origin urls
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# canvas server url, client id and secret, get them from school LTI team
+CANVAS_SERVER_URL=
+CANVAS_CLIENT_ID=
+CANVAS_CLIENT_SECRET=
+
+# sendgrid api key, get it from sendgrid dashboard
+SENDGRID_API_KEY=
+
+# misc
+DOMAIN=localhost:5000
+LOCAL_TIMEZONE=US/Pacific
+```
+
+### Available CLI Commands
+
+```bash
+# intialize database
+flask initdb
+# drop database
+flask dropdb
+# seed database
+flask seeddb
+# reset database (drop, init, seed)
+flask resetdb
+# run linting check
+flask lint
+# run unit tests
+flask unit
+# run e2e tests
+flask e2e
+# run all tests (unit, e2e)
+flask test
+# run coverage
+flask cov
+# run security audit
+flask audit
+```
+
+### Devops
+
+#### Testing
+
+(under construction)
+our framework is pytest, using selenium for e2e testing
+should mention deets on oauth/api stubbing, email testing
+
+#### CI/CD
+
+(under construction)
+github actions for now
+
+#### Deployment
+
+(under construction)

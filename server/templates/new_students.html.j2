@@ -2,62 +2,78 @@
 {% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
-{% call macros.form(form) %}
-
-<div class="mdl-grid">
-  <div class="mdl-cell mdl-cell--3-col">
-    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-      {{ form.sheet_url(class="mdl-textfield__input", type="Google Sheet URL", id="gsurl") }}
-      <label class="mdl-textfield__label" for="gsurl">Google Sheet URL</label>
-    </div>
-    <div class="errormsg">
-      {% if form.sheet_url.errors %}
-        {% for error in form.sheet_url.errors %}
-          <span>{{ form.sheet_url.errors }}</span>
-        {% endfor %}
-      {% endif %}
-    </div>
+<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+  <div class="mdl-tabs__tab-bar">
+    <a href="#sheet-panel" class="mdl-tabs__tab is-active">Import from Custom Sheet</a>
+    <a href="#canvas-panel" class="mdl-tabs__tab">Import from Canvas Roster</a>
   </div>
-  <div class="mdl-cell mdl-cell--3-col">
-    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-      {{ form.sheet_range(class="mdl-textfield__input", type="Sheet Name", id="sheetname") }}
-      <label class="mdl-textfield__label" for="sheetname">Sheet Name</label>
-    </div>
-    <div class="errormsg">
-      {% if form.sheet_range.errors %}
-        {% for error in form.sheet_range.errors %}
-          <span>{{ form.sheet_range.errors }}</span>
-        {% endfor %}
-      {% endif %}
-    </div>
+  <div class="mdl-tabs__panel is-active" id="sheet-panel">
+    <form action="{{ url_for('import_students_from_custom_sheet', exam=exam) }}" method="post">
+        {{ from_sheet_form.hidden_tag() }}
+      <div class="mdl-grid">
+        <div class="mdl-cell mdl-cell--3-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            {{ from_sheet_form.sheet_url(class="mdl-textfield__input", type="Google Sheet URL", id="gsurl") }}
+            <label class="mdl-textfield__label" for="gsurl">Google Sheet URL</label>
+          </div>
+          <div class="errormsg">
+            {% if from_sheet_form.sheet_url.errors %}
+              {% for error in from_sheet_form.sheet_url.errors %}
+                <span>{{ from_sheet_form.sheet_url.errors }}</span>
+              {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+        <div class="mdl-cell mdl-cell--3-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            {{ from_sheet_form.sheet_range(class="mdl-textfield__input", type="Sheet Name", id="sheetname") }}
+            <label class="mdl-textfield__label" for="sheetname">Sheet Name</label>
+          </div>
+          <div class="errormsg">
+            {% if from_sheet_form.sheet_range.errors %}
+              {% for error in from_sheet_form.sheet_range.errors %}
+                <span>{{ from_sheet_form.sheet_range.errors }}</span>
+              {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-buttons">
+          {{ from_sheet_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+        </div>
+        
+        <div class="mdl-cell mdl-cell--12-col">
+          <h4>Example</h4>
+          <img src="{{ url_for('students_template') }}" alt="Students sheet example" style="max-width:100%;
+          max-height:100%; padding-bottom: 50px;">
+
+          <p>To import students, create a Google spreadsheet with the columns "Name",
+          "Student ID", "Email", and "bCourses ID". The remaining columns are arbitrary attributes
+          (ex: LEFTY, RIGHTY, BROKEN) that express student preferences.</p> 
+
+          <p>For example, if a student has LEFTY=TRUE, they will be assigned a seat with the
+          LEFTY attribute. If a student has LEFTY=FALSE, they will be assigned a seat
+          without the LEFTY attribute. If a student's LEFTY attribute is blank, i.e. TRUE
+          nor FALSE, then they will could be assigned to either a LEFTY or non-LEFTY seat
+          as if they don't care.</p>
+
+          <p>Include the attributes that you want. For example, if you want alternate seating, you should include
+          an AlternateSeating column. It is recommended to have a Broken column, which indicates that students should
+          not be matched into known broken desks, and the Reserved column, which leaves the front row empty in case of
+          seating mishaps.</p>
+
+          <p>You can add students to the spreadsheet and import them again later. Duplicates
+          will be merged.</p>
+        </div>
+      </div> 
+    </form>
   </div>
-  <div class="form-buttons">
-    {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+  <div class="mdl-tabs__panel" id="canvas-panel">
+    <form action="{{ url_for('import_students_from_canvas_roster', exam=exam) }}" method="post">
+        {{ from_canvas_form.hidden_tag() }}
+        <div class="mdl-grid">
+        <div class="form-buttons">
+          {{ from_canvas_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+        </div></div>
+    </form>
   </div>
-  <div class="mdl-cell mdl-cell--12-col">
-    <h4>Example</h4>
-    <img src="{{ url_for('students_template') }}" alt="Students sheet example" style="max-width:100%;
-    max-height:100%; padding-bottom: 50px;">
-
-    <p>To import students, create a Google spreadsheet with the columns "Name",
-    "Student ID", "Email", and "bCourses ID". The remaining columns are arbitrary attributes
-    (ex: LEFTY, RIGHTY, BROKEN) that express student preferences.</p> 
-
-    <p>For example, if a student has LEFTY=TRUE, they will be assigned a seat with the
-    LEFTY attribute. If a student has LEFTY=FALSE, they will be assigned a seat
-    without the LEFTY attribute. If a student's LEFTY attribute is blank, i.e. TRUE
-    nor FALSE, then they will could be assigned to either a LEFTY or non-LEFTY seat
-    as if they don't care.</p>
-
-    <p>Include the attributes that you want. For example, if you want alternate seating, you should include
-    an AlternateSeating column. It is recommended to have a Broken column, which indicates that students should
-    not be matched into known broken desks, and the Reserved column, which leaves the front row empty in case of
-    seating mishaps.</p>
-
-    <p>You can add students to the spreadsheet and import them again later. Duplicates
-    will be merged.</p>
-  </div>
-</div> 
-
-{% endcall %}
 {% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+{% call macros.form(form) %}
+<main class="mdl-grid">
+  <div class="form-buttons">
+    {{ form.login_as_yu(class="mdl-button mdl-js-button mdl-button--raised") }}
+    {{ form.login_as_jimmy(class="mdl-button mdl-js-button mdl-button--raised") }}
+  </div>
+</main>
+{% endcall %}
+{% endblock %}

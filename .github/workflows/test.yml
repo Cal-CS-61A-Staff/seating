@@ -1,0 +1,52 @@
+name: Test
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  unit-test-with-pytest:
+    strategy:
+      matrix:
+        test-type: ["unit", "e2e"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
+      # values set in GitHub repo vars/secrets are available as env vars in os
+      # but flask app expects them from os (flask uses os.getenv to fetech them)
+      # so we need to export them to os
+      - name: Exports all GitHub Environment Secrets
+        uses: oNaiPs/secrets-to-env-action@v1
+        with:
+          secrets: ${{ toJSON(secrets) }}
+      - name: Exports all GitHub Environment Variables
+        uses: oNaiPs/secrets-to-env-action@v1
+        with:
+          secrets: ${{ toJSON(vars) }}
+      - name: Prepare reports directory
+        run: |
+          mkdir -p reports
+          touch reports/pytest-${{ matrix.test-type }}.txt
+          touch reports/pytest-coverage-${{ matrix.test-type }}.txt
+      - name: Run tests with pytest and generate reports
+        run: |
+          # make sure pipe propogates exit code to fail CI on test failure
+          set -o pipefail
+          pytest --junitxml=reports/pytest-${{ matrix.test-type }}.xml --cov-report=term-missing:skip-covered --cov=server tests/${{ matrix.test-type }}/ | tee reports/pytest-coverage-${{ matrix.test-type }}.txt
+          set +o pipefail
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          title: Coverage for ${{ matrix.test-type }} tests
+          create-new-comment: true
+          pytest-coverage-path: reports/pytest-coverage-${{ matrix.test-type }}.txt
+          junitxml-path: reports/pytest-${{ matrix.test-type }}.xml

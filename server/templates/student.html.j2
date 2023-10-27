@@ -9,7 +9,8 @@
     <img class="photo" src="photo"/>
     <h6>{{ student.name }}</h6>
     <p>{{ student.email }}</p>
-    <p>{{ student.sid }}</p>
+    <p>Student ID: {{ student.sid }}</p>
+    <p>Canvas ID: {{ student.canvas_id }}</p>
     <p>
     {% if student.assignment %}
       {% set seat = student.assignment.seat %}
@@ -20,7 +21,7 @@
         Sharable Link to This Seat
       </a>
     {% else %}
-      No Assigned Seat
+      No Assigned Seat in {{ student.exam.display_name }}
     {% endif %}
     </p>
   </div>
