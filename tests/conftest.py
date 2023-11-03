@@ -1,6 +1,7 @@
 import os
 
 import pytest
+import responses
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -33,6 +34,12 @@ def db(app):
 
         sqlalchemy_db.session.remove()
         sqlalchemy_db.drop_all()
+
+
+@pytest.fixture()
+def mocker():
+    with responses.RequestsMock() as rsps:
+        yield rsps
 
 
 @pytest.fixture()

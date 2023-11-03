@@ -36,6 +36,22 @@ def test_db_rollback(db):
     assert User.query.filter_by(name='test').first() is None
 
 
+def test_mocking(mocker):
+    """
+    Test that api mocking works
+    """
+    import requests
+    mocker.get(
+        "http://xyz.com/api/1/foobar",
+        body="{}",
+        status=200,
+        content_type="application/json",
+    )
+    resp = requests.get("http://xyz.com/api/1/foobar")
+    assert resp.status_code == 200
+    assert resp.json() == {}
+
+
 def test_multiple_fixtures(app, client, db):
     """
     Test that multiple fixtures work
