@@ -3,8 +3,8 @@ from canvasapi import Canvas
 
 from server import app
 from server.models import Offering
-from server.utils.stub import get_dev_user, get_dev_course, get_dev_user_courses
-from server.utils.url import Redirect
+from server.services.canvas.stub import get_dev_user, get_dev_course, get_dev_user_courses
+from server.typings.exception import Redirect
 
 
 def _get_client(key=None):
@@ -12,7 +12,7 @@ def _get_client(key=None):
         key = session.get('access_token', None)
     if not key:
         session['after_login'] = request.url
-        raise Redirect(url_for('login'))
+        raise Redirect(url_for('auth.login'))
     return Canvas(app.config['CANVAS_SERVER_URL'], key)
 
 

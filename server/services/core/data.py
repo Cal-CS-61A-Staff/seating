@@ -3,7 +3,7 @@ import itertools
 
 from apiclient import discovery, errors
 
-from server.utils.auth import google_oauth
+from server.services.auth import google_oauth
 from server.typings.exception import DataValidationError
 from server.models import Room, Seat, Student, slug
 

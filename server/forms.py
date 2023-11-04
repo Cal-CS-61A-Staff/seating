@@ -5,7 +5,7 @@ from wtforms import BooleanField, SelectMultipleField, StringField, SubmitField,
     TextAreaField, widgets
 from wtforms.validators import Email, InputRequired, URL
 
-from server.utils.url import offering_regex, exam_regex
+from server.controllers import exam_regex
 
 
 class ExamForm(FlaskForm):

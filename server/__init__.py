@@ -1,5 +1,3 @@
-import os
-
 from flask import Flask, redirect
 import flask.ctx
 from werkzeug.exceptions import HTTPException
@@ -61,8 +59,23 @@ app.jinja_env.filters.update(
     max=max,
 )
 
+# These must be done after `app`` is created as they depend on `app`
 
-import server.utils.auth  # noqa
-import server.models  # noqa
+# prepares all auth clients
+import server.services.auth  # noqa
+
+# registers controller converters
+from server.controllers import ExamConverter, OfferingConverter  # noqa
+app.url_map.converters['exam'] = ExamConverter
+app.url_map.converters['offering'] = OfferingConverter
+
+# registers base controllers (depends on converters, so must be done after)
 import server.views  # noqa
-import tests.conftest  # noqa
+
+# registers blueprint controllers
+from server.controllers import auth_module, health_module  # noqa
+app.register_blueprint(auth_module)
+app.register_blueprint(health_module)
+
+# registers flask cli commands
+import cli  # noqa

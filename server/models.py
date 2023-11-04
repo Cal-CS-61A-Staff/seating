@@ -1,4 +1,4 @@
-import click
+
 import itertools
 from natsort import natsorted
 import re
@@ -167,48 +167,3 @@ class SeatAssignment(db.Model):
 
 def slug(display_name):
     return re.sub(r'[^A-Za-z0-9._-]', '', display_name.lower())
-
-# Flask-CLI commands
-# Run with `flask <cmd>`
-
-
-@app.cli.command('initdb')
-def init_db():
-    """
-    Initializes the database
-    """
-    click.echo('Creating database...')
-    db.create_all()
-    db.session.commit()
-
-
-@app.cli.command('dropdb')
-def drop_db():
-    """
-    Drops all tables from the database
-    """
-    doit = click.confirm('Are you sure you want to delete all data?')
-    if doit:
-        click.echo('Dropping database...')
-        db.drop_all()
-
-# For development purposes only
-
-
-@app.cli.command('seeddb')
-def seed_db():
-    """
-    Seeds the database with data
-    There is no need to seed even in development, since the database is
-    dynamically populated when app launches, see stub.py
-    """
-    pass
-
-
-@app.cli.command('resetdb')
-@click.pass_context
-def reset_db(ctx):
-    "Drops, initializes, then seeds tables with data"
-    ctx.invoke(drop_db)
-    ctx.invoke(init_db)
-    ctx.invoke(seed_db)

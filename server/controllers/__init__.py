@@ -1,24 +1,17 @@
-from flask import abort, redirect, request, session, url_for
-from flask_login import current_user
-from werkzeug.exceptions import HTTPException
-from werkzeug.routing import BaseConverter
-import server.utils.canvas as canvas_client
 
-from server import app
+from server.typings.exception import Redirect
 from server.models import SeatAssignment, Student, db, Offering, Exam
+from werkzeug.routing import BaseConverter
+from flask_login import current_user
+from flask import abort, request, session, url_for
+from flask import Blueprint
+
+auth_module = Blueprint('auth', 'auth', url_prefix='/')
+import server.controllers.auth_controllers  # noqa
+health_module = Blueprint('health', 'health', url_prefix='/health')
+import server.controllers.health_controllers  # noqa
 
 GENERAL_STUDENT_HINT = "If you think this is a mistake, please contact your course staff."
-
-
-class Redirect(HTTPException):
-    code = 302
-
-    def __init__(self, url):
-        self.url = url
-
-    def get_response(self, environ=None):
-        return redirect(self.url)
-
 
 ban_words = '(?!(((new)|(offerings)|(exams))\b))'
 offering_regex = ban_words + r'\d+'
@@ -35,7 +28,7 @@ class ExamConverter(BaseConverter):
     def to_python(self, value):
         if not current_user.is_authenticated:
             session['after_login'] = request.url
-            raise Redirect(url_for('login'))
+            raise Redirect(url_for('auth.login'))
         _, canvas_id, _, exam_name = value.split('/', 3)
         exam = Exam.query.filter_by(
             offering_canvas_id=canvas_id, name=exam_name
@@ -76,12 +69,13 @@ class OfferingConverter(BaseConverter):
     def to_python(self, value):
         if not current_user.is_authenticated:
             session['after_login'] = request.url
-            raise Redirect(url_for('login'))
+            raise Redirect(url_for('auth.login'))
         canvas_id = value.rsplit('/', 1)[-1]
 
         offering = Offering.query.filter_by(
             canvas_id=canvas_id).one_or_none()
         if not offering:
+            import server.services.canvas as canvas_client
             # visiting a offering route the first time as a staff member will create it in db
             if str(canvas_id) not in current_user.staff_offerings:
                 abort(404,
@@ -97,8 +91,3 @@ class OfferingConverter(BaseConverter):
 
     def to_url(self, offering):
         return format_offering_url(offering.canvas_id)
-
-
-def apply_converter():
-    app.url_map.converters['exam'] = ExamConverter
-    app.url_map.converters['offering'] = OfferingConverter

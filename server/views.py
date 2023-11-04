@@ -5,18 +5,15 @@ from flask_login import current_user, login_required
 
 from server import app
 from server.models import db, Exam, Room, Seat, Student
-from server.form import ExamForm, RoomForm, ChooseRoomForm, ImportStudentFromSheetForm, \
+from server.forms import ExamForm, RoomForm, ChooseRoomForm, ImportStudentFromSheetForm, \
     ImportStudentFromCanvasRosterForm, DeleteStudentForm, AssignForm, EmailForm
-from server.utils.auth import google_oauth
-import server.utils.canvas as canvas_client
-from server.utils.data import parse_form_and_validate_room, validate_students, \
+from server.services.auth import google_oauth
+import server.services.canvas as canvas_client
+from server.services.email import email_students
+from server.services.core.data import parse_form_and_validate_room, validate_students, \
     parse_student_sheet, parse_canvas_student_roster
+from server.services.core.assign import assign_students
 from server.typings.exception import DataValidationError
-from server.utils.url import apply_converter
-from server.utils.assign import assign_students
-from server.utils.email import email_students
-
-apply_converter()
 
 # region Offering CRUDI
 

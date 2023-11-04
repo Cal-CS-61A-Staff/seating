@@ -16,11 +16,14 @@ jobs:
     strategy:
       matrix:
         test-type: ["unit", "e2e"]
+        python-version: ["3.10", "3.11", "3.12"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Bootstrap
         uses: ./.github/actions/bootstrap
+        with:
+          python-version: ${{ matrix.python-version }}
       # values set in GitHub repo vars/secrets are available as env vars in os
       # but flask app expects them from os (flask uses os.getenv to fetech them)
       # so we need to export them to os
@@ -46,7 +49,7 @@ jobs:
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
         with:
-          title: Coverage for ${{ matrix.test-type }} tests
+          title: Coverage for ${{ matrix.test-type }} tests for Python ${{ matrix.python-version }}
           create-new-comment: true
           pytest-coverage-path: reports/pytest-coverage-${{ matrix.test-type }}.txt
           junitxml-path: reports/pytest-${{ matrix.test-type }}.xml

@@ -81,12 +81,12 @@
                 {{ current_user.name }} <i class="material-icons">expand_more</i>
             </a>
             <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu" for="auth-menu">
-              <a class="mdl-navigation__link" href="{{ url_for('logout') }}">
+              <a class="mdl-navigation__link" href="{{ url_for('auth.logout') }}">
               <li class="mdl-menu__item">Log Out</li>
               </a>
             </ul>
           {% else %}
-            <a class="mdl-navigation__link" href="{{ url_for('login') }}">
+            <a class="mdl-navigation__link" href="{{ url_for('auth.login') }}">
               Login
             </a>
           {% endif %}

@@ -1,6 +1,6 @@
 import random
 
-from server.models import Room, Seat, SeatAssignment, Student
+from server.models import SeatAssignment
 
 
 def assign_students(exam):

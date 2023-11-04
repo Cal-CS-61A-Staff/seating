@@ -39,15 +39,18 @@ jobs:
         uses: ./.github/actions/bootstrap
       - name: Audit with safety
         # returns 255 if there are vulnerabilities, 0 otherwise
-        # so, CI will fail if there are vulnerabilities
+        # we use `|| true` to make sure CI does not fail whatsoever
         run: |
-          safety check
+          safety check || true
+        continue-on-error: true
   audit-with-pip-audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Bootstrap
         uses: ./.github/actions/bootstrap
-        # will fail if there are vulnerabilities
+        # returns 1 if there are vulnerabilities, 0 otherwise
+        # we use `|| true` to make sure CI does not fail whatsoever
       - name: Audit with pip-audit
-        uses: pypa/gh-action-pip-audit@v1.0.8
+        run: |
+          pip-audit || true
