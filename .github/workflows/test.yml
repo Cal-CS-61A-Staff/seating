@@ -48,6 +48,9 @@ jobs:
           set +o pipefail
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
+        # no need to comment on merging to main; only need for pr
+        # it will fail anyway because of branch protection rejects commit comments
+        if: github.event_name == 'pull_request'
         with:
           title: Coverage for ${{ matrix.test-type }} tests for Python ${{ matrix.python-version }}
           create-new-comment: true
