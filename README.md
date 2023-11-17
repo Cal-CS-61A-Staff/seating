@@ -254,6 +254,8 @@ flask lint
 flask unit
 # run e2e tests
 flask e2e
+# run a11y tests
+flask a11y
 # run all tests (unit, e2e)
 flask test
 # run coverage

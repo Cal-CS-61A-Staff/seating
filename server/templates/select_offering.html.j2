@@ -8,11 +8,9 @@
     <ul class="mdl-list">
     {% for offering in staff_offerings %}
       <li class="mdl-list__item">
-        {# <div class="material-icons std" onclick="location.href = '{{ url_for('toggle_exam', exam=exam) }}';" style="margin-left: 0">{{ "star" if exam.is_active else "star_border" }}</div> #}
         <a class="mdl-list__item-primary-content" href="{{ url_for('offering', offering=offering) }}">
           {{ offering.name }}
         </a>
-        {# <div class="material-icons std" onclick="location.href = '{{ url_for('delete_exam', exam=exam) }}';" style="float: right">clear</div> #}
       </li>
     {% endfor %}
     </ul>
@@ -20,11 +18,9 @@
     <ul class="mdl-list">
     {% for offering in student_offerings %}
       <li class="mdl-list__item">
-        {# <div class="material-icons std" onclick="location.href = '{{ url_for('toggle_exam', exam=exam) }}';" style="margin-left: 0">{{ "star" if exam.is_active else "star_border" }}</div> #}
-        <a class="mdl-list__item-primary-content" href="{{ url_for('offering', offering=offering) }}">
+         <a class="mdl-list__item-primary-content" href="{{ url_for('offering', offering=offering) }}">
           {{ offering.name }}
         </a>
-        {# <div class="material-icons std" onclick="location.href = '{{ url_for('delete_exam', exam=exam) }}';" style="float: right">clear</div> #}
       </li>
     {% endfor %}
     </ul>

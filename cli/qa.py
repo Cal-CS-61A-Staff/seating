@@ -17,6 +17,12 @@ def run_unit():
     pytest.main(['-s', 'tests/unit'])
 
 
+@app.cli.command('a11y')
+def run_a11y():
+    click.echo('Running accessibility tests...')
+    pytest.main(['-s', 'tests/a11y'])
+
+
 @app.cli.command('test')
 def run_all():
     click.echo('Running all tests...')

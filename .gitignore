@@ -104,5 +104,8 @@ config.py
 # coverage report
 reports/
 
+# a11y report
+axe/
+
 # bootstrap
 setup.sh

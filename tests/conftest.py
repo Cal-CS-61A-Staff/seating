@@ -50,3 +50,21 @@ def driver():
     driver = webdriver.Chrome(options=options)
     yield driver
     driver.close()
+
+
+@pytest.fixture()
+def get_authed_driver(driver):
+    from selenium.webdriver.common.by import By
+
+    def _get_authed_driver(some_user_id):
+        # TODO: some_user_id is not used yet;
+        # we need to first set up seeding data for mock users
+        # and have a way to identify then by certain id
+        # for now, we just use the first user in the list
+        driver.get('http://localhost:5000/')
+        first_dev_login_btn = driver.find_element(By.CSS_SELECTOR, '.form-buttons .mdl-button')
+        assert first_dev_login_btn is not None
+        first_dev_login_btn.click()
+        return driver
+
+    yield _get_authed_driver

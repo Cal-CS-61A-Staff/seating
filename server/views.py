@@ -46,6 +46,7 @@ def offering(offering):
     """
     is_staff = str(offering.canvas_id) in current_user.staff_offerings
     return render_template("select_exam.html.j2",
+                           title="Select an Exam for {}".format(offering.name),
                            exams=offering.exams, offering=offering, is_staff=is_staff)
 
 # endregion
