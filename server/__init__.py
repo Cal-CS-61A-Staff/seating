@@ -64,6 +64,9 @@ app.jinja_env.filters.update(
 # prepares all auth clients
 import server.services.auth  # noqa
 
+# prepares mock canvas db
+import server.services.canvas.fake_data  # noqa
+
 # registers controller converters
 from server.controllers import ExamConverter, OfferingConverter  # noqa
 app.url_map.converters['exam'] = ExamConverter
@@ -73,7 +76,8 @@ app.url_map.converters['offering'] = OfferingConverter
 import server.views  # noqa
 
 # registers blueprint controllers
-from server.controllers import auth_module, health_module  # noqa
+from server.controllers import auth_module, dev_login_module, health_module  # noqa
+app.register_blueprint(dev_login_module)
 app.register_blueprint(auth_module)
 app.register_blueprint(health_module)
 

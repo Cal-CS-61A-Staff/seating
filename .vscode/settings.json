@@ -2,7 +2,8 @@
   "[python]": {
     "editor.defaultFormatter": "ms-python.autopep8",
     "editor.insertSpaces": true,
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4
   },
   "autopep8.args": ["--max-line-length=127"],
   "python.analysis.autoImportCompletions": true,

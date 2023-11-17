@@ -1,4 +1,3 @@
-
 from flask import jsonify
 
 from server.controllers import health_module

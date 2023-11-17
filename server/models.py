@@ -32,7 +32,7 @@ class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, nullable=False)
-    canvas_id = db.Column(db.String(255), nullable=False, index=True)
+    canvas_id = db.Column(db.String(255), nullable=False, index=True, unique=True)
     staff_offerings = db.Column(StringSet, nullable=False)
     student_offerings = db.Column(StringSet, nullable=False)
 
@@ -40,7 +40,7 @@ class User(db.Model, UserMixin):
 class Offering(db.Model):
     __tablename__ = 'offerings'
     id = db.Column(db.Integer, primary_key=True)
-    canvas_id = db.Column(db.String(255), nullable=False, index=True)
+    canvas_id = db.Column(db.String(255), nullable=False, index=True, unique=True)
     name = db.Column(db.String(255), nullable=False)
     code = db.Column(db.String(255), nullable=False)
 

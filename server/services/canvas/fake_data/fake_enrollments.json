@@ -1,0 +1,34 @@
+{
+  "123456": {
+    "1234567": {
+      "enrollments": [
+        { "type": "ta", "role": "TaEnrollment", "enrollment_state": "active" }
+      ]
+    },
+    "2345678": {
+      "enrollments": [
+        {
+          "type": "student",
+          "role": "StudentEnrollment",
+          "enrollment_state": "active"
+        }
+      ]
+    }
+  },
+  "234567": {
+    "1234567": {
+      "enrollments": [
+        {
+          "type": "student",
+          "role": "StudentEnrollment",
+          "enrollment_state": "active"
+        }
+      ]
+    },
+    "2345678": {
+      "enrollments": [
+        { "type": "ta", "role": "TaEnrollment", "enrollment_state": "active" }
+      ]
+    }
+  }
+}

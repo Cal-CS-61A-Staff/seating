@@ -1,0 +1,22 @@
+{
+  "123456": {
+    "id": 123456,
+    "name": "Yu Long",
+    "global_id": "10000000000000",
+    "effective_locale": "en",
+    "short_name": "Yu Long",
+    "sis_user_id": "3033033333",
+    "login_id": "1717117",
+    "email": "long_yu@berkeley.edu"
+  },
+  "234567": {
+    "id": 234567,
+    "name": "Jimmy Xu",
+    "global_id": "10000000000001",
+    "effective_locale": "en",
+    "short_name": "Jimmy Xu",
+    "sis_user_id": "3033033334",
+    "login_id": "1717118",
+    "email": "jx@berkeley.edu"
+  }
+}

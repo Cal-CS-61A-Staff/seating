@@ -2,11 +2,17 @@
 {% import 'macros.html.j2' as macros with context %}
 
 {% block body %}
+<label>Currently Available Mock Users:</label>
+<ul>
+  {% for mock_user in available_mock_users %}
+    <li> {{mock_user}} </li>
+  {% endfor %}
+</ul>
 {% call macros.form(form) %}
 <main class="mdl-grid">
   <div class="form-buttons">
-    {{ form.login_as_yu(class="mdl-button mdl-js-button mdl-button--raised") }}
-    {{ form.login_as_jimmy(class="mdl-button mdl-js-button mdl-button--raised") }}
+    <label for="user_id">User ID:</label>   {{ form.user_id(class="mdl-textfield__input") }}
+    {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent") }}
   </div>
 </main>
 {% endcall %}

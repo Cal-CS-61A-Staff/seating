@@ -254,7 +254,8 @@ def import_students_from_canvas_roster(exam):
     from_canvas_form = ImportStudentFromCanvasRosterForm()
     if from_canvas_form.validate_on_submit():
         try:
-            students = canvas_client.get_students(exam.offering_canvas_id)
+            course = canvas_client.get_course(exam.offering_canvas_id)
+            students = course.get_users(enrollment_type='student')
             headers, rows = parse_canvas_student_roster(students)
             students = validate_students(exam, headers, rows)
             db.session.add_all(students)

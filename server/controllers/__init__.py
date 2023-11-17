@@ -6,10 +6,6 @@ from flask_login import current_user
 from flask import abort, request, session, url_for
 from flask import Blueprint
 
-auth_module = Blueprint('auth', 'auth', url_prefix='/')
-import server.controllers.auth_controllers  # noqa
-health_module = Blueprint('health', 'health', url_prefix='/health')
-import server.controllers.health_controllers  # noqa
 
 GENERAL_STUDENT_HINT = "If you think this is a mistake, please contact your course staff."
 
@@ -91,3 +87,12 @@ class OfferingConverter(BaseConverter):
 
     def to_url(self, offering):
         return format_offering_url(offering.canvas_id)
+
+
+auth_module = Blueprint('auth', 'auth', url_prefix='/')
+dev_login_module = Blueprint('dev_login', 'dev_login', url_prefix='/dev_login')
+health_module = Blueprint('health', 'health', url_prefix='/health')
+
+import server.controllers.auth_controllers  # noqa
+import server.controllers.dev_login_controllers  # noqa
+import server.controllers.health_controllers  # noqa

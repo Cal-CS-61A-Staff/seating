@@ -15,7 +15,7 @@ def test_a11y_select_offering_page(get_authed_driver):
     """
     Checks a11y for select offering page
     """
-    report = run_axe(get_authed_driver("Yu"))
+    report = run_axe(get_authed_driver("123456"))
     assert_no_violations(report)
 
 
@@ -24,7 +24,7 @@ def test_a11y_select_exam_page(get_authed_driver):
     Checks a11y for select exam page
     """
     from selenium.webdriver.common.by import By
-    driver = get_authed_driver("Yu")
+    driver = get_authed_driver("123456")
     first_offering_btn = driver.find_element(By.CSS_SELECTOR, ".mdl-list__item-primary-content")
     assert first_offering_btn is not None
     first_offering_btn.click()

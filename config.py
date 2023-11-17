@@ -16,6 +16,7 @@ class ConfigBase(object):
 
     FLASK_APP = "server"
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    SERVER_BASE_URL = getenv('SERVER_BASE_URL', "http://localhost:5000/")
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     LOCAL_TIMEZONE = getenv('TIMEZONE', 'US/Pacific')
@@ -35,7 +36,6 @@ class ConfigBase(object):
 
     # Email setup. Domain environment is for link in email.
     SENDGRID_API_KEY = getenv('SENDGRID_API_KEY', "placeholder")
-    DOMAIN = getenv('DOMAIN', "placeholder")
 
     PHOTO_DIRECTORY = getenv('PHOTO_DIRECTORY', "placeholder")
 
@@ -56,12 +56,12 @@ class ProductionConfig(ConfigBase):
 
 class StagingConfig(ConfigBase):
     FLASK_ENV = AppEnvironment.STAGING.value
-    MOCK_CANVAS = False
+    SECRET_KEY = 'staging'
     SEND_EMAIL = EmailSendingConfig.TEST.value
 
     @property
     def SQLALCHEMY_DATABASE_URI(self):
-        return ConfigBase.getenv('DATABASE_URL').replace('mysql://', 'mysql+pymysql://')
+        return ConfigBase.getenv('DATABASE_URL').replace('postgresql://', 'postgresql+psycopg2://')
 
 
 class DevelopmentConfig(ConfigBase):

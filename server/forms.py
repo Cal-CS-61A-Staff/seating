@@ -92,5 +92,5 @@ class EmailForm(FlaskForm):
 
 
 class DevLoginForm(FlaskForm):
-    login_as_yu = SubmitField('login as Yu (169 TA, 168 Student)')
-    login_as_jimmy = SubmitField('login as Jimmy (169 Student, 168 TA)')
+    user_id = StringField('user_id', [InputRequired()], render_kw={"placeholder": "123456"})
+    submit = SubmitField('login')
