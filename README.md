@@ -1,5 +1,7 @@
 # Exam Seating App
 
+[![codecov](https://codecov.io/gh/berkeley-eecs/seating/graph/badge.svg?token=0FJ178HK0N)](https://codecov.io/gh/berkeley-eecs/seating)
+
 The seating app's primary goal is to assign seats to students for exams.
 
 Table of Contents:
