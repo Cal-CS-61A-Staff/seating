@@ -18,5 +18,25 @@
     "sis_user_id": "3033033334",
     "login_id": "1717118",
     "email": "jx@berkeley.edu"
+  },
+  "345678": {
+    "id": 345678,
+    "name": "Sharon Lovera",
+    "global_id": "10000000000002",
+    "effective_locale": "en",
+    "short_name": "Sharon Lovera",
+    "sis_user_id": "3033033335",
+    "login_id": "1717119",
+    "email": "sharon@berkeley.edu"
+  },
+  "456789": {
+    "id": 456789,
+    "name": "Lavender Angela",
+    "global_id": "10000000000003",
+    "effective_locale": "en",
+    "short_name": "Lavender Angela",
+    "sis_user_id": "3033033336",
+    "login_id": "1717120",
+    "email": "angelaz8@berkeley.edu"
   }
 }

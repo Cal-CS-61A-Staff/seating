@@ -5,7 +5,7 @@
         { "type": "ta", "role": "TaEnrollment", "enrollment_state": "active" }
       ]
     },
-    "2345678": {
+    "4567890": {
       "enrollments": [
         {
           "type": "student",
@@ -26,6 +26,65 @@
       ]
     },
     "2345678": {
+      "enrollments": [
+        { "type": "ta", "role": "TaEnrollment", "enrollment_state": "active" }
+      ]
+    }
+  },
+  "345678": {
+    "1234567": {
+      "enrollments": [
+        {
+          "type": "student",
+          "role": "StudentEnrollment",
+          "enrollment_state": "active"
+        }
+      ]
+    },
+    "2345678": {
+      "enrollments": [
+        {
+          "type": "student",
+          "role": "StudentEnrollment",
+          "enrollment_state": "active"
+        }
+      ]
+    },
+    "3456789": {
+      "enrollments": [
+        { "type": "ta", "role": "TaEnrollment", "enrollment_state": "active" }
+      ]
+    }
+  },
+  "456789": {
+    "1234567": {
+      "enrollments": [
+        {
+          "type": "student",
+          "role": "StudentEnrollment",
+          "enrollment_state": "active"
+        }
+      ]
+    },
+    "2345678": {
+      "enrollments": [
+        {
+          "type": "student",
+          "role": "StudentEnrollment",
+          "enrollment_state": "active"
+        }
+      ]
+    },
+    "3456789": {
+      "enrollments": [
+        {
+          "type": "student",
+          "role": "StudentEnrollment",
+          "enrollment_state": "active"
+        }
+      ]
+    },
+    "4567890": {
       "enrollments": [
         { "type": "ta", "role": "TaEnrollment", "enrollment_state": "active" }
       ]
