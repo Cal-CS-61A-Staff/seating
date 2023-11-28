@@ -129,7 +129,7 @@ def validate_students(exam, headers, rows):
         if not canvas_id or not email or not name:
             # dangerous. Might skip students without notifying staff
             continue
-        student = Student.query.filter_by(exam_id=exam.id, canvas_id=canvas_id).first()
+        student = Student.query.filter_by(exam_id=int(exam.id), canvas_id=str(canvas_id)).first()
         if not student:
             student = Student(exam_id=exam.id, canvas_id=canvas_id)
         student.name = name or student.sid
