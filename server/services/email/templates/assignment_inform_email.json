@@ -1,0 +1,5 @@
+{
+  "subject": "Your Exam Seating Assignment for {{EXAM}}",
+  "body_path": "assignment_inform_email.html",
+  "body_html": "true"
+}

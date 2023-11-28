@@ -330,7 +330,9 @@ def assign(exam):
 def email(exam):
     form = EmailForm()
     if form.validate_on_submit():
-        email_students(exam, form)
+        success, payload = email_students(exam, form)
+        if not success:
+            return payload
         return redirect(url_for('students', exam=exam))
     return render_template('email.html.j2', exam=exam, form=form)
 # endregion

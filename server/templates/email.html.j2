@@ -7,35 +7,32 @@
   <div class="mdl-cell mdl-cell--10-col delist">
     <h5>From</h5>
     <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-      {{ form.from_email(class="mdl-textfield__input", type="Email", id="fromemail") }}
-      <label class="mdl-textfield__label" for="fromemail">Email</label>
+      {{ form.from_addr(class="mdl-textfield__input", type="Email", id="from_addr") }}
+      <label class="mdl-textfield__label" for="from_addr">Sender Email</label>
     </div>
     <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-      {{ form.from_name(class="mdl-textfield__input", type="Name", id="fromname") }}
-      <label class="mdl-textfield__label" for="fromname">Name</label>
+      {{ form.signature(class="mdl-textfield__input", type="Name", id="signature") }}
+      <label class="mdl-textfield__label" for="signature">Sender signature</label>
     </div>
   </div>
-  <div class="mdl-cell mdl-cell--3-col delist">
-    <h5>Subject</h5>
+  <div class="mdl-cell mdl-cell--10-col delist">
+    <h5>Additional Info</h5>
     <div class="mdl-textfield mdl-js-textfield">
-      {{ form.subject(class="mdl-textfield__input", type="Subject", id="subject") }}
-      <label class="mdl-textfield__label" for="subject">Subject</label>
-    </div>
-  </div>
-  <div class="mdl-cell mdl-cell--3-col delist">
-    <h5>Test Email</h5>
-    <div class="mdl-textfield mdl-js-textfield">
-      {{ form.test_email(class="mdl-textfield__input", type="Test Email", id="testemail") }}
-      <label class="mdl-textfield__label" for="testemail">Leave blank to send to students</label>
-    </div>
-  </div>
-  <div class="mdl-cell mdl-cell--7-col delist">
-    <h5>Additional Text</h5>
-    <div class="mdl-textfield mdl-js-textfield">
-      {{ form.additional_text(class="mdl-textfield__input", type="text", rows="10", id="addtext") }}
-      <label class="mdl-textfield__label" for="addtext">Additional Text...</label>
+      {{ form.additional_info(class="mdl-textfield__input", type="text", rows="10", id="additional_info") }}
+      <label class="mdl-textfield__label" for="additional_info">Additional Info...</label>
     </div>
   <div>
+  <div class="mdl-cell mdl-cell--10-col delist">
+    <h5>Overrides</h5>
+    <div class="mdl-textfield mdl-js-textfield">
+      {{ form.override_subject(class="mdl-textfield__input", type="Subject", id="subject") }}
+      <label class="mdl-textfield__label" for="subject">Override Email Subject</label>
+    </div>
+    <div class="mdl-textfield mdl-js-textfield">
+      {{ form.override_to_addr(class="mdl-textfield__input", type="Test Email", id="testemail") }}
+      <label class="mdl-textfield__label" for="testemail">Override Receipt Address</label>
+    </div>
+  </div>
   <div class="form-buttons">
     {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
   </div>

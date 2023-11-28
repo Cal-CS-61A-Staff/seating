@@ -83,11 +83,11 @@ class AssignForm(FlaskForm):
 
 
 class EmailForm(FlaskForm):
-    from_email = StringField('from_email', [Email()])
-    from_name = StringField('from_name', [InputRequired()])
-    subject = StringField('subject', [InputRequired()])
-    test_email = StringField('test_email')
-    additional_text = TextAreaField('additional_text')
+    from_addr = StringField('from_addr', [Email(), InputRequired()])
+    signature = StringField('signature', [InputRequired()])
+    additional_info = TextAreaField('additional_info')
+    override_subject = StringField('override_subject')
+    override_to_addr = StringField('override_to_addr')
     submit = SubmitField('send')
 
 

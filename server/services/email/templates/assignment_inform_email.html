@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Seating Assignment for {{COURSE}} {{EXAM}}</title>
+  </head>
+  <body>
+    <p>Dear <strong>{{NAME}}</strong>,</p>
+
+    <p>Here's your assigned seat for the upcoming exam:</p>
+
+    <ul>
+      <li>Course: <strong>{{COURSE}}</strong></li>
+      <li>Exam: <strong>{{EXAM}}</strong></li>
+      <li>Room: <strong>{{ROOM}}</strong></li>
+      <li>Seat: <strong>{{SEAT}}</strong></li>
+    </ul>
+
+    <p>You can view this seat's position on the seating chart at:</p>
+    <a href="{{URL}}">View Seating Chart</a>
+
+    <p>
+      If you have any questions or require further assistance, please do not
+      hesitate to contact the relevant course staff.
+    </p>
+
+    <p>Good luck on your exam!</p>
+
+    <p>{{ADDITIONAL_INFO}}</p>
+
+    <p>Best,</p>
+    <p>{{SIGNATURE}}</p>
+  </body>
+</html>

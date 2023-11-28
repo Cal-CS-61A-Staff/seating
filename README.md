@@ -105,27 +105,7 @@ Student and email data could come from different sources (Google Sheets, csv upl
 
 #### Emailing students
 
-(Under Construction; content might be outdated)
-
-Students will receive an email that looks like
-
-```
-Hi -name-,
-
-Here's your assigned seat for -exam-:
-
-Room: -room-
-
-Seat: -seat-
-
-You can view this seat's position on the seating chart at:
-<domain>/seat/-seatid-/
-
--additional text-
-```
-
-The "additional text" is a good place to tell them what to do if they have an
-issue with their seat, and to sign the email (e.g. "- Cal CS 61A Staff").
+In the emailing page, you should specify minimally sender's address and sender's signature. The signature is appended to the end of the email body. You can also specify additional text to be appended to the end of the email body (this is a good place to tell students what to do if they have concerns about their seating assignments). The email body is generated from a template. The template is a html file that you can edit. The template is located at `server/services/email/templates/assignment_inform_email.html` and its variables are automatically filled in.
 
 #### Get Roster Photos
 
@@ -231,11 +211,14 @@ CANVAS_SERVER_URL=
 CANVAS_CLIENT_ID=
 CANVAS_CLIENT_SECRET=
 
-# sendgrid api key, get it from sendgrid dashboard
-SENDGRID_API_KEY=
+# email setup, use any smtp server
+EMAIL_SERVER=
+EMAIL_PORT=
+EMAIL_USE_TLS=
+EMAIL_USERNAME=
 
 # misc
-DOMAIN=localhost:5000
+SERVER_BASE_URL=localhost:5000
 LOCAL_TIMEZONE=US/Pacific
 ```
 

@@ -84,6 +84,18 @@ class Exam(db.Model):
     def unassigned_students(self):
         return [student for student in self.students if student.assignment == None]  # noqa
 
+    def get_assignments(self, emailed=None, limit=None, offset=None):
+        query = SeatAssignment.query.join(SeatAssignment.seat).join(Seat.room).filter(
+            Room.exam_id == self.id,
+        )
+        if emailed is not None:
+            query = query.filter(SeatAssignment.emailed == emailed)
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
+        return query.all()
+
     def __repr__(self):
         return '<Exam {}>'.format(self.name)
 

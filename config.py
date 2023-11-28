@@ -35,10 +35,13 @@ class ConfigBase(object):
     MOCK_CANVAS = getenv('MOCK_CANVAS', 'false').lower() == 'true'
     SEND_EMAIL = getenv('SEND_EMAIL', 'off').lower()
 
-    # Email setup. Domain environment is for link in email.
-    SENDGRID_API_KEY = getenv('SENDGRID_API_KEY', "placeholder")
+    # Email setup.
+    EMAIL_SERVER = getenv('EMAIL_SERVER', "unset")
+    EMAIL_PORT = getenv('EMAIL_PORT', "unset")
+    EMAIL_USERNAME = getenv('EMAIL_USERNAME', "unset")
+    EMAIL_PASSWORD = getenv('EMAIL_PASSWORD', "unset")
 
-    PHOTO_DIRECTORY = getenv('PHOTO_DIRECTORY', "placeholder")
+    PHOTO_DIRECTORY = getenv('PHOTO_DIRECTORY', "unset")
 
 
 class ProductionConfig(ConfigBase):
