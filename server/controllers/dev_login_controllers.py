@@ -1,4 +1,3 @@
-from turtle import title
 from flask import request, jsonify, abort, redirect, url_for, render_template
 import server.services.canvas as canvas_client
 
