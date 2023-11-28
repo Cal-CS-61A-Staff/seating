@@ -1,0 +1,47 @@
+[
+  {
+    "model": "server.models.Seat",
+    "records": [
+      {
+        "id": 1,
+        "room_id": 1,
+        "name": "A1",
+        "row": "A",
+        "seat": 1,
+        "x": 0,
+        "y": 0,
+        "attributes": "Lefty"
+      },
+      {
+        "id": 2,
+        "room_id": 1,
+        "name": "A2",
+        "row": "A",
+        "seat": 2,
+        "x": 1,
+        "y": 0,
+        "attributes": "Righty"
+      },
+      {
+        "id": 3,
+        "room_id": 1,
+        "name": "B1",
+        "row": "B",
+        "seat": 1,
+        "x": 0,
+        "y": 1,
+        "attributes": "Lefty"
+      },
+      {
+        "id": 4,
+        "room_id": 1,
+        "name": "B2",
+        "row": "B",
+        "seat": 2,
+        "x": 1,
+        "y": 1,
+        "attributes": "Righty"
+      }
+    ]
+  }
+]

@@ -2,6 +2,7 @@ import click
 
 from server.models import db
 from server import app
+from tests.fixtures import seed_db as _seed_db
 
 
 @app.cli.command('initdb')
@@ -32,7 +33,8 @@ def seed_db():
     There is no need to seed even in development, since the database is
     dynamically populated when app launches, see stub.py
     """
-    pass
+    click.echo('Seeding database...')
+    _seed_db()
 
 
 @app.cli.command('resetdb')

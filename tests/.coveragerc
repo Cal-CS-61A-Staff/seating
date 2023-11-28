@@ -1,0 +1,10 @@
+[run]
+branch = True
+source = server
+parallel = True
+concurrency = 
+    multiprocessing
+    thread
+
+[data]
+parallel = True

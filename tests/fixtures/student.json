@@ -1,0 +1,37 @@
+[
+  {
+    "model": "server.models.Student",
+    "records": [
+      {
+        "id": 1,
+        "exam_id": 1,
+        "canvas_id": "234567",
+        "email": "jx@berkeley.edu",
+        "name": "Jimmy Xu",
+        "sid": "3033033334",
+        "wants": "",
+        "avoids": ""
+      },
+      {
+        "id": 2,
+        "exam_id": 1,
+        "canvas_id": "345678",
+        "email": "sharon@berkeley.edu",
+        "name": "Sharon Lovera",
+        "sid": "3033033335",
+        "wants": "Lefty",
+        "avoids": ""
+      },
+      {
+        "id": 3,
+        "exam_id": 1,
+        "canvas_id": "456789",
+        "email": "angelaz8@berkeley.edu",
+        "name": "Lavender Angela",
+        "sid": "3033033336",
+        "wants": "Righty",
+        "avoids": "Lefty,Broken"
+      }
+    ]
+  }
+]

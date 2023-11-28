@@ -1,4 +1,4 @@
-from server.models import User
+from server.models import Seat, User, Offering, Exam, Room, Student
 
 
 def test_health():
@@ -34,6 +34,31 @@ def test_db_rollback(db):
     Test that database commits of different cases do not interfere with each other
     """
     assert User.query.filter_by(name='test').first() is None
+
+
+def test_seeded_db(seeded_db):
+    """
+    Test that seeded database works
+    """
+    assert User.query.count() > 0
+    assert Offering.query.count() > 0
+    assert Exam.query.count() > 0
+    room = Room.query.first()
+    assert room is not None
+    assert room.seats is not None
+    assert Student.query.count() > 0
+
+    # now remove all user
+    User.query.delete()
+    seeded_db.session.commit()
+    assert User.query.count() == 0
+
+
+def test_seeded_db_rollback(seeded_db):
+    """
+    Test that the previous test did not affect the seeded database
+    """
+    assert User.query.count() > 0
 
 
 def test_mocking(mocker):

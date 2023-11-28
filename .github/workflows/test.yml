@@ -40,12 +40,6 @@ jobs:
           mkdir -p reports
           touch reports/pytest-${{ matrix.test-type }}.txt
           touch reports/pytest-coverage-${{ matrix.test-type }}.txt
-      - name: Start Flask server for e2e tests
-        if: matrix.test-type == 'e2e'
-        run: |
-          echo 'y' | flask resetdb
-          flask run --debugger &
-          sleep 5
       - name: Run tests with pytest and generate reports
         run: |
           # make sure pipe propogates exit code to fail CI on test failure

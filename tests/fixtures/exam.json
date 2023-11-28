@@ -1,0 +1,14 @@
+[
+  {
+    "model": "server.models.Exam",
+    "records": [
+      {
+        "id": 1,
+        "offering_canvas_id": "1234567",
+        "name": "midterm1",
+        "display_name": "Midterm 1",
+        "is_active": true
+      }
+    ]
+  }
+]

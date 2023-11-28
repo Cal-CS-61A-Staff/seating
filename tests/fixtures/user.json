@@ -1,0 +1,28 @@
+[
+  {
+    "model": "server.models.User",
+    "records": [
+      {
+        "id": 1,
+        "name": "Yu Long",
+        "canvas_id": 123456,
+        "staff_offerings": "1234567",
+        "student_offerings": "4567890"
+      },
+      {
+        "id": 2,
+        "name": "Jimmy Xu",
+        "canvas_id": 234567,
+        "staff_offerings": "2345678",
+        "student_offerings": "1234567"
+      },
+      {
+        "id": 3,
+        "name": "Sharon Lovera",
+        "canvas_id": 345678,
+        "staff_offerings": "3456789",
+        "student_offerings": "1234567,2345678"
+      }
+    ]
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "model": "server.models.SeatAssignment",
+    "records": [
+      {
+        "student_id": 1,
+        "seat_id": 1,
+        "emailed": false
+      }
+    ]
+  }
+]

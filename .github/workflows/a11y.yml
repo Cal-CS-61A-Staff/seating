@@ -26,11 +26,6 @@ jobs:
         uses: oNaiPs/secrets-to-env-action@v1
         with:
           secrets: ${{ toJSON(vars) }}
-      - name: Spin up Server and Wait
-        run: |
-          echo 'y' | flask resetdb
-          flask run --debugger &
-          sleep 5
       - name: Run A11y Audit
         run: |
           pytest -s tests/a11y

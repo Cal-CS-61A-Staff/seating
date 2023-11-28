@@ -1,0 +1,13 @@
+[
+  {
+    "model": "server.models.Room",
+    "records": [
+      {
+        "id": 1,
+        "exam_id": 1,
+        "name": "soda999",
+        "display_name": "Soda 999"
+      }
+    ]
+  }
+]

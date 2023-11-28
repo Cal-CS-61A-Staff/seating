@@ -258,10 +258,8 @@ flask unit
 flask e2e
 # run a11y tests
 flask a11y
-# run all tests (unit, e2e)
+# run all tests (unit, e2e, a11y)
 flask test
-# run coverage
-flask cov
 # run security audit
 flask audit
 ```
@@ -270,14 +268,31 @@ flask audit
 
 #### Testing
 
-(under construction)
-our framework is pytest, using selenium for e2e testing
-should mention deets on oauth/api stubbing, email testing
+This repo is equipped with some typical testing scaffoldings you might expect to find in a full-stack application:
+
+- Test runner: `pytest`
+- Coverage: `pytest-cov`, which uses `coverage.py` under the hood
+- HTTP request stubbing: `responses`
+- Seeding database from fixture files: `flask-fixtures`
+- Webdriver for UI/e2e tests: `selenium`
+
+There are a few other aspects worth noting:
+
+- Canvas OAuth
+
+We did not use `responses` library to stub out Auth API Call. Instead, when `MOCK_CANVAS` env var is set to `True`, our app would connect to a fake local OAuth2 server instead of the actual Canvas OAuth2 server. It still completes the entire OAuth2 flow but draws user information from `server/services/canvas/fake_data/fake_users.json`.
+
+- Canvas API
+
+We did not use `responses` library to stub out Canvas API as we are using the `canvasapi` library instead of calling HTTP endpoints directly. What we did is to use a fake `CanvasClient` when `MOCK_CANVAS` env var is set to `True`, which draws information from `server/services/canvas/fake_data`.
+
+- Email
+
+We provide three ways to test the email feature.
 
 #### CI/CD
 
-(under construction)
-github actions for now
+We are using
 
 #### Deployment
 

@@ -1,0 +1,31 @@
+[
+  {
+    "model": "server.models.Offering",
+    "records": [
+      {
+        "id": 1,
+        "canvas_id": "1234567",
+        "name": "Introduction to Software Engineering (Fall 2023)",
+        "code": "COMPSCI 169A-LEC-001"
+      },
+      {
+        "id": 2,
+        "canvas_id": "2345678",
+        "name": "Introduction to the Internet: Architecture and Protocols (Fall 2022)",
+        "code": "COMPSCI 168-LEC-001"
+      },
+      {
+        "id": 3,
+        "canvas_id": "3456789",
+        "name": "Introduction to Computer Security (Fall 2022)",
+        "code": "COMPSCI 161-LEC-001"
+      },
+      {
+        "id": 4,
+        "canvas_id": "4567890",
+        "name": "Computer Architecture (Fall 2022)",
+        "code": "COMPSCI 150-LEC-001"
+      }
+    ]
+  }
+]
