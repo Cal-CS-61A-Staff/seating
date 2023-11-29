@@ -1,0 +1,38 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--12-col">
+        <h5>Update Profile for {{ student.name }} </h5>
+    </div>
+
+    {% call macros.form(form) %}
+      <div class="mdl-cell mdl-cell--10-col delist">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+          {{ form.wants(class="mdl-textfield__input", type="text",   id="wants") }}
+          <label class="mdl-textfield__label" for="wants">New Wants</label>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--10-col delist">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+          {{ form.avoids(class="mdl-textfield__input", type="text", id="avoids") }}
+          <label class="mdl-textfield__label" for="avoids">New Avoids</label>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--10-col delist">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+          {{ form.email(class="mdl-textfield__input", type="Email", id="email") }}
+          <label class="mdl-textfield__label" for="email">New Email</label>
+        </div>
+      </div>
+      <div class="form-buttons">
+        {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+      </div>
+      <div class="form-buttons">
+        {{ form.cancel(class="mdl-button mdl-js-button mdl-button--raised") }}
+      </div>
+    {% endcall %}
+  </div>
+</div>
+{% endblock %}

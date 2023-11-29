@@ -1,3 +1,4 @@
+from os import abort
 import re
 
 from flask_wtf import FlaskForm
@@ -76,6 +77,14 @@ class DeleteStudentForm(FlaskForm):
     emails = TextAreaField('emails')
     use_all_emails = BooleanField('use_all_emails')
     submit = SubmitField('delete by emails')
+
+
+class EditStudentForm(FlaskForm):
+    email = StringField('email', [Email()])
+    wants = StringField('wants')
+    avoids = StringField('avoids')
+    submit = SubmitField('make edits')
+    cancel = SubmitField('cancel')
 
 
 class AssignForm(FlaskForm):

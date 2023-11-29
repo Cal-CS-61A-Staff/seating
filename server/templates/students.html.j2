@@ -38,6 +38,7 @@
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="sid" style="text-align: center;">Student ID</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="canvas_id" style="text-align: center;">Canvas ID</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Seat</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Edit</th>
           <th class="mdl-data-table__cell--non-numeric" style="text-align: center;">Delete</th>
         </tr>
       </thead>
@@ -59,8 +60,11 @@
               {{ seat.room.display_name }} {{ seat.name }}
             </a>
           {% else %}
-            <span class="assignment" style="text-align: center;">&mdash;</span>
+            <span class="assignment" style="text-align: center;">NOT SET<br>Wants: {{ student.wants }}<br>Avoids: {{ student.avoids }}</span>
           {% endif %}
+          </td>
+          <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
+            <div class="material-icons" style="text-align: center; margin: 0; cursor: pointer;" onclick="location.href = '{{ url_for('edit_student', exam=exam, canvas_id=student.canvas_id) }}';" style="float: right;">edit</div>
           </td>
           <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
             <div class="material-icons" style="text-align: center; margin: 0; cursor: pointer;" onclick="location.href = '{{ url_for('delete_student', exam=exam, canvas_id=student.canvas_id) }}';" style="float: right;">clear</div>

@@ -4,9 +4,9 @@ from flask import abort, redirect, render_template, request, send_file, url_for,
 from flask_login import current_user, login_required
 
 from server import app
-from server.models import db, Exam, Room, Seat, Student
+from server.models import SeatAssignment, db, Exam, Room, Seat, Student
 from server.forms import ExamForm, RoomForm, ChooseRoomForm, ImportStudentFromSheetForm, \
-    ImportStudentFromCanvasRosterForm, DeleteStudentForm, AssignForm, EmailForm
+    ImportStudentFromCanvasRosterForm, DeleteStudentForm, AssignForm, EmailForm, EditStudentForm
 from server.services.auth import google_oauth
 import server.services.canvas as canvas_client
 from server.services.email import email_students
@@ -301,6 +301,35 @@ def student(exam, canvas_id):
     student = Student.query.filter_by(
         exam_id=exam.id, canvas_id=canvas_id).first_or_404()
     return render_template('student.html.j2', exam=exam, student=student)
+
+
+@app.route('/<exam:exam>/students/<string:canvas_id>/edit', methods=['GET', 'POST'])
+def edit_student(exam, canvas_id):
+    student = Student.query.filter_by(
+        exam_id=exam.id, canvas_id=canvas_id).first_or_404()
+    if not student:
+        abort(404, "Student not found.")
+    form = EditStudentForm()
+    orig_wants_set = set(student.wants)
+    orig_avoids_set = set(student.avoids)
+    if request.method == 'GET':
+        form.wants.data = ",".join(orig_wants_set)
+        form.avoids.data = ",".join(orig_avoids_set)
+        form.email.data = student.email
+    if form.validate_on_submit():
+        if 'cancel' in request.form:
+            return redirect(url_for('students', exam=exam))
+        new_wants_set = set(re.split(r'\s|,', form.wants.data))
+        new_avoids_set = set(re.split(r'\s|,', form.avoids.data))
+        student.wants = new_wants_set
+        student.avoids = new_avoids_set
+        # if wants or avoids changed, delete original assignment
+        if orig_wants_set != new_wants_set or orig_avoids_set != new_avoids_set:
+            SeatAssignment.query.filter_by(student_id=student.id).delete()
+        student.email = form.email.data
+        db.session.commit()
+        return redirect(url_for('students', exam=exam))
+    return render_template('edit_student.html.j2', exam=exam, form=form, student=student)
 
 
 @app.route('/<exam:exam>/students/<string:canvas_id>/delete', methods=['GET', 'DELETE'])
