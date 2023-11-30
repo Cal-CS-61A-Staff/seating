@@ -2,7 +2,6 @@ from flask import session, request, url_for
 from canvasapi import Canvas
 from canvasapi.user import User
 from canvasapi.course import Course
-from canvasapi.enrollment import Enrollment
 
 from server import app
 from server.models import Offering
@@ -38,7 +37,9 @@ def is_course_valid(c) -> bool:
     return not (not c) and \
         hasattr(c, 'id') and \
         hasattr(c, 'name') and \
-        hasattr(c, 'course_code')
+        hasattr(c, 'course_code') and \
+        hasattr(c, 'start_at') and \
+        hasattr(c, 'start_at_date')
 
 
 def get_user_courses_categorized(user: FakeUser | User) \
@@ -55,13 +56,27 @@ def get_user_courses_categorized(user: FakeUser | User) \
                 student_courses.add(c)
             else:
                 other.add(c)
+
     # a course should not appear in more than one category
     student_courses -= set(staff_courses)
     other = other - set(staff_courses) - set(student_courses)
-    # sorted by course name
-    staff_courses: list[FakeCourse | Course] = sorted(staff_courses, key=lambda c: c.name)
-    student_courses: list[FakeCourse | Course] = sorted(student_courses, key=lambda c: c.name)
-    other: list[FakeCourse | Course] = sorted(other, key=lambda c: c.name)
+
+    # convert to list because order matters
+    staff_courses: list[FakeCourse | Course] = list(staff_courses)
+    student_courses: list[FakeCourse | Course] = list(student_courses)
+    other: list[FakeCourse | Course] = list(other)
+
+    # sorted by start_at_date DESC and then by name ASC
+    def _sort_courses(courses: list[FakeCourse | Course]):
+        # Cannot do courses.sort(key=lambda c: (c.start_at_date, c.name))
+        # String or Datetime object cannot be negated to reverse the order
+        courses.sort(key=lambda c: c.name)
+        courses.sort(key=lambda c: c.start_at_date, reverse=True)
+
+    _sort_courses(staff_courses)
+    _sort_courses(student_courses)
+    _sort_courses(other)
+
     return list(staff_courses), list(student_courses), list(other)
 
 
@@ -69,5 +84,6 @@ def api_course_to_model(course: Course | FakeCourse) -> Offering:
     return Offering(
         canvas_id=course.id,
         name=course.name,
-        code=course.course_code
+        code=course.course_code,
+        start_at=course.start_at,
     )

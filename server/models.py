@@ -11,6 +11,7 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 
 from server import app
+from server.utils.date import parse_ISO8601
 
 db = SQLAlchemy(app=app)
 
@@ -43,10 +44,15 @@ class Offering(db.Model):
     canvas_id = db.Column(db.String(255), nullable=False, index=True, unique=True)
     name = db.Column(db.String(255), nullable=False)
     code = db.Column(db.String(255), nullable=False)
+    start_at = db.Column(db.String(255), nullable=False)
 
     exams = db.relationship('Exam', uselist=True, cascade='all, delete-orphan',
                             order_by='Exam.display_name',
                             backref=backref('offering', uselist=False, single_parent=True))
+
+    @property
+    def start_at_date(self):
+        return parse_ISO8601(self.start_at)
 
     def __repr__(self):
         return '<Offering {}>'.format(self.name)

@@ -8,6 +8,7 @@
     <ul class="mdl-list">
     {% for offering in staff_offerings %}
       <li class="mdl-list__item">
+        <span style="margin-right: 10px; color: #424242; font-weight: bold;"><small>{{ offering.start_at_date.strftime('%Y-%m') }}</small></span>
         <a class="mdl-list__item-primary-content" href="{{ url_for('offering', offering=offering) }}">
           {{ offering.name }}
         </a>
@@ -18,8 +19,9 @@
     <ul class="mdl-list">
     {% for offering in student_offerings %}
       <li class="mdl-list__item">
+        <span style="margin-right: 10px; color: #424242; font-weight: bold;"><small>{{ offering.start_at_date.strftime('%Y-%m') }}</small></span>
          <a class="mdl-list__item-primary-content" href="{{ url_for('offering', offering=offering) }}">
-          {{ offering.name }}
+           {{ offering.name }}
         </a>
       </li>
     {% endfor %}
@@ -28,6 +30,7 @@
     <ul class="mdl-list">
     {% for offering in other_offerings %}
       <li class="mdl-list__item">
+        <span style="margin-right: 10px; color: #424242; font-weight: bold;"><small>{{ offering.start_at_date.strftime('%Y-%m') }}</small></span>
         {{ offering.name }}
       </li>
     {% endfor %}
