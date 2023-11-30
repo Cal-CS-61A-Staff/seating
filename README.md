@@ -26,7 +26,10 @@ Table of Contents:
       - [During the exam](#during-the-exam)
   - [For Developers](#for-developers)
     - [Local Setup](#local-setup)
-    - [Environment Variables](#environment-variables)
+    - [External Services](#external-services)
+      - [Canvas API](#canvas-api)
+      - [GCP Service Account](#gcp-service-account)
+      - [An SMTP server](#an-smtp-server)
     - [Available CLI Commands](#available-cli-commands)
     - [Devops](#devops)
       - [Testing](#testing)
@@ -161,14 +164,15 @@ Make sure you are in the virtual environment.
 
 ```
 	pip install -r requirements.txt
-   pip install -r requirements-dev.txt
+  pip install -r requirements-dev.txt
 ```
 
 4. Setup Environment Variables
 
 Copy the `.env.example` file to `.env` and fill in the environment variables.
-You will need a few API keys and secrets. See the section on environment variables for details.
-Make sure you are in the virtual environment.
+See `.env.example` for a list of environment variables and explanations.
+You will need a few API keys and secrets. See the section on xternal Services for more details.
+Make sure you are in the virtual environment!
 
 5. Setup Database
 
@@ -192,35 +196,41 @@ Open [localhost:5000](https://localhost:5000). You should be able to see the app
 Try clicking into a course offering and create an exam.
 Use this [demo Google Sheet](https://docs.google.com/spreadsheets/d/1nC2vinn0k-_TLO0aLmLZtI9juEoSOVEvA3o40HGvXAw/edit?usp=drive_web&ouid=100612133541464602205) to import rooms and students, and trying out assigning seatings.
 
-### Environment Variables
+### External Services
 
-```bash
-# env flag. available values: development, production, testing
-FLASK_ENV=development
+To use the full functionality of the app, you will need to set up the following external services.
 
-# whether to mock canvas. false to use real canvas api, true to use mock canvas api
-MOCK_CANVAS=false
+#### Canvas API
 
-# google oauth client id and secrets, follow the normal gcp oauth flow to get it
-# remember to setup the redirect and origin urls
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+This is for user authentication and data fetching of courses, students, etc.
 
-# canvas server url, client id and secret, get them from school LTI team
-CANVAS_SERVER_URL=
-CANVAS_CLIENT_ID=
-CANVAS_CLIENT_SECRET=
+Contact School LTI team to register your app and client ID and secret.
 
-# email setup, use any smtp server
-EMAIL_SERVER=
-EMAIL_PORT=
-EMAIL_USE_TLS=
-EMAIL_USERNAME=
+#### GCP Service Account
 
-# misc
-SERVER_BASE_URL=localhost:5000
-LOCAL_TIMEZONE=US/Pacific
-```
+This is for Google Sheets API to bulk import rooms and students
+
+Setup a GCP Project and [create a service account](https://cloud.google.com/iam/docs/service-account-overview) with the role `Project Editor`.
+
+There are two ways to provide service account credentials to the app. In any case you will need to download the service account key as a JSON file from GCP Dashboard first, and set `GCP_SA_CRED_TYPE` to either `file` or `env`.
+
+- Use credentials file
+  1. Download the service account key as a JSON file from GCP Dashboard and save it to root directory of the repo as `gcp-service-account-credentials.json`.
+  2. Set the environment variable `GCP_SA_CRED_TYPE` to `file`.
+  3. Set the environment variable `GCP_SA_CRED_FILE` to `gcp-service-account-credentials.json`.
+  4. You could of course use a different file path, but make sure you set the environment variable accordingly and never commit the file to version control. The default name of `gcp-service-account-credentials.json` is already in `.gitignore`.
+- Use environment variables
+  1. Sometimes, using a credentials file is not convenient (on GitHub Action/Heroku for example). You can also encode the content of the downloaded JSON file into a base64 string and supply it via an environment variable.
+  2. Download the service account key as a JSON file from GCP Dashboard.
+  3. Encode the content of the JSON file into a base64 string. `base64 -w 0 path/to/your/service-account-file.json`
+  4. Set the environment variable `GCP_SA_CRED_TYPE` to `env`.
+  5. Set the environment variable `GCP_SA_CRED_VALUE` to the base64 string you just obtained.
+
+#### An SMTP server
+
+This is for sending emails to students about their seat assignments.
+
+We have not yet decided on a SMTP server to use. For now, you can use your own Gmail account SMTP server.
 
 ### Available CLI Commands
 

@@ -3,7 +3,6 @@ from flask import redirect, request, session, url_for
 import server.services.canvas as canvas_client
 from flask_login import LoginManager
 from flask_oauthlib.client import OAuth
-from oauth2client.contrib.flask_util import UserOAuth2
 
 from server import app
 
@@ -60,6 +59,3 @@ def load_user(user_id):
 def unauthorized():
     session['after_login'] = request.url
     return redirect(url_for('auth.login'))
-
-
-google_oauth = UserOAuth2(app)

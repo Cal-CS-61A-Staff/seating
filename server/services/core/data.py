@@ -1,43 +1,7 @@
-import re
-import itertools
+from server.services.google import get_spreadsheet_tab_content
 
-from apiclient import discovery, errors
-
-from server.services.auth import google_oauth
 from server.typings.exception import DataValidationError
 from server.models import Room, Seat, Student, slug
-
-
-def _read_csv(sheet_url, sheet_range):
-    m = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', sheet_url)
-    if not m:
-        raise DataValidationError('Enter a Google Sheets URL')
-    spreadsheet_id = m.group(1)
-    http = google_oauth.http()
-    discoveryUrl = ('https://sheets.googleapis.com/$discovery/rest?'
-                    'version=v4')
-    service = discovery.build('sheets', 'v4', http=http,
-                              discoveryServiceUrl=discoveryUrl)
-
-    try:
-        result = service.spreadsheets().values().get(
-            spreadsheetId=spreadsheet_id, range=sheet_range).execute()
-    except errors.HttpError as e:
-        raise DataValidationError(e._get_reason())
-    values = result.get('values', [])
-
-    if not values:
-        raise DataValidationError('Sheet is empty')
-    headers = [h.lower() for h in values[0]]
-    rows = [
-        {k: v for k, v in itertools.zip_longest(headers, row, fillvalue='')}
-        for row in values[1:]
-    ]
-    if len(set(headers)) != len(headers):
-        raise DataValidationError('Headers must be unique')
-    elif not all(re.match(r'[a-z0-9]+', h) for h in headers):
-        raise DataValidationError('Headers must consist of digits and numbers')
-    return headers, rows
 
 
 def parse_form_and_validate_room(exam, room_form):
@@ -50,8 +14,8 @@ def parse_form_and_validate_room(exam, room_form):
         exam_id=exam.id, name=room.name).first()
     if existing_room:
         raise DataValidationError('A room with that name already exists')
-    headers, rows = _read_csv(room_form.sheet_url.data,
-                              room_form.sheet_range.data)
+    headers, rows = get_spreadsheet_tab_content(room_form.sheet_url.data,
+                                                room_form.sheet_range.data)
     if 'row' not in headers:
         raise DataValidationError('Missing "row" column')
     elif 'seat' not in headers:
@@ -93,7 +57,7 @@ def parse_form_and_validate_room(exam, room_form):
 
 
 def parse_student_sheet(form):
-    return _read_csv(form.sheet_url.data, form.sheet_range.data)
+    return get_spreadsheet_tab_content(form.sheet_url.data, form.sheet_range.data)
 
 
 def parse_canvas_student_roster(roster):

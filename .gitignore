@@ -107,5 +107,8 @@ reports/
 # a11y report
 axe/
 
+# gcp credentials
+gcp-service-account-credentials.json
+
 # bootstrap
 setup.sh

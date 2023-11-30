@@ -7,6 +7,10 @@ class DataValidationError(Exception):
     pass
 
 
+class GcpError (Exception):
+    pass
+
+
 class EnvironmentalVariableMissingError(Exception):
 
     def __init__(self, var_name):

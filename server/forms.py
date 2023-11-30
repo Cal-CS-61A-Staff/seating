@@ -36,31 +36,13 @@ class RoomForm(FlaskForm):
 
 
 class ChooseRoomForm(FlaskForm):
-    rooms = MultiCheckboxField(choices=[('277 Cory', '277 Cory'),
-                                        ('145 Dwinelle', '145 Dwinelle'),
-                                        ('155 Dwinelle', '155 Dwinelle'),
-                                        ('10 Evans', '10 Evans'),
-                                        ('100 GPB', '100 GPB'),
-                                        ('A1 Hearst Field Annex', 'A1 Hearst Field Annex'),
-                                        ('Hearst Gym', 'Hearst Gym'),
-                                        ('120 Latimer', '120 Latimer'),
-                                        ('1 LeConte', '1 LeConte'),
-                                        ('2 LeConte', '2 LeConte'),
-                                        ('4 LeConte', '4 LeConte'),
-                                        ('100 Lewis', '100 Lewis'),
-                                        ('245 Li Ka Shing', '245 Li Ka Shing'),
-                                        ('159 Mulford', '159 Mulford'),
-                                        ('105 North Gate', '105 North Gate'),
-                                        ('1 Pimentel', '1 Pimentel'),
-                                        ('RSF FH', 'RSF FH'),
-                                        ('306 Soda', '306 Soda'),
-                                        ('2040 VLSB', '2040 VLSB'),
-                                        ('2050 VLSB', '2050 VLSB'),
-                                        ('2060 VLSB', '2060 VLSB'),
-                                        ('150 Wheeler', '150 Wheeler'),
-                                        ('222 Wheeler', '222 Wheeler')
-                                        ])
     submit = SubmitField('import')
+    rooms = MultiCheckboxField('select_rooms')
+
+    def __init__(self, room_list=None, *args, **kwargs):
+        super(ChooseRoomForm, self).__init__(*args, **kwargs)
+        if room_list is not None:
+            self.rooms.choices = [(item, item) for item in room_list]
 
 
 class ImportStudentFromSheetForm(FlaskForm):

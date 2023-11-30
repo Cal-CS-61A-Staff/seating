@@ -16,3 +16,8 @@ class EmailSendingConfig(Enum):
 
 class EmailTemplate(Enum):
     ASSIGNMENT_INFORM_EMAIL = 'assignment_inform_email'
+
+
+class GcpSaCredType(Enum):
+    FILE = 'file'
+    ENV = 'env'

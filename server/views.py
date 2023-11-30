@@ -1,13 +1,13 @@
 import re
 
-from flask import abort, redirect, render_template, request, send_file, url_for, flash
+from flask import abort, redirect, render_template, request, send_file, url_for
 from flask_login import current_user, login_required
 
 from server import app
 from server.models import SeatAssignment, db, Exam, Room, Seat, Student
 from server.forms import ExamForm, RoomForm, ChooseRoomForm, ImportStudentFromSheetForm, \
     ImportStudentFromCanvasRosterForm, DeleteStudentForm, AssignForm, EmailForm, EditStudentForm
-from server.services.auth import google_oauth
+from server.services.google import get_spreadsheet_tabs
 import server.services.canvas as canvas_client
 from server.services.email import email_students
 from server.services.core.data import parse_form_and_validate_room, validate_students, \
@@ -126,19 +126,18 @@ def exam(exam):
 
 
 @app.route('/<exam:exam>/rooms/import/')
-@google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def import_room(exam):
     """
     Path: /offerings/<canvas_id>/exams/<exam_name>/rooms/import
     """
     new_form = RoomForm()
-    choose_form = ChooseRoomForm()
+    choose_form = ChooseRoomForm(room_list=get_spreadsheet_tabs(app.config.get('MASTER_ROOM_SHEET_URL')))
     return render_template('new_room.html.j2',
-                           exam=exam, new_form=new_form, choose_form=choose_form)
+                           exam=exam, new_form=new_form, choose_form=choose_form,
+                           master_sheet_url=app.config.get('MASTER_ROOM_SHEET_URL'))
 
 
 @app.route('/<exam:exam>/rooms/import/from_custom_sheet/', methods=['GET', 'POST'])
-@google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def import_room_from_custom_sheet(exam):
     """
     Path: /offerings/<canvas_id>/exams/<exam_name>/rooms/import/new
@@ -161,26 +160,22 @@ def import_room_from_custom_sheet(exam):
                     "Room name {} already exists for this exam.".format(room.name))
             return redirect(url_for('exam', exam=exam))
     return render_template('new_room.html.j2',
-                           exam=exam, new_form=new_form, choose_form=choose_form, room=room)
-
-
-MASTER_ROOM_SHEET = 'https://docs.google.com/spreadsheets/d/' + \
-    '1cHKVheWv2JnHBorbtfZMW_3Sxj9VtGMmAUU2qGJ33-s/edit?usp=sharing'
+                           exam=exam, new_form=new_form, choose_form=choose_form, room=room,
+                           master_sheet_url=app.config.get('MASTER_ROOM_SHEET_URL'))
 
 
 @app.route('/<exam:exam>/rooms/import/from_master_sheet/', methods=['GET', 'POST'])
-@google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def import_room_from_master_sheet(exam):
     """
     Path: /offerings/<canvas_id>/exams/<exam_name>/rooms/import/choose
     """
     new_form = RoomForm()
-    choose_form = ChooseRoomForm()
+    choose_form = ChooseRoomForm(room_list=get_spreadsheet_tabs(app.config.get('MASTER_ROOM_SHEET_URL')))
     if choose_form.validate_on_submit():
         for r in choose_form.rooms.data:
             f = RoomForm(
                 display_name=r,
-                sheet_url=MASTER_ROOM_SHEET, sheet_range=r)
+                sheet_url=app.config.get("MASTER_ROOM_SHEET_URL"), sheet_range=r)
             room = None
             try:
                 room = parse_form_and_validate_room(exam, f)
@@ -192,7 +187,8 @@ def import_room_from_master_sheet(exam):
                 db.session.commit()
         return redirect(url_for('exam', exam=exam))
     return render_template('new_room.html.j2',
-                           exam=exam, new_form=new_form, choose_form=choose_form)
+                           exam=exam, new_form=new_form, choose_form=choose_form,
+                           master_sheet_url=app.config.get('MASTER_ROOM_SHEET_URL'))
 
 
 @app.route('/<exam:exam>/rooms/<string:name>/delete', methods=['GET', 'DELETE'])
@@ -231,7 +227,6 @@ def import_students(exam):
 
 
 @app.route('/<exam:exam>/students/import/from_custom_sheet/', methods=['GET', 'POST'])
-@google_oauth.required(scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
 def import_students_from_custom_sheet(exam):
     from_sheet_form = ImportStudentFromSheetForm()
     from_canvas_form = ImportStudentFromCanvasRosterForm()
