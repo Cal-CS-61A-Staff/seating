@@ -238,7 +238,7 @@ def import_students_from_custom_sheet(exam):
             db.session.commit()
             flash(
                 f"Import done. {len(new_students)} new students, {len(updated_students)} updated students"
-                " {len(invalid_students)} invalid students.", 'success')
+                f" {len(invalid_students)} invalid students.", 'success')
             if updated_students:
                 flash(
                     f"Updated students: {','.join([s.name for s in updated_students])}", 'warning')
