@@ -1,5 +1,3 @@
-from operator import inv
-from turtle import update
 from server.services.google import get_spreadsheet_tab_content
 
 from server.typings.exception import DataValidationError

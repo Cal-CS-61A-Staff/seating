@@ -1,5 +1,3 @@
-import email
-from math import e
 from server import app
 from server.models import Student, db, Exam, SeatAssignment, Offering
 from server.services.email.smtp import SMTPConfig, send_email
