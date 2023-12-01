@@ -6,7 +6,7 @@ import re
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, types
-from sqlalchemy.orm import backref
+from sqlalchemy.orm import backref, validates
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 
