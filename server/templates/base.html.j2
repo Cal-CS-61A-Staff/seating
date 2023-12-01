@@ -11,12 +11,11 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-blue.min.css">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/flash.css') }}">
     <title>{% block title %}{{ title }}{% endblock %}</title>
   </head>
 
   <body>
-    {# if there is a specific exam, store a variable to true#}
-
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
       <header class="mdl-layout__header">
         <div class="mdl-layout__header-row">
@@ -92,6 +91,20 @@
           {% endif %}
         </div>
       </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span class="alert-icon">🔔</span>
+                        <span class="alert-message">{{ message }}</span>
+                        <button type="button" class="close-alert" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+      {% endwith %}
 
       <main class="mdl-layout__content">
         {% block body %}{% endblock %}

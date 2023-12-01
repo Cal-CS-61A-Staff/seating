@@ -9,8 +9,8 @@
         "email": "jx@berkeley.edu",
         "name": "Jimmy Xu",
         "sid": "3033033334",
-        "wants": "",
-        "avoids": ""
+        "wants": [],
+        "avoids": []
       },
       {
         "id": 2,
@@ -19,8 +19,8 @@
         "email": "sharon@berkeley.edu",
         "name": "Sharon Lovera",
         "sid": "3033033335",
-        "wants": "Lefty",
-        "avoids": ""
+        "wants": ["Lefty"],
+        "avoids": []
       },
       {
         "id": 3,
@@ -29,8 +29,8 @@
         "email": "angelaz8@berkeley.edu",
         "name": "Lavender Angela",
         "sid": "3033033336",
-        "wants": "Righty",
-        "avoids": "Lefty,Broken"
+        "wants": ["Righty"],
+        "avoids": ["Lefty", "Broken"]
       }
     ]
   }

@@ -1,3 +1,5 @@
+from operator import inv
+from turtle import update
 from server.services.google import get_spreadsheet_tab_content
 
 from server.typings.exception import DataValidationError
@@ -84,22 +86,30 @@ def validate_students(exam, headers, rows):
         raise DataValidationError('Missing "name" column')
     elif 'bcourses id' not in headers and 'canvas id' not in headers:
         raise DataValidationError('Missing "canvas id" column')
-    students = []
+
+    new_students = []
+    updated_students = []
+    invalid_students = []
+
     for row in rows:
         canvas_id = row.pop(
             'bcourses id', row.pop('canvas id', None))
         email = row.pop('email', None)
         name = row.pop('name', None)
         if not canvas_id or not email or not name:
-            # dangerous. Might skip students without notifying staff
-            continue
+            invalid_students.append(row)
         student = Student.query.filter_by(exam_id=int(exam.id), canvas_id=str(canvas_id)).first()
+        is_new = False
         if not student:
+            is_new = True
             student = Student(exam_id=exam.id, canvas_id=canvas_id)
         student.name = name or student.sid
         student.sid = row.pop('student id', None) or student.sid
         student.email = email or student.email
         student.wants = {k for k, v in row.items() if v.lower() == 'true'}
         student.avoids = {k for k, v in row.items() if v.lower() == 'false'}
-        students.append(student)
-    return students
+        if is_new:
+            new_students.append(student)
+        else:
+            updated_students.append(student)
+    return new_students, updated_students, invalid_students

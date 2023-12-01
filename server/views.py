@@ -1,6 +1,6 @@
 import re
 
-from flask import abort, redirect, render_template, request, send_file, url_for
+from flask import abort, redirect, render_template, request, send_file, url_for, flash
 from flask_login import current_user, login_required
 
 from server import app
@@ -9,7 +9,7 @@ from server.forms import ExamForm, RoomForm, ChooseRoomForm, ImportStudentFromSh
     ImportStudentFromCanvasRosterForm, DeleteStudentForm, AssignForm, EmailForm, EditStudentForm
 from server.services.google import get_spreadsheet_tabs
 import server.services.canvas as canvas_client
-from server.services.email import email_students
+from server.services.email import email_students, email_student
 from server.services.core.data import parse_form_and_validate_room, validate_students, \
     parse_student_sheet, parse_canvas_student_roster
 from server.services.core.assign import assign_students
@@ -233,11 +233,21 @@ def import_students_from_custom_sheet(exam):
     if from_sheet_form.validate_on_submit():
         try:
             headers, rows = parse_student_sheet(from_sheet_form)
-            students = validate_students(exam, headers, rows)
-            db.session.add_all(students)
+            new_students, updated_students, invalid_students = validate_students(exam, headers, rows)
+            db.session.add_all(new_students + updated_students)
             db.session.commit()
+            flash(
+                f"Import done. {len(new_students)} new students, {len(updated_students)} updated students"
+                " {len(invalid_students)} invalid students.", 'success')
+            if updated_students:
+                flash(
+                    f"Updated students: {','.join([s.name for s in updated_students])}", 'warning')
+            if invalid_students:
+                flash(
+                    f"Invalid students: {invalid_students}", 'error')
+
             return redirect(url_for('students', exam=exam))
-        except DataValidationError as e:
+        except Exception as e:
             from_sheet_form.sheet_url.errors.append(str(e))
     return render_template('new_students.html.j2', exam=exam,
                            from_sheet_form=from_sheet_form, from_canvas_form=from_canvas_form)
@@ -252,11 +262,20 @@ def import_students_from_canvas_roster(exam):
             course = canvas_client.get_course(exam.offering_canvas_id)
             students = course.get_users(enrollment_type='student')
             headers, rows = parse_canvas_student_roster(students)
-            students = validate_students(exam, headers, rows)
-            db.session.add_all(students)
+            new_students, updated_students, invalid_students = validate_students(exam, headers, rows)
+            db.session.add_all(new_students + updated_students)
             db.session.commit()
+            flash(
+                f"Import done. {len(new_students)} new students, {len(updated_students)} updated students"
+                f" {len(invalid_students)} invalid students.", 'success')
+            if updated_students:
+                flash(
+                    f"Updated students: {','.join([s.name for s in updated_students])}", 'warning')
+            if invalid_students:
+                flash(
+                    f"Invalid students: {invalid_students}", 'error')
             return redirect(url_for('students', exam=exam))
-        except DataValidationError as e:
+        except Exception as e:
             from_canvas_form.submit.errors.append(str(e))
     return render_template('new_students.html.j2', exam=exam,
                            from_sheet_form=from_sheet_form, from_canvas_form=from_canvas_form)
@@ -342,23 +361,45 @@ def assign(exam):
     form = AssignForm()
     if form.validate_on_submit():
         success, payload = assign_students(exam)
-        if not success:
-            return payload
-        db.session.add_all(payload)
-        db.session.commit()
+        if success:
+            db.session.add_all(payload)
+            db.session.commit()
+            flash("Successfully assigned students.", 'success')
+        else:
+            flash("Failed to assign students. Everything rolled back.\n{}".format(payload), 'error')
         return redirect(url_for('students', exam=exam))
     return render_template('assign.html.j2', exam=exam, form=form)
 
 
 @app.route('/<exam:exam>/students/email/', methods=['GET', 'POST'])
-def email(exam):
+def email_all_students(exam):
     form = EmailForm()
     if form.validate_on_submit():
-        success, payload = email_students(exam, form)
-        if not success:
-            return payload
+        success_students, failure_students = email_students(exam, form)
+        if failure_students:
+            names = [s.name for s in failure_students]
+            flash(f"Failed to email students: {', '.join(names)}", 'error')
+        if success_students:
+            names = [s.name for s in success_students]
+            flash(f"Successfully emailed students: {', '.join(names)}", 'success')
+        if not success_students and not failure_students:
+            flash("No students were emailed.", 'warning')
         return redirect(url_for('students', exam=exam))
     return render_template('email.html.j2', exam=exam, form=form)
+
+
+@app.route('/<exam:exam>/students/email/<string:student_id>/', methods=['GET', 'POST'])
+def email_single_student(exam, student_id):
+    form = EmailForm()
+    if form.validate_on_submit():
+        success, payload = email_student(exam, student_id, form)
+        if success:
+            flash(f"Successfully emailed student with id: {student_id}", 'success')
+        else:
+            flash(f"Failed to email student with id: {student_id}\n{payload}", 'error')
+        return redirect(url_for('students', exam=exam))
+    return render_template('email.html.j2', exam=exam, form=form)
+
 # endregion
 
 # region Misc

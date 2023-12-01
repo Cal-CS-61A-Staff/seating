@@ -1,5 +1,7 @@
+import email
+from math import e
 from server import app
-from server.models import db, Exam, SeatAssignment, Offering
+from server.models import Student, db, Exam, SeatAssignment, Offering
 from server.services.email.smtp import SMTPConfig, send_email
 import server.services.email.templates as templates
 from server.typings.enum import EmailTemplate
@@ -17,7 +19,9 @@ _email_config = SMTPConfig(
 def email_students(exam: Exam, form):
     ASSIGNMENT_PER_PAGE = 500
     page_number = 1
-    emailed_count = 0
+
+    email_success: set[Student] = set()
+    email_failure: set[Student] = set()
 
     while True:
         assignments = exam.get_assignments(
@@ -27,26 +31,32 @@ def email_students(exam: Exam, form):
         )
         if not assignments:
             break
-        page_number += 1
 
         for assignment in assignments:
             result = _email_single_assignment(exam.offering, exam, assignment, form)
             if result[0]:
-                emailed_count += 1
+                email_success.add(assignment.student)
                 assignment.emailed = True
             else:
-                db.session.commit()
-                return result
-        else:
-            db.session.commit()
+                email_failure.add(assignment.student)
 
-    if emailed_count == 0:
-        return (False, "No unemailed assignments found.")
+        db.session.commit()
 
-    return (True, )
+    return email_success, email_failure
 
 
-def _email_single_assignment(offering: Offering, exam: Exam, assignment: SeatAssignment, form) -> bool:
+def email_student(exam: Exam, student_db_id: int, form):
+    assignment: SeatAssignment = Student.query.get(student_db_id).assignment
+    if assignment is None:
+        return (False, "Student has no assignment.")
+    result = _email_single_assignment(exam.offering, exam, assignment, form)
+    if result[0]:
+        assignment.emailed = True
+        db.session.commit()
+    return result
+
+
+def _email_single_assignment(offering: Offering, exam: Exam, assignment: SeatAssignment, form):
     seat_path = url_for('student_single_seat', seat_id=assignment.seat.id)
     seat_absolute_path = os.path.join(app.config.get('SERVER_BASE_URL'), seat_path)
 

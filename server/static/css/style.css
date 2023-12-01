@@ -1,5 +1,5 @@
 a {
-  color: #1976D2;
+  color: #1976d2;
   text-decoration: none;
 }
 
@@ -52,9 +52,9 @@ header a {
 }
 
 .material-icons.std:hover {
-    cursor: pointer;
-    background-color: rgba(0,0,0,.12);
-    border-radius: 5px;
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.12);
+  border-radius: 5px;
 }
 
 .mdl-layout__content {
@@ -89,8 +89,8 @@ header a {
 
 /*horizontal scrolling on mobile*/
 @media (max-width: 620px) {
-    .seats{
-    left: 15%;     
+  .seats {
+    left: 15%;
   }
 }
 
@@ -105,15 +105,15 @@ header a {
 }
 
 .seat.highlight {
-  background-color: #EF5350;
+  background-color: #ef5350;
 }
 
 .seat.occupied {
-  background-color: #64B5F6;
+  background-color: #64b5f6;
 }
 
 .seat:hover {
-  background-color: #EF5350;
+  background-color: #ef5350;
 }
 
 .seat-label {

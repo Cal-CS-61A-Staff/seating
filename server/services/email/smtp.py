@@ -35,6 +35,6 @@ def send_email(*, smtp: SMTPConfig, from_addr, to_addr, subject, body, body_html
             server.login(smtp.username, smtp.password)
         server.send_message(msg)
         server.quit()
-        return (True, )
+        return (True, None)
     except Exception as e:
         return (False, f"Error sending email: {e.message}\n Config: \n{smtp}")

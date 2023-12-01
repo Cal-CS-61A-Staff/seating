@@ -2,7 +2,7 @@ import os
 from typing import Optional
 
 from server.typings.exception import EnvironmentalVariableMissingError
-from server.typings.enum import AppEnvironment, EmailSendingConfig, GcpSaCredType
+from server.typings.enum import AppEnvironment, GcpSaCredType
 
 
 class ConfigBase(object):
@@ -51,7 +51,6 @@ class ConfigBase(object):
 class ProductionConfig(ConfigBase):
     FLASK_ENV = AppEnvironment.PRODUCTION.value
     MOCK_CANVAS = False
-    SEND_EMAIL = EmailSendingConfig.ON.value
 
     @property
     def SECRET_KEY(self):
@@ -65,7 +64,6 @@ class ProductionConfig(ConfigBase):
 class StagingConfig(ConfigBase):
     FLASK_ENV = AppEnvironment.STAGING.value
     SECRET_KEY = 'staging'
-    SEND_EMAIL = EmailSendingConfig.TEST.value
 
     @property
     def SQLALCHEMY_DATABASE_URI(self):
@@ -85,7 +83,6 @@ class TestingConfig(ConfigBase):
     FLASK_ENV = AppEnvironment.TESTING.value
     SECRET_KEY = 'testing'
     MOCK_CANVAS = True
-    SEND_EMAIL = EmailSendingConfig.OFF.value
 
     @property
     def SQLALCHEMY_DATABASE_URI(self):

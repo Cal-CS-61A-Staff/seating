@@ -1,5 +1,5 @@
 from server import app
-from server.models import db
+from server.models import db, Student
 
 
 def seed_db():
