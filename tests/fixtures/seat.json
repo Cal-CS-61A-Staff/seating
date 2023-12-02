@@ -10,7 +10,7 @@
         "seat": 1,
         "x": 0,
         "y": 0,
-        "attributes": "Lefty"
+        "attributes": ["Lefty"]
       },
       {
         "id": 2,
@@ -20,7 +20,7 @@
         "seat": 2,
         "x": 1,
         "y": 0,
-        "attributes": "Righty"
+        "attributes": ["Righty"]
       },
       {
         "id": 3,
@@ -30,7 +30,7 @@
         "seat": 1,
         "x": 0,
         "y": 1,
-        "attributes": "Lefty"
+        "attributes": ["Lefty"]
       },
       {
         "id": 4,
@@ -40,7 +40,7 @@
         "seat": 2,
         "x": 1,
         "y": 1,
-        "attributes": "Righty"
+        "attributes": ["Righty"]
       }
     ]
   }

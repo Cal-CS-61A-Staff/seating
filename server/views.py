@@ -4,7 +4,7 @@ from flask_login import current_user, login_required
 
 from server import app
 from server.models import SeatAssignment, db, Exam, Room, Seat, Student
-from server.forms import ExamForm, RoomForm, ChooseRoomForm, ImportStudentFromSheetForm, \
+from server.forms import EditRoomForm, ExamForm, RoomForm, ChooseRoomForm, ImportStudentFromSheetForm, \
     ImportStudentFromCanvasRosterForm, DeleteStudentForm, AssignForm, EmailForm, EditStudentForm
 from server.services.email.templates import get_email
 from server.services.google import get_spreadsheet_tabs
@@ -13,6 +13,7 @@ from server.services.email import email_about_assignment
 from server.services.core.data import parse_form_and_validate_room, validate_students, \
     parse_student_sheet, parse_canvas_student_roster
 from server.services.core.assign import assign_students
+from server.utils.date import to_ISO8601
 from server.typings.enum import EmailTemplate
 
 # region Offering CRUDI
@@ -149,16 +150,17 @@ def import_room_from_custom_sheet(exam):
         try:
             room = parse_form_and_validate_room(exam, new_form)
         except Exception as e:
-            new_form.sheet_url.errors.append(str(e))
+            flash(f"Failed to import room due to an unexpected error: {e}", 'error')
         if new_form.create_room.data:
             try:
                 db.session.add(room)
                 db.session.commit()
-                # TODO: proper error handling
-            except:
-                new_form.sheet_url.errors.append(
-                    "Room name {} already exists for this exam.".format(room.name))
+            except Exception as e:
+                flash(f"Failed to import room due to an db error: {e}", 'error')
             return redirect(url_for('exam', exam=exam))
+    for field, errors in new_form.errors.items():
+        for error in errors:
+            flash("{}: {}".format(field, error), 'error')
     return render_template('new_room.html.j2',
                            exam=exam, new_form=new_form, choose_form=choose_form, room=room,
                            master_sheet_url=app.config.get('MASTER_ROOM_SHEET_URL'))
@@ -181,36 +183,73 @@ def import_room_from_master_sheet(exam):
                 room = parse_form_and_validate_room(exam, f)
                 # TODO: proper error handling
             except Exception as e:
-                choose_form.rooms.errors.append(str(e))
+                flash(f"Failed to import room due to an unexpected error: {e}", 'error')
             if room:
-                db.session.add(room)
-                db.session.commit()
+                try:
+                    db.session.add(room)
+                    db.session.commit()
+                except Exception as e:
+                    flash(f"Failed to import room due to an db error: {e}", 'error')
         return redirect(url_for('exam', exam=exam))
+    for field, errors in choose_form.errors.items():
+        for error in errors:
+            flash("{}: {}".format(field, error), 'error')
     return render_template('new_room.html.j2',
                            exam=exam, new_form=new_form, choose_form=choose_form,
                            master_sheet_url=app.config.get('MASTER_ROOM_SHEET_URL'))
 
 
-@app.route('/<exam:exam>/rooms/<string:name>/delete', methods=['GET', 'DELETE'])
-def delete_room(exam, name):
+@app.route('/<exam:exam>/rooms/<int:id>/delete', methods=['GET', 'DELETE'])
+def delete_room(exam, id):
     """
     Path: /offerings/<canvas_id>/exams/<exam_name>/rooms/<room_name>/delete
     Deletes a room for an exam.
     """
-    room = Room.query.filter_by(exam_id=exam.id, name=name).first_or_404()
+    room = Room.query.filter_by(exam_id=exam.id, id=id).first_or_404()
     if room:
         db.session.delete(room)
         db.session.commit()
     return render_template('exam.html.j2', exam=exam)
 
 
-@app.route('/<exam:exam>/rooms/<string:name>/')
-def room(exam, name):
+@app.route('/<exam:exam>/rooms/<int:id>/edit', methods=['GET', 'POST'])
+def edit_room(exam, id):
+    """
+    Path: /offerings/<canvas_id>/exams/<exam_name>/rooms/<room_name>/edit
+    Edits a room for an exam.
+    """
+    room = Room.query.filter_by(exam_id=exam.id, id=id).first_or_404()
+    form = EditRoomForm()
+    if request.method == 'GET':
+        form.display_name.data = room.display_name
+        if room.start_at:
+            form.start_at.data = room.start_at_time
+        if room.duration_minutes:
+            form.duration_minutes.data = room.duration_minutes
+    if form.validate_on_submit():
+        if 'cancel' in request.form:
+            return redirect(url_for('exam', exam=exam))
+        room.display_name = form.display_name.data
+        start_at_iso = None
+        if form.start_at.data:
+            start_at_iso = to_ISO8601(form.start_at.data)
+        room.start_at = start_at_iso
+        room.duration_minutes = form.duration_minutes.data
+        try:
+            db.session.commit()
+        except Exception as e:
+            flash(f"Failed to edit room due to a db error: {e}", 'error')
+        return redirect(url_for('exam', exam=exam))
+    return render_template('edit_room.html.j2', exam=exam, form=form, room=room)
+
+
+@app.route('/<exam:exam>/rooms/<int:id>/')
+def room(exam, id):
     """
     Path: /offerings/<canvas_id>/exams/<exam_name>/rooms/<room_name>
     Displays the room diagram, with an optional seat highlighted.
     """
-    room = Room.query.filter_by(exam_id=exam.id, name=name).first_or_404()
+    room = Room.query.filter_by(exam_id=exam.id, id=id).first_or_404()
     seat = request.args.get('seat')
     return render_template('room.html.j2', exam=exam, room=room, seat=seat)
 # endregion

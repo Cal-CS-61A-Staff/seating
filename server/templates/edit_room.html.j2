@@ -1,0 +1,38 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--12-col">
+        <h5>Update Info for {{ room.display_name }} </h5>
+    </div>
+
+    {% call macros.form(form) %}
+      <div class="mdl-cell mdl-cell--12-col delist">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col">
+          {{ form.display_name(class="mdl-textfield__input", type="Room Name", id="roomname") }}
+          <label class="mdl-textfield__label" for="roomname">Room Name</label>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--12-col delist">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col">
+          {{ form.start_at(class="mdl-textfield__input", type="datetime-local", id="start_at") }}
+          <label class="mdl-textfield__label" for="start_at">Start At</label>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--12-col delist">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col">
+          {{ form.duration_minutes(class="mdl-textfield__input", type="number", id="duration_minutes") }}
+          <label class="mdl-textfield__label" for="duration_minutes">Duration (Minutes)</label>
+        </div>
+      </div>
+      <div class="form-buttons">
+        {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+      </div>
+      <div class="form-buttons">
+        {{ form.cancel(class="mdl-button mdl-js-button mdl-button--raised") }}
+      </div>
+    {% endcall %}
+  </div>
+</div>
+{% endblock %}

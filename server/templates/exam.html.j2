@@ -8,10 +8,21 @@
     <ul class="mdl-list">
     {% for room in exam.rooms %}
       <li class="mdl-list__item">
-        <a class="mdl-list__item-primary-content" href="{{ url_for('room', exam=exam, name=room.name) }}">
+        <a class="mdl-list__item-primary-content" href="{{ url_for('room', exam=exam, id=room.id) }}">
           {{ room.display_name }}
         </a>
-        <div class="material-icons std" onclick="location.href = '{{ url_for('delete_room', exam=exam, name=room.name) }}';" style="float: right;">clear</div>
+        {% if room.start_at %}
+          <span style="margin-right: 5px;"><small>
+            {{ room.start_at_time_display }}
+          </small></span>
+        {% endif %}
+        {% if room.duration_minutes %}
+          <span><small>
+            {{ room.duration_display }}
+          </small></span>
+        {% endif %}
+        <div class="material-icons std" onclick="location.href = '{{ url_for('edit_room', exam=exam, id=room.id) }}';" style="float: right;">edit</div>
+        <div class="material-icons std" onclick="location.href = '{{ url_for('delete_room', exam=exam, id=room.id) }}';" style="float: right;">clear</div>
       </li>
     {% endfor %}
     </ul>

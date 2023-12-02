@@ -2,18 +2,31 @@ from server.services.google import get_spreadsheet_tab_content
 
 from server.typings.exception import DataValidationError
 from server.models import Room, Seat, Student, slug
+from server.utils.date import to_ISO8601
 
 
 def parse_form_and_validate_room(exam, room_form):
     room = Room(
         exam_id=exam.id,
         name=slug(room_form.display_name.data),
-        display_name=room_form.display_name.data,
+        display_name=room_form.display_name.data
     )
-    existing_room = Room.query.filter_by(
-        exam_id=exam.id, name=room.name).first()
+
+    start_at_iso = None
+    if room_form.start_at.data:
+        start_at_iso = to_ISO8601(room_form.start_at.data)
+        room.start_at = start_at_iso
+    if room_form.duration_minutes.data:
+        room.duration_minutes = room_form.duration_minutes.data
+
+    existing_room_query = Room.query.filter_by(
+        exam_id=exam.id, name=room.name)
+    if start_at_iso:
+        existing_room_query = existing_room_query.filter_by(start_at=start_at_iso)
+    existing_room = existing_room_query.first()
+
     if existing_room:
-        raise DataValidationError('A room with that name already exists')
+        raise DataValidationError('A room with that name and start time already exists')
     headers, rows = get_spreadsheet_tab_content(room_form.sheet_url.data,
                                                 room_form.sheet_range.data)
     if 'row' not in headers:

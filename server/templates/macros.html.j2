@@ -19,7 +19,18 @@
 {% macro room(room, highlight_seat=none, show_attributes=false, staff=true) %}
 {% if room.seats %}
 <div class="room">
-  <h4>{{ room.display_name }}</h4>
+  <h4>{{ room.display_name }}
+    {% if room.start_at %}
+        <span style="margin-right: 5px;"><small>
+          {{ room.start_at_time_display }}
+        </small></span>
+    {% endif %}
+    {% if room.duration_minutes %}
+        <span><small>
+          {{ room.duration_display }}
+        </small></span>
+    {% endif %}
+  </h4>
   <h6>Front</h6>
   {% set x_min = room.seats|map(attribute='x')|min %}
   {% set x_max = room.seats|map(attribute='x')|max %}

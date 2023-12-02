@@ -6,8 +6,8 @@ import re
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, types
-from sqlalchemy.orm import backref, validates
-from sqlalchemy import UniqueConstraint
+from sqlalchemy.orm import backref
+from sqlalchemy import UniqueConstraint, desc, text
 from sqlalchemy.ext.associationproxy import association_proxy
 
 from server import app
@@ -71,7 +71,7 @@ class Exam(db.Model):
     is_active = db.Column(db.BOOLEAN, nullable=False)
 
     rooms = db.relationship('Room', uselist=True, cascade='all, delete-orphan',
-                            order_by='Room.display_name',
+                            order_by=[desc(text('rooms.start_at')), desc(text('rooms.display_name'))],
                             backref=backref('exam', uselist=False, single_parent=True))
     students = db.relationship('Student', uselist=True, cascade='all, delete-orphan',
                                order_by='Student.name',
@@ -112,13 +112,27 @@ class Room(db.Model):
     exam_id = db.Column(db.ForeignKey('exams.id'), index=True, nullable=False)
     name = db.Column(db.String(255), nullable=False, index=True)
     display_name = db.Column(db.String(255), nullable=False)
+    start_at = db.Column(db.String(255))
+    duration_minutes = db.Column(db.Integer)
+
+    @property
+    def start_at_time(self):
+        return parse_ISO8601(self.start_at)
+
+    @property
+    def start_at_time_display(self):
+        return self.start_at_time.strftime('%I:%M %p - %b %d, %Y') if self.start_at_time else "Start Time TBA"
+
+    @property
+    def duration_display(self):
+        return f"{self.duration_minutes} mins" if self.duration_minutes else "Duration TBA"
 
     seats = db.relationship('Seat', uselist=True, cascade='all, delete-orphan',
                             order_by='Seat.name',
                             backref=backref('room', uselist=False, single_parent=True))
 
     __table_args__ = (
-        UniqueConstraint('exam_id', 'name', name='uq_exam_id_name'),
+        UniqueConstraint('exam_id', 'name', 'start_at', name='uq_exam_id_name_start_at'),
     )
 
     @property

@@ -6,7 +6,9 @@
         "id": 1,
         "exam_id": 1,
         "name": "soda999",
-        "display_name": "Soda 999"
+        "display_name": "Soda 999",
+        "start_at": "2023-12-12T10:00:00Z!",
+        "duration_minutes": 120
       }
     ]
   }
