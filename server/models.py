@@ -66,7 +66,7 @@ class Exam(db.Model):
     __tablename__ = 'exams'
     id = db.Column(db.Integer, primary_key=True)
     offering_canvas_id = db.Column(db.ForeignKey(
-        'offerings.canvas_id'), index=True, nullable=False)
+        'offerings.canvas_id', ondelete='CASCADE'), index=True, nullable=False)
     name = db.Column(db.String(255), nullable=False, index=True)
     display_name = db.Column(db.String(255), nullable=False)
     is_active = db.Column(db.BOOLEAN, nullable=False)
@@ -110,7 +110,7 @@ class Exam(db.Model):
 class Room(db.Model):
     __tablename__ = 'rooms'
     id = db.Column(db.Integer, primary_key=True)
-    exam_id = db.Column(db.ForeignKey('exams.id'), index=True, nullable=False)
+    exam_id = db.Column(db.ForeignKey('exams.id', ondelete='CASCADE'), index=True, nullable=False)
     name = db.Column(db.String(255), nullable=False, index=True)
     display_name = db.Column(db.String(255), nullable=False)
     start_at = db.Column(db.String(255))
@@ -163,7 +163,7 @@ class Room(db.Model):
 class Seat(db.Model):
     __tablename__ = 'seats'
     id = db.Column(db.Integer, primary_key=True)
-    room_id = db.Column(db.ForeignKey('rooms.id'), index=True, nullable=False)
+    room_id = db.Column(db.ForeignKey('rooms.id', ondelete='CASCADE'), index=True, nullable=False)
     fixed = db.Column(db.Boolean, default=True, nullable=False)
     name = db.Column(db.String(255))
     row = db.Column(db.String(255))
@@ -186,7 +186,7 @@ class Seat(db.Model):
 class Student(db.Model):
     __tablename__ = 'students'
     id = db.Column(db.Integer, primary_key=True)
-    exam_id = db.Column(db.ForeignKey('exams.id'), index=True, nullable=False)
+    exam_id = db.Column(db.ForeignKey('exams.id', ondelete='CASCADE'), index=True, nullable=False)
     canvas_id = db.Column(db.String(255), nullable=False, index=True)
     email = db.Column(db.String(255), index=True, nullable=False)
     name = db.Column(db.String(255), nullable=False)
@@ -210,8 +210,8 @@ class SeatAssignment(db.Model):
     __table_args__ = (
         PrimaryKeyConstraint('student_id', 'seat_id'),
     )
-    student_id = db.Column(db.ForeignKey('students.id'), index=True, nullable=False)
-    seat_id = db.Column(db.ForeignKey('seats.id'), index=True, nullable=False)
+    student_id = db.Column(db.ForeignKey('students.id', ondelete='CASCADE'), index=True, nullable=False)
+    seat_id = db.Column(db.ForeignKey('seats.id', ondelete='CASCADE'), index=True, nullable=False)
     emailed = db.Column(db.Boolean, default=False, index=True, nullable=False)
 
 

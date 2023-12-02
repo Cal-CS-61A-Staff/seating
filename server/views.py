@@ -338,7 +338,7 @@ def delete_students(exam):
         did_not_exist = set()
         if not form.use_all_emails.data:
             did_not_exist = set(emails) - deleted
-        students.delete()
+        students.delete(synchronize_session=False)
         db.session.commit()
         if not deleted and not did_not_exist:
             abort(404, "No change has been made.")
