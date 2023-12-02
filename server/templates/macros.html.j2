@@ -22,7 +22,7 @@
   <h4>{{ room.display_name }}
     {% if room.start_at %}
         <span style="margin-right: 5px;"><small>
-          {{ room.start_at_time_display }}
+          {{ room.start_at_time_display() }}
         </small></span>
     {% endif %}
     {% if room.duration_minutes %}

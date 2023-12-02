@@ -34,7 +34,7 @@ def email_about_assignment(exam, form, to_addrs):
                                              "EXAM": exam.display_name,
                                              "ROOM": assignment.seat.room.display_name,
                                              "SEAT": assignment.seat.display_name,
-                                             "START_TIME": assignment.seat.room.start_at_time_display,
+                                             "START_TIME": assignment.seat.room.start_at_time_display(),
                                              "DURATION": assignment.seat.room.duration_display,
                                              "URL": urljoin(
                                                  app.config.get('SERVER_BASE_URL'),

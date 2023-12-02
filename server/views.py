@@ -13,6 +13,7 @@ from server.services.email import email_about_assignment
 from server.services.core.data import parse_form_and_validate_room, validate_students, \
     parse_student_sheet, parse_canvas_student_roster
 from server.services.core.assign import assign_students
+from server.typings.exception import SeatAssigningAlgorithmError
 from server.utils.date import to_ISO8601
 from server.typings.enum import EmailTemplate
 
@@ -365,26 +366,47 @@ def edit_student(exam, canvas_id):
         exam_id=exam.id, canvas_id=canvas_id).first_or_404()
     if not student:
         abort(404, "Student not found.")
-    form = EditStudentForm()
+    form = EditStudentForm(room_list=exam.rooms)
     orig_wants_set = set(student.wants)
     orig_avoids_set = set(student.avoids)
+    orig_room_wants_set = set(student.room_wants)
+    orig_room_avoids_set = set(student.room_avoids)
     if request.method == 'GET':
         form.wants.data = ",".join(orig_wants_set)
         form.avoids.data = ",".join(orig_avoids_set)
+        form.room_wants.data = ",".join(orig_room_wants_set)
+        form.room_avoids.data = ",".join(orig_room_avoids_set)
         form.email.data = student.email
     if form.validate_on_submit():
         if 'cancel' in request.form:
             return redirect(url_for('students', exam=exam))
         new_wants_set = set(re.split(r'\s|,', form.wants.data))
         new_avoids_set = set(re.split(r'\s|,', form.avoids.data))
+        new_room_wants_set = set(form.room_wants.data)
+        new_room_avoids_set = set(form.room_avoids.data)
+        # wants and avoids should not overlap
+        if (new_wants_set & new_avoids_set) \
+                or (new_room_wants_set & new_room_avoids_set):
+            flash("Wants and avoids should not overlap.", 'error')
+            return render_template('edit_student.html.j2', exam=exam, form=form, student=student)
         student.wants = new_wants_set
         student.avoids = new_avoids_set
+        student.room_wants = new_room_wants_set
+        student.room_avoids = new_room_avoids_set
         # if wants or avoids changed, delete original assignment
-        if orig_wants_set != new_wants_set or orig_avoids_set != new_avoids_set:
-            SeatAssignment.query.filter_by(student_id=student.id).delete()
+        # we need to compare sets because order does not matter
+        if orig_wants_set != new_wants_set \
+                or orig_avoids_set != new_avoids_set \
+                or orig_room_wants_set != new_room_wants_set \
+                or orig_room_avoids_set != new_room_avoids_set:
+            if student.assignment:
+                db.session.delete(student.assignment)
         student.email = form.email.data
         db.session.commit()
         return redirect(url_for('students', exam=exam))
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash("{}: {}".format(field, error), 'error')
     return render_template('edit_student.html.j2', exam=exam, form=form, student=student)
 
 
@@ -402,13 +424,13 @@ def delete_student(exam, canvas_id):
 def assign(exam):
     form = AssignForm()
     if form.validate_on_submit():
-        success, payload = assign_students(exam)
-        if success:
-            db.session.add_all(payload)
+        try:
+            assignments = assign_students(exam)
+            db.session.add_all(assignments)
             db.session.commit()
             flash("Successfully assigned students.", 'success')
-        else:
-            flash("Failed to assign students. Everything rolled back.\n{}".format(payload), 'error')
+        except SeatAssigningAlgorithmError as e:
+            flash(str(e), 'error')
         return redirect(url_for('students', exam=exam))
     return render_template('assign.html.j2', exam=exam, form=form)
 

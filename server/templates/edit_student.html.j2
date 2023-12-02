@@ -10,7 +10,7 @@
     {% call macros.form(form) %}
       <div class="mdl-cell mdl-cell--10-col delist">
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-          {{ form.wants(class="mdl-textfield__input", type="text",   id="wants") }}
+          {{ form.wants(class="mdl-textfield__input", type="text", id="wants") }}
           <label class="mdl-textfield__label" for="wants">New Wants</label>
         </div>
       </div>
@@ -18,6 +18,18 @@
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
           {{ form.avoids(class="mdl-textfield__input", type="text", id="avoids") }}
           <label class="mdl-textfield__label" for="avoids">New Avoids</label>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--10-col delist">
+        <div class="">
+          <label class="" for="room_wants">New Room Wants</label>
+          <div class="checkbox" id="room_wants">{{ form.room_wants }}</div>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--10-col delist">
+        <div class="">
+          <label class="" for="room_avoids">New Room Avoids</label>
+          <div class="checkbox" id="room_avoids">{{ form.room_avoids }}</div>
         </div>
       </div>
       <div class="mdl-cell mdl-cell--10-col delist">

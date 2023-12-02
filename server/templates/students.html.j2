@@ -3,6 +3,27 @@
 
 {% block title %}Students | {{ super() }}{% endblock %}
 
+{% block head %}
+<style>
+  .mdl-data-table td.mdl-data-table__cell--non-numeric {
+    word-wrap: break-word;
+    white-space: normal;
+  }
+
+  .mdl-data-table {
+    table-layout: fixed;
+  }
+
+  .pref-card {
+    display: inline-block;
+    padding: 2px 4px;
+    margin: 2px;
+    border-radius: 2px;
+    border: 1px solid #ccc;
+    min-width: 50px;
+  }
+</style>
+{% endblock %}
 {% block body %}
 <section id="student-table" class="students mdl-grid">
   <div class="mdl-cell mdl-cell--12-col">
@@ -37,6 +58,8 @@
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="email" style="text-align: center;">Email</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="sid" style="text-align: center;">Student ID</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="canvas_id" style="text-align: center;">Canvas ID</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Wants</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Avoids</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Seat</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="emailed" style="text-align: center;">Emailed?</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Edit</th>
@@ -54,6 +77,26 @@
           <td class="email mdl-data-table__cell--non-numeric" style="text-align: center;">{{ student.email.replace("@berkeley.edu", "@") }}</td>
           <td class="sid mdl-data-table__cell--non-numeric" style="text-align: center;">{{ student.sid }}</td>
           <td class="canvas_id mdl-data-table__cell--non-numeric" style="text-align: center;">{{ student.canvas_id }}</td>
+          <td class="wants mdl-data-table__cell--non-numeric" style="text-align: center;">
+            <small>
+            {% for want in student.wants %}
+              <div class="pref-card">{{ want }}</div>
+            {% endfor %}
+            {% for room_want in student.room_wants %}
+              <div class="pref-card">{{ exam.get_room(room_want).name_and_start_at_time_display(short=True) }}</div>
+            {% endfor %}
+            </small>
+          </td>
+          <td class="avoids mdl-data-table__cell--non-numeric" style="text-align: center;">
+            <small>
+            {% for avoid in student.avoids %}
+              <div class="pref-card">{{ avoid }}</div>
+            {% endfor %}
+            {% for room_avoid in student.room_avoids %}
+              <div class="pref-card">{{ exam.get_room(room_avoid).name_and_start_at_time_display(short=True) }}</div>
+            {% endfor %}
+            </small>
+          </td>
           <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
           {% if student.assignment %}
             {% set seat = student.assignment.seat %}
@@ -61,23 +104,7 @@
               {{ seat.room.display_name }} {{ seat.display_name }}
             </a>
           {% else %}
-            <span class="assignment" style="text-align: center;">
-              <div>NOT ASSIGNED</div>
-              <small>
-                {% if student.wants %}
-                Wants:
-                {% for want in student.wants %}
-                    {{ want }}
-                {% endfor %}
-                {% endif %}
-                {% if student.avoids %}
-                <br>Avoids:
-                {% for avoid in student.avoids %}
-                    {{ avoid }}
-                {% endfor %}
-                {% endif %}
-              </small>
-            </span>
+            <div>NO SEAT</div>
           {% endif %}
           </td>
           <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
@@ -89,7 +116,7 @@
             {% endif %}
             <div class="material-icons" style="text-align: center; margin: 0; cursor: pointer;" onclick="location.href = '{{ url_for('email_single_student', exam=exam, student_id=student.id) }}';" style="float: right;">email</div>
           {% else %}
-            <div>NOT ASSIGNED</div>
+            <div>NO SEAT</div>
           {% endif %}
           </td>
           <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">

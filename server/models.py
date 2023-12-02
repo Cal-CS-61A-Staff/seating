@@ -103,6 +103,9 @@ class Exam(db.Model):
             query = query.offset(offset)
         return query.all()
 
+    def get_room(self, room_id):
+        return Room.query.filter_by(id=room_id, exam_id=self.id).first()
+
     def __repr__(self):
         return '<Exam {}>'.format(self.name)
 
@@ -118,11 +121,15 @@ class Room(db.Model):
 
     @property
     def start_at_time(self):
-        return parse_ISO8601(self.start_at)
+        return parse_ISO8601(self.start_at) if self.start_at else None
 
-    @property
-    def start_at_time_display(self):
-        return self.start_at_time.strftime('%I:%M %p - %b %d, %Y') if self.start_at_time else "Start Time TBA"
+    def start_at_time_display(self, short=False):
+        t_format = '%H:%M-%b %d' if short else '%I:%M %p - %b %d, %Y'
+        placeholder = "TBA" if short else "Start Time TBA"
+        return self.start_at_time.strftime(t_format) if self.start_at else placeholder
+
+    def name_and_start_at_time_display(self, short=False):
+        return f"{self.display_name} ({self.start_at_time_display(short)})"
 
     @property
     def duration_display(self):
@@ -193,6 +200,8 @@ class Student(db.Model):
     sid = db.Column(db.String(255))
     wants = db.Column(StringSet, nullable=False)
     avoids = db.Column(StringSet, nullable=False)
+    room_wants = db.Column(StringSet, nullable=False)
+    room_avoids = db.Column(StringSet, nullable=False)
 
     assignment = db.relationship('SeatAssignment', uselist=False, cascade='all, delete-orphan',
                                  backref=backref('student', uselist=False, single_parent=True))

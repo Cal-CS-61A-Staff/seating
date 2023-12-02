@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-blue.min.css">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/flash.css') }}">
+    {% block head %}{% endblock %}
     <title>{% block title %}{{ title }}{% endblock %}</title>
   </head>
 
@@ -57,7 +58,7 @@
                     {{ room.display_name }}
                     {% if room.start_at %}
                       <span style="margin-right: 5px;"><small>
-                        {{ room.start_at_time_display }}
+                        {{ room.start_at_time_display() }}
                       </small></span>
                     {% endif %}
                     {% if room.duration_minutes %}
@@ -108,7 +109,7 @@
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }}">
                         <span class="alert-icon">🔔</span>
-                        <span class="alert-message">{{ message }}</span>
+                        <span class="alert-message">{{ message.replace("\n", "<br>") }}</span>
                         <button type="button" class="close-alert" onclick="this.parentElement.style.display='none';">&times;</button>
                     </div>
                 {% endfor %}

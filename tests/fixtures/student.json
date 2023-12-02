@@ -10,7 +10,9 @@
         "name": "Jimmy Xu",
         "sid": "3033033334",
         "wants": [],
-        "avoids": []
+        "avoids": [],
+        "room_wants": [],
+        "room_avoids": []
       },
       {
         "id": 2,
@@ -20,7 +22,9 @@
         "name": "Sharon Lovera",
         "sid": "3033033335",
         "wants": ["Lefty"],
-        "avoids": []
+        "avoids": [],
+        "room_wants": [],
+        "room_avoids": []
       },
       {
         "id": 3,
@@ -30,7 +34,9 @@
         "name": "Lavender Angela",
         "sid": "3033033336",
         "wants": ["Righty"],
-        "avoids": ["Lefty", "Broken"]
+        "avoids": ["Lefty", "Broken"],
+        "room_wants": [],
+        "room_avoids": []
       }
     ]
   }

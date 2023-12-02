@@ -45,6 +45,22 @@ class ChooseRoomForm(FlaskForm):
             self.rooms.choices = [(item, item) for item in room_list]
 
 
+class EditStudentForm(FlaskForm):
+    email = StringField('email', [Email()])
+    wants = StringField('wants')
+    avoids = StringField('avoids')
+    room_wants = MultiCheckboxField('room_wants')
+    room_avoids = MultiCheckboxField('room_avoids')
+    submit = SubmitField('make edits')
+    cancel = SubmitField('cancel')
+
+    def __init__(self, room_list=None, *args, **kwargs):
+        super(EditStudentForm, self).__init__(*args, **kwargs)
+        if room_list is not None:
+            self.room_wants.choices = [(str(item.id), item.name_and_start_at_time_display()) for item in room_list]
+            self.room_avoids.choices = [(str(item.id), item.name_and_start_at_time_display()) for item in room_list]
+
+
 class EditRoomForm(FlaskForm):
     display_name = StringField('display_name')
     start_at = DateTimeField('start_at', [Optional()], format='%Y-%m-%dT%H:%M')
@@ -67,14 +83,6 @@ class DeleteStudentForm(FlaskForm):
     emails = TextAreaField('emails')
     use_all_emails = BooleanField('use_all_emails')
     submit = SubmitField('delete by emails')
-
-
-class EditStudentForm(FlaskForm):
-    email = StringField('email', [Email()])
-    wants = StringField('wants')
-    avoids = StringField('avoids')
-    submit = SubmitField('make edits')
-    cancel = SubmitField('cancel')
 
 
 class AssignForm(FlaskForm):
