@@ -1,9 +1,8 @@
-from os import abort
 import re
 
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, SelectMultipleField, StringField, SubmitField, \
-    TextAreaField, widgets
+    TextAreaField, widgets, ValidationError
 from wtforms.validators import Email, InputRequired, URL
 
 from server.controllers import exam_regex
@@ -73,12 +72,23 @@ class AssignForm(FlaskForm):
     submit = SubmitField('assign')
 
 
+def validate_email_list(form, field):
+    email_list = field.data.split(',')
+    for email in email_list:
+        email = email.strip()
+        if not Email()(form, field):
+            print(f'Invalid email address: {email}')
+            raise ValidationError(f'Invalid email address: {email}')
+
+
 class EmailForm(FlaskForm):
     from_addr = StringField('from_addr', [Email(), InputRequired()])
-    signature = StringField('signature', [InputRequired()])
-    additional_info = TextAreaField('additional_info')
-    override_subject = StringField('override_subject')
-    override_to_addr = StringField('override_to_addr')
+    to_addr = StringField('to_addr', [InputRequired()])
+    cc_addr = StringField('cc_addr', [])
+    bcc_addr = StringField('bcc_addr', [])
+    subject = StringField('subject', [InputRequired()])
+    body = TextAreaField('body', [InputRequired()])
+    body_html = BooleanField('body_html', default=True)
     submit = SubmitField('send')
 
 

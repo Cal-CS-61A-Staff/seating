@@ -1,4 +1,4 @@
-from smtplib import SMTP
+from smtplib import SMTP, SMTPException
 from email.message import EmailMessage
 
 
@@ -12,16 +12,27 @@ class SMTPConfig:
         self.use_auth = use_auth
 
     def __repr__(self) -> str:
-        return f'SMTPConfig(smtp_server={self.smtp_server}, smtp_port={self.smtp_port}, username={self.username}, use_tls={self.use_tls}, use_auth={self.use_auth})'  # noqa
+        return (f'SMTPConfig(smtp_server={self.smtp_server}, '
+                f'smtp_port={self.smtp_port}, '
+                f'username={self.username}, '
+                f'use_tls={self.use_tls}, '
+                f'use_auth={self.use_auth})')
 
 
-def send_email(*, smtp: SMTPConfig, from_addr, to_addr, subject, body, body_html=None):
+def send_email(*, smtp: SMTPConfig, from_addr, to_addr, subject, body, body_html=None, bcc_addr=None, cc_addr=None):
     msg = EmailMessage()
     msg['From'] = from_addr
     msg['To'] = to_addr
     msg['Subject'] = subject
+    if bcc_addr:
+        if isinstance(bcc_addr, str):
+            bcc_addr = bcc_addr.split(',')
+        msg['Bcc'] = bcc_addr
+    if cc_addr:
+        if isinstance(cc_addr, str):
+            cc_addr = cc_addr.split(',')
+        msg['Cc'] = cc_addr
     msg.set_content(body)
-
     if body_html:
         msg.add_alternative(body_html, subtype='html')
 
@@ -36,5 +47,7 @@ def send_email(*, smtp: SMTPConfig, from_addr, to_addr, subject, body, body_html
         server.send_message(msg)
         server.quit()
         return (True, None)
+    except SMTPException as e:
+        return (False, f"SMTP error occurred when sending email: {e.message}\n Config: \n{smtp}")
     except Exception as e:
         return (False, f"Error sending email: {e.message}\n Config: \n{smtp}")

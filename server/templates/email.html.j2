@@ -4,39 +4,63 @@
 {% block body %}
 {% call macros.form(form) %}
 <main class="mdl-grid">
-  <div class="mdl-cell mdl-cell--10-col delist">
-    <h5>From</h5>
-    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+
+  <div class="mdl-cell mdl-cell--12-col delist">
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--6-col">
       {{ form.from_addr(class="mdl-textfield__input", type="Email", id="from_addr") }}
-      <label class="mdl-textfield__label" for="from_addr">Sender Email</label>
+      <label class="mdl-textfield__label" for="from_addr">FROM:</label>
     </div>
-    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-      {{ form.signature(class="mdl-textfield__input", type="Name", id="signature") }}
-      <label class="mdl-textfield__label" for="signature">Sender signature</label>
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--6-col">
+      {{ form.to_addr(class="mdl-textfield__input", type="text", id="to_addr") }}
+      <label class="mdl-textfield__label" for="to_addr">TO:</label>
     </div>
   </div>
-  <div class="mdl-cell mdl-cell--10-col delist">
-    <h5>Additional Info</h5>
-    <div class="mdl-textfield mdl-js-textfield">
-      {{ form.additional_info(class="mdl-textfield__input", type="text", rows="10", id="additional_info") }}
-      <label class="mdl-textfield__label" for="additional_info">Additional Info...</label>
+
+  <div class="mdl-cell mdl-cell--12-col delist">
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--6-col">
+      {{ form.cc_addr(class="mdl-textfield__input", type="text", id="cc_addr") }}
+      <label class="mdl-textfield__label" for="cc_addr">CC:</label>
+    </div>
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--6-col">
+      {{ form.bcc_addr(class="mdl-textfield__input", type="text", id="bcc_addr") }}
+      <label class="mdl-textfield__label" for="bcc_addr">BCC:</label>
+    </div>
+  </div>
+
+  <div class="mdl-cell mdl-cell--12-col delist">
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col">
+      {{ form.body(class="mdl-textfield__input", type="text", rows="30", id="body") }}
+      <label class="mdl-textfield__label" for="body">Body:</label>
+    </div>
+    
+  </div>
+
+  <div class="mdl-cell mdl-cell--12-col delist">
+      <div id="preview" style="border: 2px dotted #000; padding: 10px; margin-top: 30px; background-color: #fff;">NO PREVIEW</div>
+  </div>
+
+  <div class="mdl-cell mdl-cell--12-col delist">
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--10-col">
+      {{ form.subject(class="mdl-textfield__input", type="text", rows="10", id="subject") }}
+      <label class="mdl-textfield__label" for="subject">Subject:</label>
+    </div>
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--2-col">
+      {{ form.body_html(class="mdl-textfield__input", type="checkbox", id="body_html") }}
+      <label class="mdl-textfield__label" for="body_html">HTML Body?</label>
     </div>
   <div>
-  <div class="mdl-cell mdl-cell--10-col delist">
-    <h5>Overrides</h5>
-    <div class="mdl-textfield mdl-js-textfield">
-      {{ form.override_subject(class="mdl-textfield__input", type="Subject", id="subject") }}
-      <label class="mdl-textfield__label" for="subject">Override Email Subject</label>
-    </div>
-    <div class="mdl-textfield mdl-js-textfield">
-      {{ form.override_to_addr(class="mdl-textfield__input", type="Test Email", id="testemail") }}
-      <label class="mdl-textfield__label" for="testemail">Override Receipt Address</label>
-    </div>
-  </div>
+
   <div class="form-buttons">
+    <button class="mdl-button mdl-js-button mdl-button--raised" type="button" onclick="updatePreview()">Preview</button>
     {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
   </div>
-  <div class="mdl-layout-spacer"></div>
+
+  <script>
+      function updatePreview() {
+          var htmlContent = document.getElementById('body').value;
+          document.getElementById('preview').innerHTML = htmlContent;
+      }
+  </script>
 </main>
 {% endcall %}
 {% endblock %}

@@ -1,5 +1,4 @@
 import re
-
 from flask import abort, redirect, render_template, request, send_file, url_for, flash
 from flask_login import current_user, login_required
 
@@ -7,13 +6,14 @@ from server import app
 from server.models import SeatAssignment, db, Exam, Room, Seat, Student
 from server.forms import ExamForm, RoomForm, ChooseRoomForm, ImportStudentFromSheetForm, \
     ImportStudentFromCanvasRosterForm, DeleteStudentForm, AssignForm, EmailForm, EditStudentForm
+from server.services.email.templates import get_email
 from server.services.google import get_spreadsheet_tabs
 import server.services.canvas as canvas_client
-from server.services.email import email_students, email_student
+from server.services.email import email_about_assignment
 from server.services.core.data import parse_form_and_validate_room, validate_students, \
     parse_student_sheet, parse_canvas_student_roster
 from server.services.core.assign import assign_students
-from server.typings.exception import DataValidationError
+from server.typings.enum import EmailTemplate
 
 # region Offering CRUDI
 
@@ -378,16 +378,19 @@ def assign(exam):
 def email_all_students(exam):
     form = EmailForm()
     if form.validate_on_submit():
-        success_students, failure_students = email_students(exam, form)
-        if failure_students:
-            names = [s.name for s in failure_students]
-            flash(f"Failed to email students: {', '.join(names)}", 'error')
-        if success_students:
-            names = [s.name for s in success_students]
-            flash(f"Successfully emailed students: {', '.join(names)}", 'success')
-        if not success_students and not failure_students:
-            flash("No students were emailed.", 'warning')
+        successful_emails, failed_emails = email_about_assignment(exam, form, form.to_addr.data)
+        if successful_emails:
+            flash(f"Successfully emailed {len(successful_emails)} students.", 'success')
+        if failed_emails:
+            flash(f"Failed to email students: {', '.join(failed_emails)}", 'error')
+        if not successful_emails and not failed_emails:
+            flash("No email sent.", 'warning')
         return redirect(url_for('students', exam=exam))
+    else:
+        email_prefill = get_email(EmailTemplate.ASSIGNMENT_INFORM_EMAIL)
+        form.subject.data = email_prefill.subject
+        form.body.data = email_prefill.body
+        form.to_addr.data = ','.join([s.email for s in exam.students])
     return render_template('email.html.j2', exam=exam, form=form)
 
 
@@ -395,12 +398,19 @@ def email_all_students(exam):
 def email_single_student(exam, student_id):
     form = EmailForm()
     if form.validate_on_submit():
-        success, payload = email_student(exam, student_id, form)
-        if success:
-            flash(f"Successfully emailed student with id: {student_id}", 'success')
-        else:
-            flash(f"Failed to email student with id: {student_id}\n{payload}", 'error')
+        successful_emails, failed_emails = email_about_assignment(exam, form, form.to_addr.data)
+        if successful_emails:
+            flash(f"Successfully emailed {len(successful_emails)} students.", 'success')
+        if failed_emails:
+            flash(f"Failed to email students: {', '.join(failed_emails)}", 'error')
+        if not successful_emails and not failed_emails:
+            flash("No email sent.", 'warning')
         return redirect(url_for('students', exam=exam))
+    else:
+        email_prefill = get_email(EmailTemplate.ASSIGNMENT_INFORM_EMAIL)
+        form.subject.data = email_prefill.subject
+        form.body.data = email_prefill.body
+        form.to_addr.data = Student.query.get(student_id).email
     return render_template('email.html.j2', exam=exam, form=form)
 
 # endregion

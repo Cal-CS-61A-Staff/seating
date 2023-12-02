@@ -38,6 +38,7 @@
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="sid" style="text-align: center;">Student ID</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="canvas_id" style="text-align: center;">Canvas ID</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Seat</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="emailed" style="text-align: center;">Emailed?</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Edit</th>
           <th class="mdl-data-table__cell--non-numeric" style="text-align: center;">Delete</th>
         </tr>
@@ -59,9 +60,6 @@
             <a class="assignment" href="{{ url_for('room', exam=exam, name=seat.room.name, seat=seat.name) }}">
               {{ seat.room.display_name }} {{ seat.name }}
             </a>
-            {% if not student.assignment.emailed %}
-              <div>NOT EMAILED</div><div class="material-icons" style="text-align: center; margin: 0; cursor: pointer;" onclick="location.href = '{{ url_for('email_single_student', exam=exam, student_id=student.id) }}';" style="float: right;">email</div>
-            {% endif %}
           {% else %}
             <span class="assignment" style="text-align: center;">
               <div>NOT ASSIGNED</div>
@@ -80,6 +78,18 @@
                 {% endif %}
               </small>
             </span>
+          {% endif %}
+          </td>
+          <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
+          {% if student.assignment %}
+            {% if student.assignment.emailed %}
+              <div>EMAILED</div>
+            {% else %}
+              <div>NOT EMAILED</div>
+            {% endif %}
+            <div class="material-icons" style="text-align: center; margin: 0; cursor: pointer;" onclick="location.href = '{{ url_for('email_single_student', exam=exam, student_id=student.id) }}';" style="float: right;">email</div>
+          {% else %}
+            <div>NOT ASSIGNED</div>
           {% endif %}
           </td>
           <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
