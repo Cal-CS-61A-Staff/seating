@@ -33,7 +33,7 @@ def email_about_assignment(exam, form, to_addrs):
                                              "COURSE": exam.offering.name,
                                              "EXAM": exam.display_name,
                                              "ROOM": assignment.seat.room.display_name,
-                                             "SEAT": assignment.seat.name,
+                                             "SEAT": assignment.seat.display_name,
                                              "START_TIME": assignment.seat.room.start_at_time_display,
                                              "DURATION": assignment.seat.room.duration_display,
                                              "URL": urljoin(

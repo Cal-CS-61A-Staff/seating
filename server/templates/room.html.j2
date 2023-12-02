@@ -4,5 +4,5 @@
 {% block title %}{{ room.display_name }} | {{ super() }}{% endblock %}
 
 {% block body %}
-{{ macros.room(room, highlight_seat=seat, show_attributes=True) }}
+{{ macros.room(room, highlight_seat_id=seat_id, show_attributes=True) }}
 {% endblock %}

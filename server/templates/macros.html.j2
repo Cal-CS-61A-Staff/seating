@@ -16,7 +16,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro room(room, highlight_seat=none, show_attributes=false, staff=true) %}
+{% macro room(room, highlight_seat_id=none, show_attributes=false, staff=true) %}
 {% if room.seats %}
 <div class="room">
   <h4>{{ room.display_name }}
@@ -31,57 +31,111 @@
         </small></span>
     {% endif %}
   </h4>
+
+  {% if room.movable_seats %}
+    <h5>Movable Seats</h5>
+    {% set circle_size = 24 %}
+    <div style="width: 40%; margin: 0 auto; text-align: left;">
+    <div style="text-align: center;">There are {{ room.movable_seats|length }} movable seats in this room.</div>
+    <ul>
+    {% for attr in room.movable_seats_by_attribute %}
+      <li>{{ ','.join(attr) }}
+
+      {% for seat in room.movable_seats_by_attribute[attr] %}
+        {% if staff %}
+          {% if seat.assignment %}
+            <a id={{ seat.id }} style="font-size: {{ circle_size }}px;"
+              href="{{ url_for('student', exam=exam, canvas_id=seat.assignment.student.canvas_id) }}">
+              &#x25CF;
+            </a>
+          {% else %}
+            <span id={{ seat.id }} style="font-size: {{ circle_size }}px;">
+              &#x25CB;
+            </span>
+          {% endif %}
+        {% endif %}
+        <div class="seat-tooltip mdl-tooltip mdl-tooltip--large" for="{{ seat.id }}">
+        {{ seat.id }}
+          {% if show_attributes %}
+            {% for attribute in seat.attributes %}
+              <br>{{ attribute|upper }}
+            {% endfor %}
+          {% endif %}
+          {% if staff and seat.assignment %}
+            <br>{{ seat.assignment.student.name }}
+            <br>
+              <img class="photo" src="../../students/{{ seat.assignment.student.email }}/photo"/>
+            <br>{{ seat.assignment.student.sid }}
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      {% for seat in room.movable_seats_by_attribute[attr] %}
+        {% if seat.id == highlight_seat_id %}
+          <span><strong>(YOUR WILL USE A SEAT FROM THIS CATEGORY)</strong></span>
+        {% endif %}
+      {% endfor %}
+
+      </li>
+    {% endfor %}
+    </ul>
+    </div>
+  {% endif %}
+
+  {% if room.fixed_seats %}
+  <h5>Fixed Seats</h5>
   <h6>Front</h6>
-  {% set x_min = room.seats|map(attribute='x')|min %}
-  {% set x_max = room.seats|map(attribute='x')|max %}
-  {% set y_min = room.seats|map(attribute='y')|min %}
-  {% set y_max = room.seats|map(attribute='y')|max %}
+  {% set x_min = room.fixed_seats|map(attribute='x')|min %}
+  {% set x_max = room.fixed_seats|map(attribute='x')|max %}
+  {% set y_min = room.fixed_seats|map(attribute='y')|min %}
+  {% set y_max = room.fixed_seats|map(attribute='y')|max %}
   {% set scale = 23 %}
   <div class="scroll" style="overflow-y:hidden">
   <div class="seats" style="width:{{ scale * (x_max - x_min + 1) }}px;height:{{ scale * (y_max - y_min + 1) }}px">
   {% for row in room.rows %}
-  {% for seat in row %}
-    {% set x = scale * (x_max - seat.x) %}
-    {% set y = scale * (seat.y - y_min) %}
-    {% if loop.first %}
-      <div class="seat-label" style="left:{{ x + 30 }}px;top:{{ y }}px">{{ seat.name }}</div>
-    {% endif %}
-    {% if staff and seat.assignment %}
-    <a href="{{ url_for('student', exam=exam, canvas_id=seat.assignment.student.canvas_id) }}">
-    {% endif %}
-      {% if seat.name == highlight_seat %}
-        {% set class = 'seat highlight' %}
-      {% elif staff and seat.assignment %}
-        {% set class = 'seat occupied' %}
-      {% else %}
-        {% set class = 'seat' %}
-      {% endif %}
-      <div id="{{ seat.name }}" class="{{ class }}" style="left:{{ x }}px;top:{{ y }}px"></div>
-    {% if staff and seat.assignment %}
-    </a>
-    {% endif %}
-    <div class="seat-tooltip mdl-tooltip mdl-tooltip--large" for="{{ seat.name }}">
-      {{ seat.name }}
-      {% if show_attributes %}
-      {% for attribute in seat.attributes %}
-        <br>{{ attribute|upper }}
-      {% endfor %}
+    {% for seat in row %}
+      {% set x = scale * (x_max - seat.x) %}
+      {% set y = scale * (seat.y - y_min) %}
+      {% if loop.first %}
+        <div class="seat-label" style="left:{{ x + 30 }}px;top:{{ y }}px">{{ seat.name }}</div>
       {% endif %}
       {% if staff and seat.assignment %}
-        <br>{{ seat.assignment.student.name }}
-        <br>
-          <img class="photo" src="../../students/{{ seat.assignment.student.email }}/photo"/>
-        <br>{{ seat.assignment.student.sid }}
+      <a href="{{ url_for('student', exam=exam, canvas_id=seat.assignment.student.canvas_id) }}">
       {% endif %}
-    </div>
-    {% if loop.last %}
-      <div class="seat-label" style="left:{{ x - 50 }}px;top:{{ y }}px">{{ seat.name }}</div>
-    {% endif %}
-  {% endfor %}
+        {% if seat.id == highlight_seat_id %}
+          {% set class = 'seat highlight' %}
+        {% elif staff and seat.assignment %}
+          {% set class = 'seat occupied' %}
+        {% else %}
+          {% set class = 'seat' %}
+        {% endif %}
+        <div id="{{ seat.id }}" class="{{ class }}" style="left:{{ x }}px;top:{{ y }}px"></div>
+      {% if staff and seat.assignment %}
+      </a>
+      {% endif %}
+      <div class="seat-tooltip mdl-tooltip mdl-tooltip--large" for="{{ seat.id }}">
+        {{ seat.name }}
+        {% if show_attributes %}
+        {% for attribute in seat.attributes %}
+          <br>{{ attribute|upper }}
+        {% endfor %}
+        {% endif %}
+        {% if staff and seat.assignment %}
+          <br>{{ seat.assignment.student.name }}
+          <br>
+            <img class="photo" src="../../students/{{ seat.assignment.student.email }}/photo"/>
+          <br>{{ seat.assignment.student.sid }}
+        {% endif %}
+      </div>
+      {% if loop.last %}
+        <div class="seat-label" style="left:{{ x - 50 }}px;top:{{ y }}px">{{ seat.name }}</div>
+      {% endif %}
+    {% endfor %}
   {% endfor %}
   </div>
   </div>
   <h6>Back</h6>
+  {% endif %}
 </div>
 {% endif %}
 {% endmacro %}

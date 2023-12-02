@@ -250,8 +250,8 @@ def room(exam, id):
     Displays the room diagram, with an optional seat highlighted.
     """
     room = Room.query.filter_by(exam_id=exam.id, id=id).first_or_404()
-    seat = request.args.get('seat')
-    return render_template('room.html.j2', exam=exam, room=room, seat=seat)
+    seat_id = request.args.get('seat')
+    return render_template('room.html.j2', exam=exam, room=room, seat_id=seat_id)
 # endregion
 
 # region Student CRUDI

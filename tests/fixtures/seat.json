@@ -41,6 +41,24 @@
         "x": 1,
         "y": 1,
         "attributes": ["Righty"]
+      },
+      {
+        "id": 5,
+        "room_id": 1,
+        "fixed": false,
+        "attributes": ["Lefty"]
+      },
+      {
+        "id": 6,
+        "room_id": 1,
+        "fixed": false,
+        "attributes": ["Righty"]
+      },
+      {
+        "id": 7,
+        "room_id": 1,
+        "fixed": false,
+        "attributes": ["Lefty"]
       }
     ]
   }

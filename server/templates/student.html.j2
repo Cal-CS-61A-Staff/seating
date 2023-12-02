@@ -14,10 +14,10 @@
     <p>
     {% if student.assignment %}
       {% set seat = student.assignment.seat %}
-      <a href="{{ url_for('room', exam=exam, id=seat.room.id, seat=seat.name) }}">
-        {{ seat.room.display_name }} {{ seat.name }}
+      <a href="{{ url_for('room', exam=exam, id=seat.room.id, seat=seat.id) }}">
+        {{ seat.room.display_name }} {{ seat.display_name }}
       </a><br><br>
-      <a target="_blank" href="{{ url_for('single_seat', seat_id=seat.id) }}">
+      <a target="_blank" href="{{ url_for('student_single_seat', seat_id=seat.id) }}">
         Sharable Link to This Seat
       </a>
     {% else %}

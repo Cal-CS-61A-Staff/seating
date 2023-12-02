@@ -1,6 +1,7 @@
 import random
 
 from server.models import SeatAssignment
+from server.utils.misc import arr_to_dict
 
 
 def assign_students(exam):
@@ -24,16 +25,6 @@ def assign_students(exam):
             if (all(a in seat.attributes for a in wants) and  # noqa
                 all(a not in seat.attributes for a in avoids))
         ]
-
-    def arr_to_dict(arr, key_getter=lambda x: x):
-        """
-        Convert an array to a dictionary, grouping by the key returned by key_getter.
-        """
-        from collections import defaultdict
-        dic = defaultdict(list)
-        for x in arr:
-            dic[key_getter(x)].append(x)
-        return dic
 
     assignments = []
     while students:
