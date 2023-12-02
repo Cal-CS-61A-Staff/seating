@@ -48,6 +48,6 @@ def send_email(*, smtp: SMTPConfig, from_addr, to_addr, subject, body, body_html
         server.quit()
         return (True, None)
     except SMTPException as e:
-        return (False, f"SMTP error occurred when sending email: {e.message}\n Config: \n{smtp}")
+        return (False, f"SMTP error occurred when sending email: {str(e)}\n Config: \n{smtp}")
     except Exception as e:
-        return (False, f"Error sending email: {e.message}\n Config: \n{smtp}")
+        return (False, f"Error sending email: {str(e)}\n Config: \n{smtp}")

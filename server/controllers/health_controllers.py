@@ -15,4 +15,4 @@ def check_db():
         db.session.execute("SELECT 1")
         return jsonify(status="UP"), 200
     except Exception as e:
-        return jsonify(status="DOWN", error=e.message), 500
+        return jsonify(status="DOWN", error=str(e)), 500
