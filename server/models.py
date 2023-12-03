@@ -187,7 +187,7 @@ class Seat(db.Model):
         return self.name if self.name else "Movable Seat"
 
     def __repr__(self):
-        return '<Seat {}>'.format(self.name_display)
+        return '<Seat {}>'.format(self.display_name)
 
 
 class Student(db.Model):

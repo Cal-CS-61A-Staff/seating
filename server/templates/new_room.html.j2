@@ -53,15 +53,26 @@
   </div>
 
   <div class="mdl-tabs__panel" id="choice-panel">
-    <div>
-    Master Sheet URL: <a href="{{ master_sheet_url }}">{{ master_sheet_url }}</a>
-    </div>
+    
     <div class="mdl-grid">
       <div class="mdl-layout-spacer"></div>
-      <div class="mdl-cell mdl-cell--4-col">
+      <div class="mdl-cell mdl-cell--10-col">
+        <div>
+        Master Sheet URL: <a href="{{ master_sheet_url }}">{{ master_sheet_url }}</a>
+        </div>
         <form action="{{ url_for('import_room_from_master_sheet', exam=exam) }}" method="post">
           {{ choose_form.hidden_tag() }}
           <div class="checkbox">{{ choose_form.rooms }}</div>
+          <div class="mdl-cell mdl-cell--12-col">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--4-col">
+              {{ choose_form.start_at(class="mdl-textfield__input", type="datetime-local", id="choose_start_at") }}
+              <label class="mdl-textfield__label" for="choose_start_at">Start At</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--4-col">
+              {{ choose_form.duration_minutes(class="mdl-textfield__input", type="number", id="choose_duration_minutes") }}
+              <label class="mdl-textfield__label" for="choose_duration_minutes">Duration (Minutes)</label>
+            </div>
+          </div>
           <div class="form-buttons">{{ choose_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}</div>
         </form>
       </div>

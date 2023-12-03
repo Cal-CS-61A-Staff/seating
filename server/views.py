@@ -1,3 +1,4 @@
+from multiprocessing import synchronize
 import re
 from flask import abort, redirect, render_template, request, send_file, url_for, flash
 from flask_login import current_user, login_required
@@ -178,7 +179,8 @@ def import_room_from_master_sheet(exam):
         for r in choose_form.rooms.data:
             f = RoomForm(
                 display_name=r,
-                sheet_url=app.config.get("MASTER_ROOM_SHEET_URL"), sheet_range=r)
+                sheet_url=app.config.get("MASTER_ROOM_SHEET_URL"),
+                sheet_range=r)
             room = None
             try:
                 room = parse_form_and_validate_room(exam, f)
@@ -380,14 +382,17 @@ def edit_student(exam, canvas_id):
     if form.validate_on_submit():
         if 'cancel' in request.form:
             return redirect(url_for('students', exam=exam))
-        new_wants_set = set(re.split(r'\s|,', form.wants.data))
-        new_avoids_set = set(re.split(r'\s|,', form.avoids.data))
+        new_wants_set = set(re.split(r'\s|,', form.wants.data)) if form.wants.data else set()
+        new_avoids_set = set(re.split(r'\s|,', form.avoids.data)) if form.avoids.data else set()
         new_room_wants_set = set(form.room_wants.data)
         new_room_avoids_set = set(form.room_avoids.data)
         # wants and avoids should not overlap
-        if (new_wants_set & new_avoids_set) \
-                or (new_room_wants_set & new_room_avoids_set):
-            flash("Wants and avoids should not overlap.", 'error')
+        if not new_wants_set.isdisjoint(new_avoids_set) \
+                or not new_room_wants_set.isdisjoint(new_room_avoids_set):
+            flash(
+                "Wants and avoids should not overlap.\n"
+                f"Want: {new_wants_set}\nAvoid: {new_avoids_set}\n"
+                f"Room Want: {new_room_wants_set}\nRoom Avoid: {new_room_avoids_set}", 'error')
             return render_template('edit_student.html.j2', exam=exam, form=form, student=student)
         student.wants = new_wants_set
         student.avoids = new_avoids_set
@@ -424,11 +429,21 @@ def delete_student(exam, canvas_id):
 def assign(exam):
     form = AssignForm()
     if form.validate_on_submit():
+        def delete_all_assignments_no_sync(e):
+            seat_ids = {seat.id for room in e.rooms for seat in room.seats}
+            SeatAssignment.query.filter(SeatAssignment.seat_id.in_(seat_ids)).delete(synchronize_session=False)
+            db.session.commit()
+        if 'delete_all' in request.form:
+            delete_all_assignments_no_sync(exam)
+            flash("Successfully deleted all assignments.", 'success')
+            return redirect(url_for('students', exam=exam))
+        elif 'reassign_all' in request.form:
+            delete_all_assignments_no_sync(exam)
         try:
             assignments = assign_students(exam)
             db.session.add_all(assignments)
             db.session.commit()
-            flash("Successfully assigned students.", 'success')
+            flash(f"Successfully assigned {len(assignments)} students.", 'success')
         except SeatAssigningAlgorithmError as e:
             flash(str(e), 'error')
         return redirect(url_for('students', exam=exam))

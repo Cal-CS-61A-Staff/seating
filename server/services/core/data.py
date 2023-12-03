@@ -145,15 +145,18 @@ def validate_students(exam, headers, rows):
         student.sid = row.pop('student id', None) or student.sid
         student.wants = {k for k, v in row.items() if v.lower() == 'true'}
         student.avoids = {k for k, v in row.items() if v.lower() == 'false'}
-        student.room_wants = {}
-        student.room_avoids = {}
+        student.room_wants = set()
+        student.room_avoids = set()
         # wants and avoids should be mutually exclusive
-        if (student.wants & student.avoids) \
-                or (student.room_wants & student.room_avoids):
+        if not student.wants.isdisjoint(student.avoids) \
+                or not student.room_wants.isdisjoint(student.room_avoids):
             invalid_students.append(row)
             continue
         if is_new:
             new_students.append(student)
         else:
+            # clear original assignment (if any) if student is updated
+            student.assignment = None
             updated_students.append(student)
+
     return new_students, updated_students, invalid_students

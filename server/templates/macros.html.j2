@@ -71,7 +71,7 @@
       {% endfor %}
 
       {% for seat in room.movable_seats_by_attribute[attr] %}
-        {% if seat.id == highlight_seat_id %}
+        {% if seat.id and seat.id == highlight_seat_id %}
           <span><strong>(YOUR WILL USE A SEAT FROM THIS CATEGORY)</strong></span>
         {% endif %}
       {% endfor %}
@@ -102,7 +102,7 @@
       {% if staff and seat.assignment %}
       <a href="{{ url_for('student', exam=exam, canvas_id=seat.assignment.student.canvas_id) }}">
       {% endif %}
-        {% if seat.id == highlight_seat_id %}
+        {% if seat.id and seat.id == highlight_seat_id %}
           {% set class = 'seat highlight' %}
         {% elif staff and seat.assignment %}
           {% set class = 'seat occupied' %}

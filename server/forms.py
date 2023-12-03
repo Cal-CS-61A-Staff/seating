@@ -38,6 +38,8 @@ class RoomForm(FlaskForm):
 class ChooseRoomForm(FlaskForm):
     submit = SubmitField('import')
     rooms = MultiCheckboxField('select_rooms')
+    start_at = DateTimeField('start_at', [Optional()], format='%Y-%m-%dT%H:%M')
+    duration_minutes = IntegerField('duration_minutes', [Optional()])
 
     def __init__(self, room_list=None, *args, **kwargs):
         super(ChooseRoomForm, self).__init__(*args, **kwargs)
@@ -87,6 +89,8 @@ class DeleteStudentForm(FlaskForm):
 
 class AssignForm(FlaskForm):
     submit = SubmitField('assign')
+    delete_all = SubmitField('delete all assignments')
+    reassign_all = SubmitField('reassign all assignments')
 
 
 def validate_email_list(form, field):
@@ -94,7 +98,6 @@ def validate_email_list(form, field):
     for email in email_list:
         email = email.strip()
         if not Email()(form, field):
-            print(f'Invalid email address: {email}')
             raise ValidationError(f'Invalid email address: {email}')
 
 
