@@ -155,5 +155,8 @@ def validate_students(exam, headers, rows):
         if is_new:
             new_students.append(student)
         else:
+            # clear original assignment (if any) if student is updated
+            student.assignment = None
             updated_students.append(student)
+
     return new_students, updated_students, invalid_students
