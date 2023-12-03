@@ -1,8 +1,9 @@
 import re
 
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, SelectMultipleField, StringField, SubmitField, \
-    TextAreaField, DateTimeField, IntegerField, ValidationError, widgets
+from wtforms import ValidationError, BooleanField, FileField, SelectMultipleField, StringField, SubmitField, \
+    TextAreaField, DateTimeField, IntegerField, widgets
+from flask_wtf.file import FileRequired, FileAllowed
 from wtforms.validators import Email, InputRequired, URL, Optional
 from server.controllers import exam_regex
 
@@ -16,7 +17,6 @@ class ExamForm(FlaskForm):
     def validate_name(form, field):
         pattern = '^{}$'.format(exam_regex)
         if not re.match(pattern, field.data):
-            from wtforms.validators import ValidationError
             raise ValidationError('Exam name must be match pattern {}'.format(pattern))
 
 
@@ -47,20 +47,15 @@ class ChooseRoomForm(FlaskForm):
             self.rooms.choices = [(item, item) for item in room_list]
 
 
-class EditStudentForm(FlaskForm):
-    email = StringField('email', [Email()])
-    wants = StringField('wants')
-    avoids = StringField('avoids')
-    room_wants = MultiCheckboxField('room_wants')
-    room_avoids = MultiCheckboxField('room_avoids')
-    submit = SubmitField('make edits')
-    cancel = SubmitField('cancel')
-
-    def __init__(self, room_list=None, *args, **kwargs):
-        super(EditStudentForm, self).__init__(*args, **kwargs)
-        if room_list is not None:
-            self.room_wants.choices = [(str(item.id), item.name_and_start_at_time_display()) for item in room_list]
-            self.room_avoids.choices = [(str(item.id), item.name_and_start_at_time_display()) for item in room_list]
+class UploadRoomForm(FlaskForm):
+    submit = SubmitField('upload')
+    file = FileField('Choose File', validators=[
+        FileRequired(),
+        FileAllowed(['csv'], 'CSV files only!')
+    ])
+    display_name = StringField('display_name', [InputRequired()])
+    start_at = DateTimeField('start_at', [Optional()], format='%Y-%m-%dT%H:%M')
+    duration_minutes = IntegerField('duration_minutes', [Optional()])
 
 
 class EditRoomForm(FlaskForm):
@@ -81,6 +76,30 @@ class ImportStudentFromCanvasRosterForm(FlaskForm):
     submit = SubmitField('import')
 
 
+class ImportStudentFromCsvUploadForm(FlaskForm):
+    submit = SubmitField('import')
+    file = FileField('Choose File', validators=[
+        FileRequired(),
+        FileAllowed(['csv'], 'CSV files only!')
+    ])
+
+
+class EditStudentForm(FlaskForm):
+    email = StringField('email', [Email()])
+    wants = StringField('wants')
+    avoids = StringField('avoids')
+    room_wants = MultiCheckboxField('room_wants')
+    room_avoids = MultiCheckboxField('room_avoids')
+    submit = SubmitField('make edits')
+    cancel = SubmitField('cancel')
+
+    def __init__(self, room_list=None, *args, **kwargs):
+        super(EditStudentForm, self).__init__(*args, **kwargs)
+        if room_list is not None:
+            self.room_wants.choices = [(str(item.id), item.name_and_start_at_time_display()) for item in room_list]
+            self.room_avoids.choices = [(str(item.id), item.name_and_start_at_time_display()) for item in room_list]
+
+
 class DeleteStudentForm(FlaskForm):
     emails = TextAreaField('emails')
     use_all_emails = BooleanField('use_all_emails')
@@ -91,14 +110,6 @@ class AssignForm(FlaskForm):
     submit = SubmitField('assign')
     delete_all = SubmitField('delete all assignments')
     reassign_all = SubmitField('reassign all assignments')
-
-
-def validate_email_list(form, field):
-    email_list = field.data.split(',')
-    for email in email_list:
-        email = email.strip()
-        if not Email()(form, field):
-            raise ValidationError(f'Invalid email address: {email}')
 
 
 class EmailForm(FlaskForm):

@@ -37,6 +37,9 @@
         <label class="mdl-textfield__label" for="search-expandable">Search</label>
       </div>
     </div>
+      <div id="tt6" class="material-icons std" onclick="location.href = '{{ url_for('export_students_as_csv', exam=exam) }}';" style="float: right;">file_download</div>
+      <div class="mdl-tooltip" data-mdl-for="tt6">Export</div>
+      
       <div id="tt5" class="material-icons std" onclick="location.href = '{{ url_for('email_all_students', exam=exam) }}';" style="float: right;">email</div>
       <div class="mdl-tooltip" data-mdl-for="tt5">Email</div>
 

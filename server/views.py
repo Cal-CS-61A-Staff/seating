@@ -1,22 +1,23 @@
-from multiprocessing import synchronize
 import re
-from flask import abort, redirect, render_template, request, send_file, url_for, flash
+from flask import abort, redirect, render_template, request, send_file, url_for, flash, Response
 from flask_login import current_user, login_required
 
 from server import app
 from server.models import SeatAssignment, db, Exam, Room, Seat, Student
-from server.forms import EditRoomForm, ExamForm, RoomForm, ChooseRoomForm, ImportStudentFromSheetForm, \
-    ImportStudentFromCanvasRosterForm, DeleteStudentForm, AssignForm, EmailForm, EditStudentForm
+from server.forms import EditRoomForm, ExamForm, ImportStudentFromCsvUploadForm, RoomForm, ChooseRoomForm, \
+    ImportStudentFromSheetForm, ImportStudentFromCanvasRosterForm, DeleteStudentForm, AssignForm, EmailForm, \
+    EditStudentForm, UploadRoomForm
+from server.services.core.export import export_exam_student_info
 from server.services.email.templates import get_email
 from server.services.google import get_spreadsheet_tabs
 import server.services.canvas as canvas_client
 from server.services.email import email_about_assignment
-from server.services.core.data import parse_form_and_validate_room, validate_students, \
-    parse_student_sheet, parse_canvas_student_roster
+from server.services.core.data import get_room_from_csv, get_room_from_google_spreadsheet, \
+    get_students_from_canvas, get_students_from_csv, get_students_from_google_spreadsheet
 from server.services.core.assign import assign_students
 from server.typings.exception import SeatAssigningAlgorithmError
-from server.utils.date import to_ISO8601
 from server.typings.enum import EmailTemplate
+from server.utils.date import to_ISO8601
 
 # region Offering CRUDI
 
@@ -135,8 +136,9 @@ def import_room(exam):
     """
     new_form = RoomForm()
     choose_form = ChooseRoomForm(room_list=get_spreadsheet_tabs(app.config.get('MASTER_ROOM_SHEET_URL')))
+    upload_form = UploadRoomForm()
     return render_template('new_room.html.j2',
-                           exam=exam, new_form=new_form, choose_form=choose_form,
+                           exam=exam, new_form=new_form, choose_form=choose_form, upload_form=upload_form,
                            master_sheet_url=app.config.get('MASTER_ROOM_SHEET_URL'))
 
 
@@ -147,10 +149,11 @@ def import_room_from_custom_sheet(exam):
     """
     new_form = RoomForm()
     choose_form = ChooseRoomForm()
+    upload_form = UploadRoomForm()
     room = None
     if new_form.validate_on_submit():
         try:
-            room = parse_form_and_validate_room(exam, new_form)
+            room = get_room_from_google_spreadsheet(exam, new_form)
         except Exception as e:
             flash(f"Failed to import room due to an unexpected error: {e}", 'error')
         if new_form.create_room.data:
@@ -164,7 +167,9 @@ def import_room_from_custom_sheet(exam):
         for error in errors:
             flash("{}: {}".format(field, error), 'error')
     return render_template('new_room.html.j2',
-                           exam=exam, new_form=new_form, choose_form=choose_form, room=room,
+                           exam=exam,
+                           new_form=new_form, choose_form=choose_form, upload_form=upload_form,
+                           room=room,
                            master_sheet_url=app.config.get('MASTER_ROOM_SHEET_URL'))
 
 
@@ -175,6 +180,7 @@ def import_room_from_master_sheet(exam):
     """
     new_form = RoomForm()
     choose_form = ChooseRoomForm(room_list=get_spreadsheet_tabs(app.config.get('MASTER_ROOM_SHEET_URL')))
+    upload_form = UploadRoomForm()
     if choose_form.validate_on_submit():
         for r in choose_form.rooms.data:
             f = RoomForm(
@@ -183,8 +189,7 @@ def import_room_from_master_sheet(exam):
                 sheet_range=r)
             room = None
             try:
-                room = parse_form_and_validate_room(exam, f)
-                # TODO: proper error handling
+                room = get_room_from_google_spreadsheet(exam, f)
             except Exception as e:
                 flash(f"Failed to import room due to an unexpected error: {e}", 'error')
             if room:
@@ -198,7 +203,38 @@ def import_room_from_master_sheet(exam):
         for error in errors:
             flash("{}: {}".format(field, error), 'error')
     return render_template('new_room.html.j2',
-                           exam=exam, new_form=new_form, choose_form=choose_form,
+                           exam=exam,
+                           new_form=new_form, choose_form=choose_form, upload_form=upload_form,
+                           master_sheet_url=app.config.get('MASTER_ROOM_SHEET_URL'))
+
+
+@app.route('/<exam:exam>/rooms/import/from_csv_upload/', methods=['GET', 'POST'])
+def import_room_from_csv_upload(exam):
+    new_form = RoomForm()
+    choose_form = ChooseRoomForm()
+    upload_form = UploadRoomForm()
+    if upload_form.validate_on_submit():
+        room = None
+        if upload_form.file.data:
+            try:
+                room = get_room_from_csv(exam, upload_form)
+            except Exception as e:
+                flash(f"Failed to import room due to an unexpected error: {e}", 'error')
+        else:
+            flash("No file uploaded!", 'error')
+        if room:
+            try:
+                db.session.add(room)
+                db.session.commit()
+            except Exception as e:
+                flash(f"Failed to import room due to a db error: {e}", 'error')
+        return redirect(url_for('exam', exam=exam))
+    for field, errors in upload_form.errors.items():
+        for error in errors:
+            flash("{}: {}".format(field, error), 'error')
+    return render_template('new_room.html.j2',
+                           exam=exam,
+                           new_form=new_form, choose_form=choose_form, upload_form=upload_form,
                            master_sheet_url=app.config.get('MASTER_ROOM_SHEET_URL'))
 
 
@@ -264,18 +300,21 @@ def room(exam, id):
 def import_students(exam):
     from_sheet_form = ImportStudentFromSheetForm()
     from_canvas_form = ImportStudentFromCanvasRosterForm()
+    from_csv_form = ImportStudentFromCsvUploadForm()
     return render_template('new_students.html.j2', exam=exam,
-                           from_sheet_form=from_sheet_form, from_canvas_form=from_canvas_form)
+                           from_sheet_form=from_sheet_form,
+                           from_canvas_form=from_canvas_form,
+                           from_csv_form=from_csv_form)
 
 
 @app.route('/<exam:exam>/students/import/from_custom_sheet/', methods=['GET', 'POST'])
 def import_students_from_custom_sheet(exam):
     from_sheet_form = ImportStudentFromSheetForm()
     from_canvas_form = ImportStudentFromCanvasRosterForm()
+    from_csv_form = ImportStudentFromCsvUploadForm()
     if from_sheet_form.validate_on_submit():
         try:
-            headers, rows = parse_student_sheet(from_sheet_form)
-            new_students, updated_students, invalid_students = validate_students(exam, headers, rows)
+            new_students, updated_students, invalid_students = get_students_from_google_spreadsheet(exam, from_sheet_form)
             to_commit = new_students + updated_students
             if to_commit:
                 db.session.add_all(to_commit)
@@ -292,20 +331,23 @@ def import_students_from_custom_sheet(exam):
         except Exception as e:
             flash(f"Failed to import students due to an unexpected error: {str(e)}", 'error')
         return redirect(url_for('students', exam=exam))
+    for field, errors in from_sheet_form.errors.items():
+        for error in errors:
+            flash("{}: {}".format(field, error), 'error')
     return render_template('new_students.html.j2', exam=exam,
-                           from_sheet_form=from_sheet_form, from_canvas_form=from_canvas_form)
+                           from_sheet_form=from_sheet_form,
+                           from_canvas_form=from_canvas_form,
+                           from_csv_form=from_csv_form)
 
 
 @app.route('/<exam:exam>/students/import/from_canvas_roster/', methods=['GET', 'POST'])
 def import_students_from_canvas_roster(exam):
     from_sheet_form = ImportStudentFromSheetForm()
     from_canvas_form = ImportStudentFromCanvasRosterForm()
+    from_csv_form = ImportStudentFromCsvUploadForm()
     if from_canvas_form.validate_on_submit():
         try:
-            course = canvas_client.get_course(exam.offering_canvas_id)
-            students = course.get_users(enrollment_type='student')
-            headers, rows = parse_canvas_student_roster(students)
-            new_students, updated_students, invalid_students = validate_students(exam, headers, rows)
+            new_students, updated_students, invalid_students = get_students_from_canvas(exam)
             to_commit = new_students + updated_students
             if to_commit:
                 db.session.add_all(to_commit)
@@ -322,8 +364,49 @@ def import_students_from_canvas_roster(exam):
         except Exception as e:
             flash(f"Failed to import students due to an unexpected error: {str(e)}", 'error')
         return redirect(url_for('students', exam=exam))
+    for field, errors in from_canvas_form.errors.items():
+        for error in errors:
+            flash("{}: {}".format(field, error), 'error')
     return render_template('new_students.html.j2', exam=exam,
-                           from_sheet_form=from_sheet_form, from_canvas_form=from_canvas_form)
+                           from_sheet_form=from_sheet_form,
+                           from_canvas_form=from_canvas_form,
+                           from_csv_form=from_csv_form)
+
+
+@app.route('/<exam:exam>/students/import/from_csv_upload/', methods=['GET', 'POST'])
+def import_students_from_csv_upload(exam):
+    from_sheet_form = ImportStudentFromSheetForm()
+    from_canvas_form = ImportStudentFromCanvasRosterForm()
+    from_csv_form = ImportStudentFromCsvUploadForm()
+    if from_csv_form.validate_on_submit():
+        if from_csv_form.file.data:
+            try:
+                new_students, updated_students, invalid_students = get_students_from_csv(exam, from_csv_form)
+                to_commit = new_students + updated_students
+                if to_commit:
+                    db.session.add_all(to_commit)
+                    db.session.commit()
+                flash(
+                    f"Import done. {len(new_students)} new students, {len(updated_students)} updated students"
+                    f" {len(invalid_students)} invalid students.", 'success')
+                if updated_students:
+                    flash(
+                        f"Updated students: {','.join([s.name for s in updated_students])}", 'warning')
+                if invalid_students:
+                    flash(
+                        f"Invalid students: {invalid_students}", 'error')
+            except Exception as e:
+                flash(f"Failed to import students due to an unexpected error: {str(e)}", 'error')
+        else:
+            flash("No file uploaded!", 'error')
+        return redirect(url_for('students', exam=exam))
+    for field, errors in from_csv_form.errors.items():
+        for error in errors:
+            flash("{}: {}".format(field, error), 'error')
+    return render_template('new_students.html.j2', exam=exam,
+                           from_sheet_form=from_sheet_form,
+                           from_canvas_form=from_canvas_form,
+                           from_csv_form=from_csv_form)
 
 
 @app.route('/<exam:exam>/students/delete/', methods=['GET', 'POST'])
@@ -353,6 +436,19 @@ def delete_students(exam):
 def students(exam):
     # TODO load assignment and seat at the same time?
     return render_template('students.html.j2', exam=exam, students=exam.students)
+
+
+@app.route('/<exam:exam>/students/export/csv')
+def export_students_as_csv(exam):
+    from datetime import datetime
+    file_content = export_exam_student_info(exam)
+    timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    file_name = f"{exam.name}_students_{timestamp}.csv"
+    return Response(
+        file_content,
+        mimetype="text/csv",
+        headers={"Content-disposition": f"attachment; filename={file_name}"}
+    )
 
 
 @app.route('/<exam:exam>/students/<string:canvas_id>/')

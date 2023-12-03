@@ -7,6 +7,7 @@
   <div class="mdl-tabs__tab-bar">
     <a href="#sheet-panel" class="mdl-tabs__tab is-active">Import from Custom Sheet</a>
     <a href="#choice-panel" class="mdl-tabs__tab">Import from Master Sheet</a>
+    <a href="#upload-panel" class="mdl-tabs__tab">Import from CSV Upload</a>
   </div>
 
   <div class="mdl-tabs__panel is-active" id="sheet-panel">
@@ -53,7 +54,6 @@
   </div>
 
   <div class="mdl-tabs__panel" id="choice-panel">
-    
     <div class="mdl-grid">
       <div class="mdl-layout-spacer"></div>
       <div class="mdl-cell mdl-cell--10-col">
@@ -79,5 +79,35 @@
       <div class="mdl-layout-spacer"></div>
     </div>
   </div>
+
+  <div class="mdl-tabs__panel" id="upload-panel">
+    <div class="mdl-grid">
+      <div class="mdl-layout-spacer"></div>
+      <div class="mdl-cell mdl-cell--10-col">
+        <form action="{{ url_for('import_room_from_csv_upload', exam=exam) }}" method="post" enctype="multipart/form-data">
+          {{ upload_form.hidden_tag() }}
+          {{ upload_form.file(class="mdl-textfield__input", type="file", id="upload_csv_file")}}
+          <div class="mdl-cell mdl-cell--12-col">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--4-col">
+              {{ upload_form.display_name(class="mdl-textfield__input", type="Room Name", id="upload_roomname") }}
+              <label class="mdl-textfield__label" for="upload_roomname">Room Name</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--4-col">
+              {{ upload_form.start_at(class="mdl-textfield__input", type="datetime-local", id="upload_start_at") }}
+              <label class="mdl-textfield__label" for="upload_start_at">Start At</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--4-col">
+              {{ upload_form.duration_minutes(class="mdl-textfield__input", type="number", id="upload_duration_minutes") }}
+              <label class="mdl-textfield__label" for="upload_duration_minutes">Duration (Minutes)</label>
+            </div>
+          </div>
+          <div class="form-buttons">{{ upload_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}</div>
+        </form>
+      </div>
+      <div class="mdl-layout-spacer"></div>
+    </div>
+
+  </div>
+
 </div>
 {% endblock %}

@@ -19,11 +19,10 @@ class SMTPConfig:
                 f'use_auth={self.use_auth})')
 
 
-def send_email(*, smtp: SMTPConfig, from_addr, to_addr, subject, body, body_html=None, bcc_addr=None, cc_addr=None):
+def send_email(*, smtp: SMTPConfig, from_addr, to_addr, subject, body,
+               body_html=None, bcc_addr=None, cc_addr=None):
     msg = EmailMessage()
-    msg['From'] = from_addr
-    msg['To'] = to_addr
-    msg['Subject'] = subject
+    msg['From'], msg['To'], msg['Subject'] = from_addr, to_addr, subject
     if bcc_addr:
         if isinstance(bcc_addr, str):
             bcc_addr = bcc_addr.split(',')

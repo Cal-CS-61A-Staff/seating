@@ -80,6 +80,25 @@ def get_user_courses_categorized(user: FakeUser | User) \
     return list(staff_courses), list(student_courses), list(other)
 
 
+def get_student_roster_for_offering(offering_canvas_id, key=None):
+    course = _get_client(key).get_course(offering_canvas_id)
+    students = course.get_users(enrollment_type='student')
+    headers = ['canvas id', 'email', 'name', 'student id']
+    rows = []
+    for student in students:
+        stu_dict = {}
+        if hasattr(student, 'id'):
+            stu_dict['canvas id'] = student.id
+        if hasattr(student, 'email'):
+            stu_dict['email'] = student.email
+        if hasattr(student, 'short_name'):
+            stu_dict['name'] = student.short_name
+        if hasattr(student, 'sis_user_id'):
+            stu_dict['student id'] = student.sis_user_id
+        rows.append(stu_dict)
+    return headers, rows
+
+
 def api_course_to_model(course: Course | FakeCourse) -> Offering:
     return Offering(
         canvas_id=course.id,

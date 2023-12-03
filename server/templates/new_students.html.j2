@@ -6,6 +6,7 @@
   <div class="mdl-tabs__tab-bar">
     <a href="#sheet-panel" class="mdl-tabs__tab is-active">Import from Custom Sheet</a>
     <a href="#canvas-panel" class="mdl-tabs__tab">Import from Canvas Roster</a>
+    <a href="#upload-panel" class="mdl-tabs__tab">Import from CSV upload</a>
   </div>
   <div class="mdl-tabs__panel is-active" id="sheet-panel">
     <form action="{{ url_for('import_students_from_custom_sheet', exam=exam) }}" method="post">
@@ -67,13 +68,27 @@
       </div> 
     </form>
   </div>
+
   <div class="mdl-tabs__panel" id="canvas-panel">
     <form action="{{ url_for('import_students_from_canvas_roster', exam=exam) }}" method="post">
         {{ from_canvas_form.hidden_tag() }}
         <div class="mdl-grid">
-        <div class="form-buttons">
-          {{ from_canvas_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
-        </div></div>
+          <div class="form-buttons">
+            {{ from_canvas_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+          </div>
+        </div>
+    </form>
+  </div>
+
+  <div class="mdl-tabs__panel" id="upload-panel">
+    <form action="{{ url_for('import_students_from_csv_upload', exam=exam) }}" method="post" enctype="multipart/form-data">
+        {{ from_csv_form.hidden_tag() }}
+        <div class="mdl-grid">
+          {{ from_csv_form.file(class="mdl-textfield__input", type="file", id="upload_csv_file")}}
+          <div class="form-buttons">
+            {{ from_csv_form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+          </div>
+        </div>
     </form>
   </div>
 {% endblock %}
