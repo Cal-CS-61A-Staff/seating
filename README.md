@@ -1,6 +1,8 @@
 # Exam Seating App
 
-[![codecov](https://codecov.io/gh/berkeley-eecs/seating/graph/badge.svg?token=0FJ178HK0N)](https://codecov.io/gh/berkeley-eecs/seating)
+[![Codecov](https://codecov.io/gh/berkeley-eecs/seating/graph/badge.svg?token=0FJ178HK0N)](https://codecov.io/gh/berkeley-eecs/seating)
+![CodeQL](https://github.com/berkeley-eecs/seating/actions/workflows/codeql.yml/badge.svg)
+![Tests](https://github.com/berkeley-eecs/seating/actions/workflows/test.yml/badge.svg)
 
 One stop solution to manage and access exam seating assignments of all your Berkeley courses, for course staff and students.
 
