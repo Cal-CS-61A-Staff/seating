@@ -21,6 +21,6 @@ The entire app is protected behind Canvas (bCourses) authentication and authoriz
 
 ## Get Started!
 
-- If you are an instructor or a course staff member who wants to use this app for your course, see [here](wiki/for-course-staff).
-- If you are a developer or maintainer that works with this app, see [here](wiki/for-developers).
-- If you are a student, see [here](wiki/for-students).
+- If you are an instructor or a course staff member who wants to use this app for your course, see [here](../../wiki/for-course-staff).
+- If you are a developer or maintainer that works with this app, see [here](../../wiki/for-developers).
+- If you are a student, see [here](../../wiki/for-students).
