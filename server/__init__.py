@@ -26,7 +26,21 @@ class App(Flask):
         return UrlRequestContext(self, environ)
 
 
+import sentry_sdk  # noqa
+
+sentry_sdk.init(
+    dsn="https://bb1482ed49f0807ee6a49accafe927f9@o4506322522734592.ingest.sentry.io/4506322540953600",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+)
+
 app = App(__name__)
+
 
 from config import ConfigBase, ProductionConfig, StagingConfig, DevelopmentConfig, TestingConfig  # noqa
 env_value = ConfigBase.getenv('FLASK_ENV').lower()
