@@ -61,11 +61,12 @@
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="email" style="text-align: center;">Email</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="sid" style="text-align: center;">Student ID</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="canvas_id" style="text-align: center;">Canvas ID</th>
-          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Wants</th>
-          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Avoids</th>
-          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Seat</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="wants" style="text-align: center;">Wants</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="avoids" style="text-align: center;">Avoids</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="seat" style="text-align: center;">Seat</th>
           <th class="sort mdl-data-table__cell--non-numeric" data-sort="emailed" style="text-align: center;">Emailed?</th>
-          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Edit</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="assignment" style="text-align: center;">Assign</th>
+          <th class="sort mdl-data-table__cell--non-numeric" data-sort="edit" style="text-align: center;">Edit</th>
           <th class="mdl-data-table__cell--non-numeric" style="text-align: center;">Delete</th>
         </tr>
       </thead>
@@ -121,6 +122,9 @@
           {% else %}
             <div>NO SEAT</div>
           {% endif %}
+          </td>
+          <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
+            <div class="material-icons" style="text-align: center; margin: 0; cursor: pointer;" onclick="location.href = '{{ url_for('assign_student', exam=exam, canvas_id=student.canvas_id) }}';" style="float: right;">assignment</div>
           </td>
           <td class="mdl-data-table__cell--non-numeric" style="text-align: center;">
             <div class="material-icons" style="text-align: center; margin: 0; cursor: pointer;" onclick="location.href = '{{ url_for('edit_student', exam=exam, canvas_id=student.canvas_id) }}';" style="float: right;">edit</div>

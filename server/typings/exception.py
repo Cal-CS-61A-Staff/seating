@@ -10,8 +10,10 @@ class DataValidationError(Exception):
 class GcpError (Exception):
     pass
 
+class SeatAssignmentError(Exception):
+    pass
 
-class SeatAssigningAlgorithmError(Exception):
+class NotEnoughSeatError(SeatAssignmentError):
     def __init__(self, exam, students, preference):
         wants, avoids, room_wants, room_avoids = preference
         pref_str = """\
@@ -30,6 +32,16 @@ class SeatAssigningAlgorithmError(Exception):
                          f"- Student:\n{students_str}\n"
                          f"- Preference:\n{pref_str}\n"
                          "Seat with such preference does not exist or runs out.")
+
+    def __str__(self):
+        return self.args[1]
+
+class SeatOverrideError(SeatAssignmentError):
+    def __init__(self, student, seat, reason):
+        super().__init__(self, "Seat override failed on:\n"
+                         f"- Student: {student.name}\n"
+                         f"- Seat: {seat.name}\n"
+                         f"- Reason: {reason}")
 
     def __str__(self):
         return self.args[1]

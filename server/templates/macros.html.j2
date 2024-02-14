@@ -16,7 +16,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro room(room, highlight_seat_id=none, show_attributes=false, staff=true) %}
+{% macro room(room, highlight_seat_id=none, show_attributes=false, staff=true, remove_link=false) %}
 {% if room.seats %}
 <div class="room">
   <h4>{{ room.display_name }}
@@ -44,12 +44,15 @@
       {% for seat in room.movable_seats_by_attribute[attr] %}
         {% if staff %}
           {% if seat.assignment %}
-            <a id={{ seat.id }} style="font-size: {{ circle_size }}px;"
-              href="{{ url_for('student', exam=exam, canvas_id=seat.assignment.student.canvas_id) }}">
-              &#x25CF;
+            {% if not remove_link %}
+            <a href="{{ url_for('student', exam=exam, canvas_id=seat.assignment.student.canvas_id) }}">
+            {% endif %}
+              <span class="s" id={{ seat.id }} style="font-size: {{ circle_size }}px;">&#x25CF;</span>
+            {% if not remove_link %}
             </a>
+            {% endif %}
           {% else %}
-            <span id={{ seat.id }} style="font-size: {{ circle_size }}px;">
+            <span class="s" id={{ seat.id }} style="font-size: {{ circle_size }}px;">
               &#x25CB;
             </span>
           {% endif %}
@@ -99,18 +102,18 @@
       {% if loop.first %}
         <div class="seat-label" style="left:{{ x + 30 }}px;top:{{ y }}px">{{ seat.name }}</div>
       {% endif %}
-      {% if staff and seat.assignment %}
+      {% if staff and seat.assignment and not remove_link %}
       <a href="{{ url_for('student', exam=exam, canvas_id=seat.assignment.student.canvas_id) }}">
       {% endif %}
         {% if seat.id and seat.id == highlight_seat_id %}
-          {% set class = 'seat highlight' %}
+          {% set class = 's seat highlight' %}
         {% elif staff and seat.assignment %}
-          {% set class = 'seat occupied' %}
+          {% set class = 's seat occupied' %}
         {% else %}
-          {% set class = 'seat' %}
+          {% set class = 's seat' %}
         {% endif %}
         <div id="{{ seat.id }}" class="{{ class }}" style="left:{{ x }}px;top:{{ y }}px"></div>
-      {% if staff and seat.assignment %}
+      {% if staff and seat.assignment and not remove_link %}
       </a>
       {% endif %}
       <div class="seat-tooltip mdl-tooltip mdl-tooltip--large" for="{{ seat.id }}">

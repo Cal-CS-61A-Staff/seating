@@ -1,0 +1,39 @@
+{% extends 'base.html.j2' %}
+{% import 'macros.html.j2' as macros with context %}
+
+{% block body %}
+<div class="">
+{% for room in exam.rooms %}
+  {{ macros.room(room, highlight_seat_id=seat_id, show_attributes=True, remove_link=True) }}
+  <hr style="border-top: 1px solid black;" />
+{% endfor %}
+</div>
+<div class="mdl-grid">
+{% call macros.form(form) %}
+  <div class="mdl-cell mdl-cell--12-col delist">
+    <div class="checkbox" id="ignore_restrictions">
+      {{ form.ignore_restrictions }}
+      <label class="" for="ignore_restrictions">Ignore Restrictions?</label>
+    </div>
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col">
+      {{ form.seat_id(class="mdl-textfield__input", type="Seat ID", id="seat_id") }}
+      <label class="mdl-textfield__label" for="seat_id">Seat ID (Leave blank for random)</label>
+    </div>
+  </div>
+  <div class="form-buttons">
+      {{ form.submit(class="mdl-button mdl-js-button mdl-button--raised") }}
+  </div>
+{% endcall %}
+</div>
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        var elements = document.querySelectorAll('.s');
+        elements.forEach(function(element) {
+            element.addEventListener('click', function() {
+                seat_id = this.id;
+                document.getElementById('seat_id').value = seat_id;
+            });
+        });
+    });
+</script>
+{% endblock %}
