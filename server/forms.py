@@ -112,8 +112,9 @@ class AssignForm(FlaskForm):
     reassign_all = SubmitField('reassign all assignments')
 
 class AssignSingleForm(FlaskForm):
-    ignore_restrictions = BooleanField('ignore_restrictions')
+    ignore_restrictions = BooleanField('ignore restrictions')
     seat_id = StringField('seat_id')
+    just_delete = SubmitField('just delete')
     submit = SubmitField('assign')
 
 class EmailForm(FlaskForm):

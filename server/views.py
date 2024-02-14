@@ -551,6 +551,14 @@ def assign_student(exam, canvas_id):
     if form.validate_on_submit():
         student = Student.query.filter_by(exam_id=exam.id, canvas_id=canvas_id).first_or_404()
         try:
+            if 'just_delete' in request.form:
+                if student.assignment:
+                    db.session.delete(student.assignment)
+                    db.session.commit()
+                    flash(f"Successfully deleted assignment for {student.name}.", 'success')
+                else:
+                    flash(f"No assignment to delete for {student.name}.", 'warning')
+                return redirect(url_for('students', exam=exam))
             chosen_seat = Seat.query.filter_by(id=form.seat_id.data).first_or_404() if form.seat_id.data != "" else None
             old_assignment = None
             if student.assignment:
