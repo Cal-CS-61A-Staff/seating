@@ -182,7 +182,7 @@ def test_new_student_listed_again_with_another_canvas_id_is_invalid(exam):
     assert len(_students_named('New Student')) == 1
 
 
-def test_student_listed_twice_can_still_open_the_exam(exam, client):
+def test_student_listed_twice_can_still_open_the_exam(exam, login_as):
     # two students with one canvas id used to crash the exam page for that student
     db.session.delete(Student.query.filter_by(exam_id=1, canvas_id='345678').one())
     db.session.commit()
@@ -191,10 +191,7 @@ def test_student_listed_twice_can_still_open_the_exam(exam, client):
     assert Student.query.filter_by(exam_id=1, canvas_id='345678').count() == 1
 
     sharon = User.query.filter_by(canvas_id='345678').one()
-    with client.session_transaction() as session:
-        session['_user_id'] = str(sharon.id)
-        session['_fresh'] = True
-    response = client.get(f'{EXAM_URL}/')
+    response = login_as(sharon.id).get(f'{EXAM_URL}/')
     # not seated yet, which the page explains instead of crashing
     assert response.status_code == 403
     assert 'You have not been assigned a seat' in response.get_data(as_text=True)

@@ -1,3 +1,5 @@
+import time
+
 from flask import redirect, session, url_for
 from flask_login import login_user, logout_user, login_required
 from markupsafe import escape
@@ -6,7 +8,7 @@ import server.services.canvas as canvas_client
 from server.models import db, User
 
 from server.controllers import auth_module
-from server.services.auth import oauth_provider
+from server.services.auth import SIGNED_IN_AT_KEY, oauth_provider
 from authlib.integrations.base_client import OAuthError
 
 
@@ -49,7 +51,11 @@ def authorized():
         user_model.student_offerings = student_offerings
     db.session.commit()
 
-    login_user(user_model, remember=True)
+    # No remember cookie: it holds no time, so it would sign the user back in with the roles from
+    # their last sign-in for as long as the browser keeps it.
+    login_user(user_model)
+    session.permanent = True
+    session[SIGNED_IN_AT_KEY] = time.time()
     after_login = session.pop('after_login', None) or url_for('views.index')
     return redirect(after_login)
 

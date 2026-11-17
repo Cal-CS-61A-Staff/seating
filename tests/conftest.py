@@ -12,6 +12,7 @@ from selenium.webdriver.chrome.options import Options
 from config import TestingConfig
 from server.application import create_app
 from server.models import db as sqlalchemy_db
+from server.services.auth import SIGNED_IN_AT_KEY
 from tests.fixtures import seed_db
 
 
@@ -163,6 +164,7 @@ def login_as(client):
         with client.session_transaction() as sess:
             sess['_user_id'] = str(user_id)
             sess['_fresh'] = True
+            sess[SIGNED_IN_AT_KEY] = time.time()
         return client
 
     return _login_as

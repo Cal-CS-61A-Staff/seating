@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from typing import Optional
 
 from server.typings.exception import EnvironmentalVariableMissingError
@@ -29,6 +30,11 @@ class ConfigBase(object):
     # drop the session on that redirect and break login.)
     SESSION_COOKIE_SAMESITE = 'Lax'
     REMEMBER_COOKIE_SAMESITE = 'Lax'
+    # Sessions end after this long without a request. Sign-ins also expire after
+    # SIGN_IN_MAX_AGE (server/services/auth), so Canvas roles are read again.
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=2)
+    # The remember cookie is no longer set. Any left in browsers are refused (see
+    # sign_in_expired), and logging out deletes them; until then they keep the flags above.
 
     # Uploads (rooms, students, layout previews) are read into memory, so refuse a request
     # larger than this with 413. A roster of thousands of students is well under 1 MB.
@@ -75,6 +81,11 @@ class ConfigBase(object):
         self.MASTER_ROOM_SHEET_URL = getenv('MASTER_ROOM_SHEET_URL', optional=True)
 
         self.PHOTO_DIRECTORY = getenv('PHOTO_DIRECTORY', "unset")
+
+        # How long a Canvas sign-in is trusted, in seconds, before the user must sign in again
+        sign_in_max_age = getenv('SIGN_IN_MAX_AGE', optional=True)
+        if sign_in_max_age:
+            self.SIGN_IN_MAX_AGE = int(sign_in_max_age)
 
 
 class ProductionConfig(ConfigBase):

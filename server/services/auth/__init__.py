@@ -1,3 +1,5 @@
+import time
+
 from flask import current_app, redirect, request, session, url_for
 
 from flask_login import LoginManager
@@ -7,6 +9,23 @@ from server.services.canvas import is_mock_canvas
 
 # set up for each app by init_auth
 login_manager = LoginManager()
+
+# When the user last signed in through Canvas, in the (signed) session cookie.
+SIGNED_IN_AT_KEY = 'signed_in_at'
+# Roles come from Canvas only at sign-in, so a sign-in older than this is refused and the user
+# signs in again, picking up any role they've gained or lost. Overridable with the
+# SIGN_IN_MAX_AGE config value, in seconds.
+DEFAULT_SIGN_IN_MAX_AGE = 12 * 60 * 60
+
+
+def sign_in_expired():
+    """
+    Whether this session's sign-in is too old to trust its Canvas roles, or has no sign-in time
+    (sessions and remember cookies from before it was kept).
+    """
+    signed_in_at = session.get(SIGNED_IN_AT_KEY)
+    max_age = current_app.config.get('SIGN_IN_MAX_AGE', DEFAULT_SIGN_IN_MAX_AGE)
+    return not isinstance(signed_in_at, (int, float)) or time.time() - signed_in_at > max_age
 
 
 def get_access_token():
@@ -64,6 +83,8 @@ def oauth_provider():
 @login_manager.user_loader
 def load_user(user_id):
     from server.models import db, User
+    if sign_in_expired():
+        return None
     return db.session.get(User, user_id)
 
 

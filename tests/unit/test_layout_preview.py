@@ -319,12 +319,9 @@ class TestMasterSheetLayout:
 
 
 @pytest.fixture()
-def authed_client(seeded_db, client):
+def authed_client(seeded_db, login_as):
     """A test client logged in as the seeded staff user."""
-    with client.session_transaction() as flask_session:
-        flask_session['_user_id'] = '1'
-        flask_session['_fresh'] = True
-    return client
+    return login_as(1)
 
 
 @pytest.mark.app_config(WTF_CSRF_ENABLED=False)
