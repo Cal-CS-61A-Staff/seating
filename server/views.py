@@ -1,4 +1,5 @@
 import re
+import secrets
 from flask import Blueprint, abort, current_app, redirect, render_template, request, send_file, url_for, flash, \
     Response
 from flask.json import jsonify
@@ -19,17 +20,67 @@ from server.services.email import email_about_assignment, send_test_email, subst
 from server.services.core.data import get_room_from_csv, get_room_from_google_spreadsheet, get_room_from_manual_input, \
     get_students_from_canvas, get_students_from_import_form, update_room_from_manual_input, \
     get_layout_preview_from_file, get_layout_preview_from_text
+from server.services.core.room import find_room
 from server.services.core.assign import assign_single_student, assign_students
-from server.typings.exception import DataValidationError, NotEnoughSeatError, SeatAssignmentError
+from server.typings.exception import DataValidationError, GcpError, NotEnoughSeatError, SeatAssignmentError
 from server.typings.enum import EmailTemplate
 from server.utils.date import to_ISO8601
 from server.utils.misc import set_to_str, str_set_to_set
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 # the app's own pages; create_app registers it
 bp = Blueprint('views', __name__)
+
+
+def _flash_unexpected_error(action):
+    """
+    Rolls back, and says an action failed, with a short reference to find the error in the logs by.
+    Call it while handling the exception: its text never reaches the user, since it can hold SQL
+    statements, their student data and the database's host, and flashes are stored in the
+    (unencrypted) session cookie.
+
+    The rollback leaves the session usable (on Postgres, a failed statement aborts the transaction)
+    but expires every loaded object: read what is needed afterwards, like names and redirect URLs, first.
+    """
+    try:
+        db.session.rollback()
+    except Exception:
+        pass  # the session is thrown away at the end of the request anyway
+    ref = secrets.token_hex(4)
+    current_app.logger.exception("Couldn't %s (ref %s)", action, ref)
+    flash(f"Couldn't {action} due to an unexpected error (ref {ref}).", 'error')
+
+
+def _commit_or_flash(action, find_duplicate=None, duplicate_message=None):
+    """
+    Commits, or rolls back and says why it couldn't, and returns whether it committed.
+
+    A broken constraint is a duplicate if find_duplicate, run after the rollback, finds what the commit
+    clashed with (e.g. saved by another request since the check before saving): that gets
+    duplicate_message(it). Anything else is unexpected (see _flash_unexpected_error, whose note on
+    reading things before the rollback applies here too).
+    """
+    try:
+        db.session.commit()
+        return True
+    except IntegrityError:
+        db.session.rollback()
+        duplicate = None
+        if find_duplicate:
+            try:
+                duplicate = find_duplicate()
+            except Exception:
+                db.session.rollback()
+        if duplicate:
+            flash(duplicate_message(duplicate), 'error')
+        else:
+            _flash_unexpected_error(action)
+    except Exception:
+        _flash_unexpected_error(action)
+    return False
 
 
 @bp.route('/')
@@ -128,19 +179,21 @@ def add_offerings():
         if not chosen:
             flash("No course offering imported.", 'info')
             return redirect(url_for('views.offerings'))
-        try:
-            for canvas_id in chosen:
-                if canvas_id in hidden_offerings:
-                    hidden_offerings[canvas_id].is_hidden = False
-            db.session.bulk_save_objects([staff_offerings_id_to_model[canvas_id]
-                                          for canvas_id in chosen if canvas_id not in hidden_offerings])
-            db.session.commit()
+        # hidden ones are shown again; the rest are new
+        new_canvas_ids = [canvas_id for canvas_id in chosen if canvas_id not in hidden_offerings]
+        for canvas_id in chosen:
+            if canvas_id in hidden_offerings:
+                hidden_offerings[canvas_id].is_hidden = False
+        # added, not bulk saved: a bulk save inserts right away, and the insert can fail on a duplicate
+        db.session.add_all([staff_offerings_id_to_model[canvas_id] for canvas_id in new_canvas_ids])
+        if _commit_or_flash(
+                "import the course offerings",
+                # new ones imported by someone else since this page was loaded
+                lambda: Offering.query.filter(Offering.canvas_id.in_(new_canvas_ids))
+                .with_entities(Offering.name).all(),
+                lambda imported: f"Already imported: {', '.join(name for name, in imported)}."):
             flash(f"Imported {len(chosen)} course offerings.", 'success')
-            return redirect(url_for('views.offerings'))
-        except Exception as e:
-            db.session.rollback()
-            print("error", str(e))
-            flash("An error occurred when inserting offering: " + str(e), 'error')
+        return redirect(url_for('views.offerings'))
     return render_template("new_offerings.html",
                            title="Add New Course Offerings",
                            form=form)
@@ -175,13 +228,11 @@ def hide_offering(offering):
     # offering urls convertor lets the course's students in too: check staff status here
     if str(offering.canvas_id) not in current_user.staff_offerings:
         abort(403, "You are not a staff member in this offering.")
-    try:
-        offering.is_hidden = True
-        db.session.commit()
-        flash(f"Hid {offering.name}. Its exams are kept; import it again from Canvas to show it again.", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Failed to hide offering {offering.name} (Canvas ID: {offering.canvas_id}) due to an error:\n{e}", 'error')
+    # the commit expires the offering
+    name = offering.name
+    offering.is_hidden = True
+    if _commit_or_flash(f"hide {name}"):
+        flash(f"Hid {name}. Its exams are kept; import it again from Canvas to show it again.", 'success')
     return redirect(url_for('views.offerings'))
 
 
@@ -200,27 +251,40 @@ def new_exam(offering):
     if str(offering.canvas_id) not in current_user.staff_offerings:
         abort(403, "You are not a staff member in this offering.")
     form = ExamForm()
+    title = "Create an Exam for {}".format(offering.name)
     if form.validate_on_submit():
+        # a rollback expires the offering: read what the error paths need first
+        canvas_id, name = offering.canvas_id, form.name.data
+        offering_url = url_for('views.offering', offering=offering)
+
+        def find_exam():
+            return Exam.query.filter_by(offering_canvas_id=canvas_id, name=name).first()
         try:
+            if find_exam():
+                flash(_exam_exists_message(name), 'error')
+                return render_template("upsert_exam.html", title=title, form=form, exam=None)
             if form.active.data:
                 # only one exam can be active at a time, so deactivate all others first
                 offering.mark_all_exams_as_inactive()
-            exam = Exam(offering_canvas_id=offering.canvas_id,
-                        name=form.name.data,
-                        display_name=form.display_name.data,
-                        is_active=form.active.data)
-            offering.exams.append(exam)
+            offering.exams.append(Exam(offering_canvas_id=canvas_id, name=name,
+                                       display_name=form.display_name.data, is_active=form.active.data))
             if offering.ensure_one_exam_is_active():
                 flash("No active exam left. The first exam is activated by default.", 'info')
-            db.session.commit()
-            return redirect(url_for('views.offering', offering=offering))
-        except Exception as e:
-            db.session.rollback()
-            flash(f"An error occurred when inserting exam of name={form.name.data}\n{str(e)}", 'error')
-            return redirect(url_for('views.offering', offering=offering))
-    return render_template("upsert_exam.html",
-                           title="Create an Exam for {}".format(offering.name),
-                           form=form, exam=None)
+        except Exception:
+            _flash_unexpected_error(f"create exam '{name}'")
+            return redirect(offering_url)
+        # a duplicate is one created by someone else since the check above
+        _commit_or_flash(f"create exam '{name}'", find_exam, lambda exam: _exam_exists_message(name))
+        return redirect(offering_url)
+    return render_template("upsert_exam.html", title=title, form=form, exam=None)
+
+
+def _exam_exists_message(name):
+    return f"An exam named '{name}' already exists in this offering."
+
+
+def _room_exists_message(display_name):
+    return f"A room named '{display_name}' with that start time already exists in this exam."
 
 
 @bp.route("/<exam:exam>/delete/", methods=["POST"])
@@ -229,14 +293,17 @@ def delete_exam(exam):
     Path: /offerings/<canvas_id>/exams/<exam_name>/delete
     Deletes an exam for a course offering.
     """
+    # the commit expires the exam
+    display_name, offering_url = exam.display_name, url_for('views.offering', offering=exam.offering)
     try:
+        # loads its rooms, students, seats and assignments, to delete them with it
         db.session.delete(exam)
-        db.session.commit()
+    except Exception:
+        _flash_unexpected_error(f"delete exam '{display_name}'")
+        return redirect(offering_url)
+    if _commit_or_flash(f"delete exam '{display_name}'"):
         flash("Deleted exam.", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Failed to delete exam {exam.display_name} (ID: {exam.id}) due to an error:\n{e}", 'error')
-    return redirect(url_for('views.offering', offering=exam.offering))
+    return redirect(offering_url)
 
 
 @bp.route("/<exam:exam>/edit/", methods=["GET", "POST"])
@@ -260,13 +327,9 @@ def edit_exam(exam):
             exam.is_active = False
             if exam.offering.ensure_one_exam_is_active():
                 flash("No active exam left. The first exam is activated by default.", 'info')
-        try:
-            db.session.commit()
-            return redirect(url_for('views.offering', offering=exam.offering))
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Failed to edit exam name={exam.display_name} due to a db error: \n{e}", 'error')
-            return redirect(url_for('views.offering', offering=exam.offering))
+        offering_url = url_for('views.offering', offering=exam.offering)
+        _commit_or_flash(f"edit exam '{form.display_name.data}'")
+        return redirect(offering_url)
     return render_template("upsert_exam.html",
                            title="Edit Exam: {}".format(exam.display_name),
                            form=form, exam=exam)
@@ -286,12 +349,10 @@ def toggle_exam(exam):
         # only one exam can be active at a time, so deactivate all others first
         exam.offering.mark_all_exams_as_inactive()
         exam.is_active = True
-    try:
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Failed to toggle exam name={exam.display_name} due to a db error: \n{e}", 'error')
-    return redirect(url_for('views.offering', offering=exam.offering))
+    # the commit expires the exam
+    display_name, offering_url = exam.display_name, url_for('views.offering', offering=exam.offering)
+    _commit_or_flash(f"activate or deactivate exam '{display_name}'")
+    return redirect(offering_url)
 
 
 @bp.route('/<exam:exam>/')
@@ -304,6 +365,36 @@ def exam(exam):
 # endregion
 
 # region Room CRUDI
+
+
+def _prepare_room(display_name, prepare):
+    """Runs prepare, which builds a new room from a form, or says why it couldn't and returns None."""
+    try:
+        return prepare()
+    except (DataValidationError, GcpError) as e:
+        # written for users: a duplicate room, a bad sheet or missing columns
+        flash(f"Couldn't import room '{display_name}': {e}", 'error')
+    except Exception:
+        _flash_unexpected_error(f"import room '{display_name}'")
+    return None
+
+
+def _room_clash(exam_id, name, start_at, other_than=None):
+    """
+    What _commit_or_flash needs to tell a room that a commit found to be a duplicate. The database
+    only rejects a room with the same name and start time: rooms with no start time never clash.
+    """
+    if not start_at:
+        return None, None
+    return (lambda: find_room(exam_id, name, start_at, other_than=other_than),
+            lambda existing: _room_exists_message(existing.display_name))
+
+
+def _save_new_room(room):
+    exam_id, name, start_at, display_name = room.exam_id, room.name, room.start_at, room.display_name
+    db.session.add(room)
+    # a duplicate is one imported by someone else since prepare_room checked
+    _commit_or_flash(f"import room '{display_name}'", *_room_clash(exam_id, name, start_at))
 
 
 @bp.route('/<exam:exam>/rooms/import/')
@@ -325,22 +416,17 @@ def import_room_from_custom_sheet(exam):
     """
     Path: /offerings/<canvas_id>/exams/<exam_name>/rooms/import/new
     """
+    # a failed save rolls back, which expires the exam
+    exam_url = url_for('views.exam', exam=exam)
     new_form = RoomForm()
     choose_form = ChooseRoomForm()
     upload_form = UploadRoomForm()
     room = None
     if new_form.validate_on_submit():
-        try:
-            room = get_room_from_google_spreadsheet(exam, new_form)
-        except Exception as e:
-            flash(f"Failed to import room due to an unexpected error: {e}", 'error')
-        if new_form.create_room.data:
-            try:
-                db.session.add(room)
-                db.session.commit()
-            except Exception as e:
-                flash(f"Failed to import room due to an db error: {e}", 'error')
-            return redirect(url_for('views.exam', exam=exam))
+        room = _prepare_room(new_form.display_name.data, lambda: get_room_from_google_spreadsheet(exam, new_form))
+        if room and new_form.create_room.data:
+            _save_new_room(room)
+            return redirect(exam_url)
     for field, errors in new_form.errors.items():
         for error in errors:
             flash("{}: {}".format(field, error), 'error')
@@ -357,6 +443,8 @@ def import_room_from_master_sheet(exam):
     """
     Path: /offerings/<canvas_id>/exams/<exam_name>/rooms/import/choose
     """
+    # a failed save rolls back, which expires the exam
+    exam_url = url_for('views.exam', exam=exam)
     new_form = RoomForm()
     choose_form = ChooseRoomForm(room_list=get_spreadsheet_tabs(current_app.config.get('MASTER_ROOM_SHEET_URL')))
     upload_form = UploadRoomForm()
@@ -366,18 +454,10 @@ def import_room_from_master_sheet(exam):
                 display_name=r,
                 sheet_url=current_app.config.get("MASTER_ROOM_SHEET_URL"),
                 sheet_range=r)
-            room = None
-            try:
-                room = get_room_from_google_spreadsheet(exam, f)
-            except Exception as e:
-                flash(f"Failed to import room due to an unexpected error: {e}", 'error')
+            room = _prepare_room(r, lambda: get_room_from_google_spreadsheet(exam, f))
             if room:
-                try:
-                    db.session.add(room)
-                    db.session.commit()
-                except Exception as e:
-                    flash(f"Failed to import room due to an db error: {e}", 'error')
-        return redirect(url_for('views.exam', exam=exam))
+                _save_new_room(room)
+        return redirect(exam_url)
     for field, errors in choose_form.errors.items():
         for error in errors:
             flash("{}: {}".format(field, error), 'error')
@@ -390,25 +470,20 @@ def import_room_from_master_sheet(exam):
 
 @bp.route('/<exam:exam>/rooms/import/from_csv_upload/', methods=['GET', 'POST'])
 def import_room_from_csv_upload(exam):
+    # a failed save rolls back, which expires the exam
+    exam_url = url_for('views.exam', exam=exam)
     new_form = RoomForm()
     choose_form = ChooseRoomForm()
     upload_form = UploadRoomForm()
     if upload_form.validate_on_submit():
         room = None
         if upload_form.file.data:
-            try:
-                room = get_room_from_csv(exam, upload_form)
-            except Exception as e:
-                flash(f"Failed to import room due to an unexpected error: {e}", 'error')
+            room = _prepare_room(upload_form.display_name.data, lambda: get_room_from_csv(exam, upload_form))
         else:
             flash("No file uploaded!", 'error')
         if room:
-            try:
-                db.session.add(room)
-                db.session.commit()
-            except Exception as e:
-                flash(f"Failed to import room due to a db error: {e}", 'error')
-        return redirect(url_for('views.exam', exam=exam))
+            _save_new_room(room)
+        return redirect(exam_url)
     for field, errors in upload_form.errors.items():
         for error in errors:
             flash("{}: {}".format(field, error), 'error')
@@ -421,6 +496,8 @@ def import_room_from_csv_upload(exam):
 
 @bp.route('/<exam:exam>/rooms/import/from_manual/', methods=['GET', 'POST'])
 def import_room_manually(exam):  # noqa: C901
+    # a failed save rolls back, which expires the exam
+    exam_url = url_for('views.exam', exam=exam)
     form = EditRoomForm()
     if request.method == 'GET':
         if not form.movable_seats.entries:
@@ -433,18 +510,10 @@ def import_room_manually(exam):  # noqa: C901
         seats_to_add = defaultdict(int)
         for seat_form in form.movable_seats.data:
             seats_to_add[frozenset(str_set_to_set(seat_form['attributes']))] += max(0, seat_form['count'])
-        room = None
-        try:
-            room = get_room_from_manual_input(exam, form, seats_to_add)
-        except Exception as e:
-            flash(f"Failed to import room due to an unexpected error: {e}", 'error')
+        room = _prepare_room(form.display_name.data, lambda: get_room_from_manual_input(exam, form, seats_to_add))
         if room:
-            try:
-                db.session.add(room)
-                db.session.commit()
-            except Exception as e:
-                flash(f"Failed to import room due to a db error: {e}", 'error')
-        return redirect(url_for('views.exam', exam=exam))
+            _save_new_room(room)
+        return redirect(exam_url)
     for field, errors in form.errors.items():
         for error in errors:
             flash("{}: {}".format(field, error), 'error')
@@ -458,16 +527,18 @@ def delete_room(exam, id):
     Deletes a room for an exam.
     """
     room = Room.query.filter_by(exam_id=exam.id, id=id).first_or_404()
+    # the commit expires the room and exam
+    display_name, exam_url = room.display_name, url_for('views.exam', exam=exam)
     try:
         # students may still reference this room in their wants/avoids
         exam.remove_room_preferences(room.id)
         db.session.delete(room)
-        db.session.commit()
+    except Exception:
+        _flash_unexpected_error(f"delete room '{display_name}'")
+        return redirect(exam_url)
+    if _commit_or_flash(f"delete room '{display_name}'"):
         flash("Deleted room.", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Failed to delete room {room.display_name} (ID: {room.id}) due to an error:\n{e}", 'error')
-    return redirect(url_for('views.exam', exam=exam))
+    return redirect(exam_url)
 
 
 @bp.route('/<exam:exam>/rooms/<int:id>/edit', methods=['GET', 'POST'])
@@ -509,15 +580,21 @@ def edit_room(exam, id):  # noqa: C901
         seats_to_add = defaultdict(int)
         for seat_form in form.movable_seats.data:
             seats_to_add[frozenset(str_set_to_set(seat_form['attributes']))] += max(0, seat_form['count'])
+        # a rollback expires the room and exam: read what the error paths need first
+        exam_url = url_for('views.exam', exam=exam)
+        exam_id, name = exam.id, room.name
         try:
-            update_room_from_manual_input(room, seats_to_add)
-        except Exception as e:
-            flash(f"Failed to edit room seats due to an unexpected error: {e}", 'error')
-        try:
-            db.session.commit()
-        except Exception as e:
-            flash(f"Failed to edit room due to a db error: {e}", 'error')
-        return redirect(url_for('views.exam', exam=exam))
+            # its queries would flush the new start time, which can clash with another room: leave that to the commit
+            with db.session.no_autoflush:
+                update_room_from_manual_input(room, seats_to_add)
+        except DataValidationError as e:
+            flash(f"Couldn't edit the seats of room '{form.display_name.data}': {e}", 'error')
+        except Exception:
+            _flash_unexpected_error(f"edit the seats of room '{form.display_name.data}'")
+            return redirect(exam_url)
+        # the name (slug) never changes here: a duplicate is another room of that name at the new start time
+        _commit_or_flash(f"edit room '{form.display_name.data}'", *_room_clash(exam_id, name, start_at_iso, other_than=id))
+        return redirect(exam_url)
     return render_template('upsert_room.html', exam=exam, form=form, room=room)
 
 
@@ -594,15 +671,18 @@ def import_students(exam):
     form = ImportStudentsForm()
     from_canvas_form = ImportStudentFromCanvasRosterForm()
     if form.validate_on_submit():
+        # a failed save rolls back, which expires the exam
+        students_url = url_for('views.students', exam=exam)
         try:
             prepared = get_students_from_import_form(exam, form)
             _save_student_import(exam, prepared, canvas_client.fetch_roster_student_ids(exam.offering_canvas_id))
-        except DataValidationError as e:
+        except (DataValidationError, GcpError) as e:
+            db.session.rollback()
             flash(str(e), 'error')
             return _render_import_students(exam, form, from_canvas_form)
-        except Exception as e:
-            flash(f"Failed to import students due to an unexpected error: {str(e)}", 'error')
-        return redirect(url_for('views.students', exam=exam))
+        except Exception:
+            _flash_unexpected_error("import students")
+        return redirect(students_url)
     return _render_import_students(exam, form, from_canvas_form)
 
 
@@ -611,14 +691,20 @@ def import_students_from_canvas_roster(exam):
     form = ImportStudentsForm()
     from_canvas_form = ImportStudentFromCanvasRosterForm()
     if from_canvas_form.validate_on_submit():
+        # a failed save rolls back, which expires the exam
+        students_url = url_for('views.students', exam=exam)
         try:
             _save_student_import(exam, *get_students_from_canvas(exam, from_canvas_form))
         except HTTPException:
             # e.g. the redirect to sign in again once the Canvas token has expired
             raise
-        except Exception as e:
-            flash(f"Failed to import students due to an unexpected error: {str(e)}", 'error')
-        return redirect(url_for('views.students', exam=exam))
+        except DataValidationError as e:
+            # e.g. a roster without emails
+            db.session.rollback()
+            flash(f"Couldn't import students from the Canvas roster: {e}", 'error')
+        except Exception:
+            _flash_unexpected_error("import students from the Canvas roster")
+        return redirect(students_url)
     return _render_import_students(exam, form, from_canvas_form)
 
 
@@ -799,14 +885,17 @@ def edit_students(exam):  # noqa: C901
 def delete_student(exam_student):
     exam, student = exam_student
     if student:
+        # the commit expires the student and exam
+        name, students_url = student.name, url_for('views.students', exam=exam)
         try:
+            # loads their seat assignment, to delete it with them
             db.session.delete(student)
-            db.session.commit()
+        except Exception:
+            _flash_unexpected_error(f"delete student {name}")
+            return redirect(students_url)
+        if _commit_or_flash(f"delete student {name}"):
             flash("Deleted student.", 'success')
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Failed to delete student {student.name}"
-                  f"(Canvas id: {student.canvas_id}) due to an error:\n{str(e)}", 'error')
+        return redirect(students_url)
     return redirect(url_for('views.students', exam=exam))
 
 
@@ -1099,8 +1188,10 @@ def preview_layout():
                 preview = get_layout_preview_from_file(form.file.data)
             else:
                 preview = get_layout_preview_from_text(form.text.data)
-        except Exception as e:
-            flash(f"Failed to preview layout: {e}", 'error')
+        except DataValidationError as e:
+            flash(f"Couldn't preview the layout: {e}", 'error')
+        except Exception:
+            _flash_unexpected_error("preview the layout")
         if preview is not None and not preview['counts']['total']:
             flash("That file did not contain any seats.", 'warning')
             preview = None

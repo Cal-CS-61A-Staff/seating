@@ -1,6 +1,6 @@
 from server.forms import ImportStudentFormBase
 from server.services.canvas import get_student_roster_for_offering, roster_student_ids_from_rows
-from server.services.csv import original_csv_headers, parse_csv, parse_csv_str, parse_xlsx, sniff_delimiter
+from server.services.csv import decode_csv_file, original_csv_headers, parse_csv, parse_csv_str, parse_xlsx, sniff_delimiter
 from server.services.google import get_spreadsheet_tab_content, get_spreadsheet_tabs
 
 from server.services.core.layout_preview import build_layout_preview
@@ -58,9 +58,7 @@ def _get_seats_from_manual_input(manual_input_dict):
 
 def get_layout_preview_from_file(file):
     """Parse an uploaded room file into a preview, without creating a room."""
-    # utf-8-sig so a spreadsheet export's byte order mark does not end up
-    # glued to the first column name.
-    return get_layout_preview_from_text(file.read().decode('utf-8-sig'))
+    return get_layout_preview_from_text(decode_csv_file(file))
 
 
 def get_layout_preview_from_text(text):
@@ -98,7 +96,7 @@ def get_students_from_import_form(exam, form):
         headers, rows = parse_xlsx(form.file.data.read())
         return prepare_students(exam, headers, rows, config=_get_config_from_form(form))
     elif form.file.data:
-        text = form.file.data.read().decode('utf-8-sig')
+        text = decode_csv_file(form.file.data)
     elif form.text.data and form.text.data.strip():
         text = form.text.data
     elif form.sheet_url.data:

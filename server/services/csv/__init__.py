@@ -17,12 +17,20 @@ class LowerCaseDictReader(csv.DictReader):
         self.fieldnames = [field.lower() for field in self.fieldnames]
 
 
+def decode_csv_file(file):
+    """The text of an uploaded CSV file, which must be UTF-8."""
+    try:
+        # utf-8-sig also reads Excel's "CSV UTF-8" files, which start with a byte order mark
+        return file.read().decode('utf-8-sig')
+    except UnicodeDecodeError:
+        raise DataValidationError('Save the file as CSV with UTF-8 encoding')
+
+
 def parse_csv(file):
     """
     Parse a CSV file and return a list of headers and rows.
     """
-    # utf-8-sig also reads Excel's "CSV UTF-8" files, which start with a byte order mark
-    return parse_csv_str(file.read().decode('utf-8-sig'))
+    return parse_csv_str(decode_csv_file(file))
 
 
 def parse_csv_str(csv_str, delimiter=','):

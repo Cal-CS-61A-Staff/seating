@@ -21,16 +21,23 @@ def prepare_room(exam, room_form):
     if room_form.duration_minutes.data:
         room.duration_minutes = room_form.duration_minutes.data
 
-    existing_room_query = Room.query.filter_by(
-        exam_id=exam.id, name=room.name)
-    if start_at_iso:
-        existing_room_query = existing_room_query.filter_by(start_at=start_at_iso)
-    existing_room = existing_room_query.first()
-
-    if existing_room:
+    if find_room(exam.id, room.name, start_at_iso):
         raise DataValidationError('A room with that name and start time already exists')
 
     return room
+
+
+def find_room(exam_id, name, start_at, other_than=None):
+    """
+    The room of an exam that a room with this name (slug) and start time would duplicate: one with
+    the same name at that time, or at any time if start_at is None. other_than is a room id to skip.
+    """
+    query = Room.query.filter_by(exam_id=exam_id, name=name)
+    if start_at:
+        query = query.filter_by(start_at=start_at)
+    if other_than is not None:
+        query = query.filter(Room.id != other_than)
+    return query.first()
 
 
 def prepare_seat(headers, rows):  # noqa: C901
@@ -67,23 +74,32 @@ def prepare_seat(headers, rows):  # noqa: C901
                     x = float(x_override)
                 if y_override:
                     y = float(y_override)
-            except TypeError:
-                raise DataValidationError('Fixed seat coordinate override must be floats.')
+            except ValueError:
+                raise DataValidationError(f'Seat {seat.name}: x and y must be numbers.')
             coords = x, y
             if coords in seat_coords:
                 raise DataValidationError(f'Fixed seat coordinates repeated: {coords}')
             seat_coords.add(coords)
             seat.x, seat.y = coords
             _ = row.pop('count', 1)  # discard count column if it exists
-            seat.attributes = {k.lower() for k, v in row.items() if v.lower() == 'true'}
+            seat.attributes = _true_attributes(row)
             valid_seats.append(seat)
         else:
             # allows count column so we can define multiple movable seats in one row
             count = row.pop('count', 1)
-            attributes = {k.lower() for k, v in row.items() if v.lower() == 'true'}
-            for _ in range(int(count)):
+            attributes = _true_attributes(row)
+            try:
+                count = int(count)
+            except (TypeError, ValueError):
+                raise DataValidationError(f'Each movable seat row needs a whole number in its count column (got "{count}").')
+            for _ in range(count):
                 seat = Seat()
                 seat.fixed = False
                 seat.attributes = attributes
                 valid_seats.append(seat)
     return valid_seats
+
+
+def _true_attributes(row):
+    # a row shorter than the header has None for its missing cells
+    return {k.lower() for k, v in row.items() if v and str(v).lower() == 'true'}
