@@ -29,6 +29,7 @@ The app is behind Canvas (bCourses) authentication, so only Berkeley affiliates 
 
 - If you are an instructor or a course staff member who wants to use this app for your course, see [here](wiki/for-course-staff).
 - If you are a developer or maintainer that works with this app, see [here](wiki/for-developers).
+- To change the database schema, see [Database Migrations](docs/migrations.md).
 - If you are a student, see [here](wiki/for-students).
 - To preview a room spreadsheet or build a new seating layout, see [Seating Layout Preview](Seating-Layout-Preview).
 - For an audit of the Wheeler 150 room tabs against the official floor plan, see [Wheeler 150 Room Layouts](Wheeler-150-Room-Layouts).

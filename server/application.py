@@ -1,14 +1,20 @@
 import logging
+import os
 
 import flask.ctx
 from canvasapi.exceptions import InvalidAccessToken
 from dotenv import load_dotenv
 from flask import Flask, redirect
+from flask_migrate import Migrate
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from server.typings.enum import AppEnvironment
 from server.typings.exception import EnvironmentalVariableMissingError
+
+
+# Schema changes are Alembic migrations here; `flask db upgrade` applies them (docs/migrations.md).
+MIGRATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 
 
 class UrlRequestContext(flask.ctx.RequestContext):
@@ -102,6 +108,12 @@ def create_app(config=None):
 
     from server.models import db
     db.init_app(app)
+    Migrate(app, db, directory=MIGRATIONS_DIR)
+    # Test apps build their tables with create_all rather than migrations, so their databases
+    # have no migration to check. test_schema_check tests it.
+    if app.config['FLASK_ENV'] != AppEnvironment.TESTING.value:
+        from server.schema_check import check_schema_before_requests
+        check_schema_before_requests(app, MIGRATIONS_DIR)
 
     from server.cache import cache_store
     cache_store.init_app(app, config={

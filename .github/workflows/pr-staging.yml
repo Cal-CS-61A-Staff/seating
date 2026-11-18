@@ -71,10 +71,13 @@ jobs:
           source: .
           flags: '--allow-unauthenticated --service-account=seating-run@staging-cdss-web-apps.iam.gserviceaccount.com --add-cloudsql-instances=staging-cdss-web-apps:us-west1:staging-cdss-web-apps-2 --max-instances=3'
           # GCP_SA_CRED_TYPE=runtime: Google Sheets are read as the account the preview runs as
-          # (seating-run, set by --service-account above), so no key is stored or passed
+          # (seating-run, set by --service-account above), so no key is stored or passed.
+          # PREVIEW_PR lets the app explain that a PR adding a migration can't run as a preview.
+          # RUN_MIGRATIONS is never set here: previews share the staging database.
           env_vars: |
             FLASK_APP=server.main
             FLASK_ENV=staging
+            PREVIEW_PR=${{ github.event.number }}
             SERVER_BASE_URL=https://preview-seating-pr-${{ github.event.number }}-137456085712.us-west1.run.app/
             WIKI_BASE_URL=https://github.com/berkeley-cdss/seating/wiki/
             LOCAL_TIMEZONE=US/Pacific

@@ -48,9 +48,11 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c 'import os, urllib.request; urllib.request.urlopen("http://127.0.0.1:" + os.environ.get("PORT", "8080") + "/health/")'
 
+# With RUN_MIGRATIONS=true (to set on staging and production, never on PR previews,
+# which share the staging database), apply database migrations before starting.
 # `exec` keeps gunicorn as PID 1 so it gets SIGTERM directly on redeploy.
 # Cloud Run's default instance is 1 vCPU, so one worker process with threads
 # (Google's recommended pattern) handles concurrent I/O-bound requests without
 # duplicating the app in memory. Override WEB_CONCURRENCY / GUNICORN_THREADS
 # to tune; GUNICORN_TIMEOUT if a slower Canvas import needs longer than 120s.
-CMD ["sh", "-c", "exec gunicorn -b 0.0.0.0:${PORT:-8080} server.main:app --workers ${WEB_CONCURRENCY:-1} --threads ${GUNICORN_THREADS:-8} --timeout ${GUNICORN_TIMEOUT:-120} --access-logfile -"]
+CMD ["sh", "-c", "if [ \"$RUN_MIGRATIONS\" = true ]; then flask --app server.main db upgrade || exit 1; fi; exec gunicorn -b 0.0.0.0:${PORT:-8080} server.main:app --workers ${WEB_CONCURRENCY:-1} --threads ${GUNICORN_THREADS:-8} --timeout ${GUNICORN_TIMEOUT:-120} --access-logfile -"]

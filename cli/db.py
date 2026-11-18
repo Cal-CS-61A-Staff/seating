@@ -1,4 +1,6 @@
 import click
+import flask_migrate
+from sqlalchemy import text
 
 from server.models import db, Exam
 from flask.cli import with_appcontext
@@ -9,11 +11,10 @@ from tests.fixtures import seed_db as _seed_db
 @with_appcontext
 def init_db():
     """
-    Initializes the database
+    Initializes the database by applying every migration (the same as `flask db upgrade`)
     """
     click.echo('Creating database...')
-    db.create_all()
-    db.session.commit()
+    flask_migrate.upgrade()
 
 
 @click.command('dropdb')
@@ -26,6 +27,9 @@ def drop_db():
     if doit:
         click.echo('Dropping database...')
         db.drop_all()
+        # and the migration record, so initdb builds the tables again
+        with db.engine.begin() as connection:
+            connection.execute(text('DROP TABLE IF EXISTS alembic_version'))
 
 
 @click.command('seeddb')
