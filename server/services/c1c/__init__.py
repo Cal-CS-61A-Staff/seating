@@ -1,3 +1,5 @@
+import re
+
 from flask import current_app
 
 from server.services.c1c import fake_data
@@ -29,6 +31,9 @@ class C1C:
                                 auth=(self.username, self.password), timeout=TIMEOUT)
 
     def get_student_photo(self, sid):
+        # it goes into the url path: anything but digits could point the request elsewhere
+        if not re.fullmatch(r'[0-9]+', sid or ''):
+            return None
         if is_mock_c1c():
             return fake_data.get_fake_photo(sid)
         try:

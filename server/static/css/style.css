@@ -285,8 +285,26 @@ p a,
   display: none;
 }
 
-.tooltip-inner .photo {
+/* a student's photo waits on Canvas and Cal1Card: the placeholder shows until it has loaded (the
+   page's script marks it), since a loading image draws an icon over anything behind it */
+.photo {
   display: inline-block;
+  vertical-align: middle;
+  background: url('../img/photo-placeholder.png') center / cover no-repeat;
+}
+
+.photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+.photo img.loaded {
+  opacity: 1;
+}
+
+.tooltip-inner .photo {
   width: 94px;
   height: 125px;
   margin: 5px;
@@ -312,6 +330,7 @@ p a,
 }
 
 .student .photo {
+  display: block;
   width: 187px;
   height: 250px;
   margin: auto;
@@ -425,6 +444,10 @@ p a,
 .import-source-error {
   color: #c62828;
   min-height: 1em;
+}
+
+.import-status:empty {
+  display: none;
 }
 
 .import-format li {

@@ -85,7 +85,12 @@ def test_seat_photos_load_only_when_shown(get_authed_driver, seeded_db):
     seat = driver.find_element(By.ID, '1')
     driver.execute_script('arguments[0].scrollIntoView({block: "center"})', seat)
     ActionChains(driver).move_to_element(seat).perform()
-    photo = WebDriverWait(driver, 5).until(lambda d: d.find_element(By.CSS_SELECTOR, '.tooltip img.photo'))
-    WebDriverWait(driver, 5).until(
-        lambda d: d.execute_script('return arguments[0].complete && arguments[0].naturalWidth > 0', photo))
+    photo = WebDriverWait(driver, 5).until(lambda d: d.find_element(By.CSS_SELECTOR, '.tooltip .photo img'))
+    # the placeholder shows behind the photo, which is shown once it has loaded
+    frame = photo.find_element(By.XPATH, '..')
+    assert 'photo-placeholder.png' in driver.execute_script(
+        'return getComputedStyle(arguments[0]).backgroundImage', frame)
+    WebDriverWait(driver, 5).until(lambda d: 'loaded' in photo.get_attribute('class').split())
+    assert driver.execute_script('return arguments[0].naturalWidth > 0', photo)
+    assert driver.execute_script('return getComputedStyle(arguments[0]).opacity', photo) == '1'
     assert driver.execute_script(photo_requests) == 1

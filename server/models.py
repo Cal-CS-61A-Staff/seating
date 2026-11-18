@@ -315,6 +315,9 @@ class Student(db.Model):
     email = db.Column(db.String(255), index=True, nullable=False)
     name = db.Column(db.String(255), nullable=False)
     sid = db.Column(db.String(255))
+    # the student id Canvas has for them: from the course's roster at the last import, or looked up
+    # for their photo since. Their photo is fetched by it, not by sid, which an import can set to anyone's.
+    canvas_sid = db.Column(db.String(255))
     wants = db.Column(StringSet, nullable=False)
     avoids = db.Column(StringSet, nullable=False)
     room_wants = db.Column(StringSet, nullable=False)

@@ -44,6 +44,7 @@
       <input id="import-canvas-roster" class="btn btn-outline-primary" type="submit" value="Import Canvas roster"
              formaction="{{ url_for('views.import_students_from_canvas_roster', exam=exam) }}">
     </div>
+    <p id="import-status" class="import-status" role="status"></p>
     <p class="form-text">Import Canvas roster takes the course's students from bCourses: names, emails and ids, but no seats or preferences, so replacing preferences clears them.</p>
   </form>
 
@@ -91,5 +92,36 @@
       }
     });
   });
+
+  // an import checks every student against the Canvas roster, which takes a while for a large class:
+  // say it's under way, and don't send it twice. Added last, so it sees whether a check above stopped it.
+  (function () {
+    var form = document.getElementById('import-students');
+    var status = document.getElementById('import-status');
+    var buttons = form.querySelectorAll('input[type=submit]');
+    var importing = false;
+    form.addEventListener('submit', function (event) {
+      if (importing) {
+        event.preventDefault();
+        return;
+      }
+      if (event.defaultPrevented) {
+        return;
+      }
+      importing = true;
+      buttons.forEach(function (button) { button.classList.add('disabled'); button.setAttribute('aria-disabled', 'true'); });
+      status.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> ';
+      status.appendChild(document.createTextNode(
+        'Importing students. This can take 10 to 20 seconds for a large class: please keep this page open.'));
+    });
+    // coming back to this page with the back button shows it as it was left: ready to import again
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) {
+        importing = false;
+        status.textContent = '';
+        buttons.forEach(function (button) { button.classList.remove('disabled'); button.removeAttribute('aria-disabled'); });
+      }
+    });
+  })();
 </script>
 {% endblock %}

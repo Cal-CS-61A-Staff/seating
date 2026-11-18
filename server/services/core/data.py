@@ -1,5 +1,5 @@
 from server.forms import ImportStudentFormBase
-from server.services.canvas import get_student_roster_for_offering
+from server.services.canvas import get_student_roster_for_offering, roster_student_ids_from_rows
 from server.services.csv import original_csv_headers, parse_csv, parse_csv_str, parse_xlsx, sniff_delimiter
 from server.services.google import get_spreadsheet_tab_content, get_spreadsheet_tabs
 
@@ -114,5 +114,7 @@ def get_students_from_import_form(exam, form):
 
 
 def get_students_from_canvas(exam, student_form):
+    """Prepares the students of the offering's Canvas roster, and gives the roster's student ids too."""
     headers, rows = get_student_roster_for_offering(exam.offering_canvas_id)
-    return prepare_students(exam, headers, rows, config=_get_config_from_form(student_form))
+    return prepare_students(exam, headers, rows, config=_get_config_from_form(student_form)), \
+        roster_student_ids_from_rows(exam.offering_canvas_id, rows)

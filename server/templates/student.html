@@ -6,7 +6,7 @@
 {% block body %}
 <section class="student">
   <div>
-    <img class="photo" src="{{ url_for('views.student_photo', exam_student=(exam, student)) }}" alt="photo for: {{ student.name }}" />
+    <span class="photo"><img src="{{ url_for('views.student_photo', exam_student=(exam, student)) }}" alt="photo for: {{ student.name }}" /></span>
     <h2 class="h6">{{ student.name }}</h2>
     <p>{{ student.email }}</p>
     <p>Student ID: {{ student.sid }}</p>

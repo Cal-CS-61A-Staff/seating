@@ -45,7 +45,7 @@ class FakeCourse:
         self.start_at = FAKE_COURSES[str(canvas_id)]['start_at']
         self.start_at_date = datetime.strptime(self.start_at, '%Y-%m-%dT%H:%M:%SZ')
 
-    def get_users(self, *, enrollment_type) -> list[FakeUser]:
+    def get_users(self, *, enrollment_type, per_page=10) -> list[FakeUser]:
         users = []
         for user, dic in FAKE_ENROLLMENTS.items():
             if str(self.id) in dic:

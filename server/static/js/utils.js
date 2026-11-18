@@ -21,3 +21,12 @@ document.addEventListener('DOMContentLoaded', function () {
     },
   });
 });
+
+// Photos stay hidden over the placeholder until they've loaded (see .photo in style.css), including
+// those in tooltips, which Bootstrap copies in as they're shown. Load events don't bubble: capture them.
+document.addEventListener('load', function (event) {
+  var img = event.target;
+  if (img.tagName === 'IMG' && img.parentElement && img.parentElement.classList.contains('photo')) {
+    img.classList.add('loaded');
+  }
+}, true);

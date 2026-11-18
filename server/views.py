@@ -539,16 +539,27 @@ def room(exam, id):
 # region Student CRUDI
 
 
-def _save_student_import(exam, new_students, updated_students, invalid_students, students_ids_to_remove):
+def _save_student_import(exam, prepared, roster_sids):
     """
     Saves what a student import prepared, and says what it did: who was added, updated and
     removed, and which rows were skipped and why.
+
+    roster_sids are the student ids on the course's Canvas roster now, by Canvas id, or None if
+    Canvas couldn't give them: every student of the exam gets theirs as their canvas_sid, which their
+    photo is fetched by, and a student no longer on the roster loses it.
     """
+    new_students, updated_students, invalid_students, students_ids_to_remove = prepared
     removed_students = Student.query.filter(Student.id.in_(students_ids_to_remove), Student.exam_id == exam.id) \
         .order_by(Student.name).all() if students_ids_to_remove else []
     # one by one rather than in a single DELETE, so that their seat assignments go with them
     for student in removed_students:
         db.session.delete(student)
+    if roster_sids is not None:
+        # the imported students first, so the query (which flushes them) doesn't update them twice
+        for student in new_students + updated_students:
+            student.canvas_sid = roster_sids.get(str(student.canvas_id))
+        for student in Student.query.filter_by(exam_id=exam.id):
+            student.canvas_sid = roster_sids.get(str(student.canvas_id))
     db.session.add_all(new_students + updated_students)
     db.session.commit()
     flash(
@@ -580,7 +591,8 @@ def import_students(exam):
     from_canvas_form = ImportStudentFromCanvasRosterForm()
     if form.validate_on_submit():
         try:
-            _save_student_import(exam, *get_students_from_import_form(exam, form))
+            prepared = get_students_from_import_form(exam, form)
+            _save_student_import(exam, prepared, canvas_client.fetch_roster_student_ids(exam.offering_canvas_id))
         except DataValidationError as e:
             flash(str(e), 'error')
             return _render_import_students(exam, form, from_canvas_form)
@@ -1017,8 +1029,18 @@ def student(exam_student):
 
 @bp.route('/<exam_student:exam_student>/photo/', methods=['GET'])
 def student_photo(exam_student):
-    _, student = exam_student
-    sid = student.sid
+    """
+    The student's Cal1Card photo, by the student id Canvas has for them (canvas_sid): their sid came
+    from an import, which could name anyone. Without one, they weren't on the course's Canvas roster
+    at the last import: look again, so a student who has joined since gets their photo.
+    """
+    exam, student = exam_student
+    sid = student.canvas_sid
+    if not sid:
+        sid = canvas_client.get_roster_student_ids(exam.offering_canvas_id).get(str(student.canvas_id))
+        if sid:
+            student.canvas_sid = sid
+            db.session.commit()
     if sid:
         from server.cache import cache_store, cache_key_photo, cache_life_photo
         import io
