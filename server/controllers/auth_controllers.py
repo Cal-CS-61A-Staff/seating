@@ -35,20 +35,12 @@ def authorized():
 
     user = canvas_client.get_user(user_info['id'])
     staff_course_dics, student_course_dics, _, _ = canvas_client.get_user_courses_categorized(user)
-    staff_offerings = [str(c.id) for c in staff_course_dics]
-    student_offerings = [str(c.id) for c in student_course_dics]
 
     user_model = User.query.filter_by(canvas_id=str(user_info['id'])).one_or_none()
     if not user_model:
-        user_model = User(
-            name=user_info['name'],
-            canvas_id=str(user_info['id']),
-            staff_offerings=staff_offerings,
-            student_offerings=student_offerings)
+        user_model = User(name=user_info['name'], canvas_id=str(user_info['id']))
         db.session.add(user_model)
-    else:
-        user_model.staff_offerings = staff_offerings
-        user_model.student_offerings = student_offerings
+    user_model.set_course_roles(staff_course_dics, student_course_dics)
     db.session.commit()
 
     # No remember cookie: it holds no time, so it would sign the user back in with the roles from

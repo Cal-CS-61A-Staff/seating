@@ -59,6 +59,9 @@ def offerings():
     user = canvas_client.get_user(current_user.canvas_id)
     staff_course_dics, student_course_dics, others, skipped = canvas_client.get_user_courses_categorized(
         user)
+    # course and exam pages check the user's saved roles: update them too, so every course listed here opens
+    current_user.set_course_roles(staff_course_dics, student_course_dics)
+    db.session.commit()
     # All fetched courses are converted to models
     staff_offerings = [canvas_client.api_course_to_model(c) for c in staff_course_dics]
     student_offerings = [canvas_client.api_course_to_model(c) for c in student_course_dics]

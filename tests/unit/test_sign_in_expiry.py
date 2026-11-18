@@ -1,5 +1,5 @@
 """
-Canvas roles are read only at sign-in, so a sign-in must not last long: no remember cookie, and a
+Canvas roles are saved at sign-in (and when /offerings loads), so a sign-in must not last long: no remember cookie, and a
 session whose sign-in is older than SIGN_IN_MAX_AGE (or has no sign-in time) is signed out.
 """
 import time

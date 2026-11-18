@@ -41,6 +41,11 @@ class User(db.Model, UserMixin):
     staff_offerings = db.Column(StringSet, nullable=False)
     student_offerings = db.Column(StringSet, nullable=False)
 
+    def set_course_roles(self, staff_courses, student_courses):
+        """Saves which courses the user teaches and takes, from their Canvas courses."""
+        self.staff_offerings = {str(c.id) for c in staff_courses}
+        self.student_offerings = {str(c.id) for c in student_courses}
+
 
 class Offering(db.Model):
     __tablename__ = 'offerings'
