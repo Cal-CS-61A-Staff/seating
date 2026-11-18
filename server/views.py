@@ -35,6 +35,16 @@ from sqlalchemy.orm import joinedload
 bp = Blueprint('views', __name__)
 
 
+def _rollback_quietly():
+    """Rolls back, and returns whether it could: when it can't, the database is down, and the session
+    is thrown away at the end of the request anyway."""
+    try:
+        db.session.rollback()
+        return True
+    except Exception:
+        return False
+
+
 def _flash_unexpected_error(action):
     """
     Rolls back, and says an action failed, with a short reference to find the error in the logs by.
@@ -45,18 +55,23 @@ def _flash_unexpected_error(action):
     The rollback leaves the session usable (on Postgres, a failed statement aborts the transaction)
     but expires every loaded object: read what is needed afterwards, like names and redirect URLs, first.
     """
-    try:
-        db.session.rollback()
-    except Exception:
-        pass  # the session is thrown away at the end of the request anyway
+    _rollback_quietly()
     ref = secrets.token_hex(4)
     current_app.logger.exception("Couldn't %s (ref %s)", action, ref)
     flash(f"Couldn't {action} due to an unexpected error (ref {ref}).", 'error')
 
 
+SAVED, DUPLICATE, FAILED = 'saved', 'duplicate', 'failed'
+
+
 def _commit_or_flash(action, find_duplicate=None, duplicate_message=None):
+    """Commits, or rolls back and says why it couldn't (see _commit), and returns whether it committed."""
+    return _commit(action, find_duplicate, duplicate_message) == SAVED
+
+
+def _commit(action, find_duplicate=None, duplicate_message=None):
     """
-    Commits, or rolls back and says why it couldn't, and returns whether it committed.
+    Commits, or rolls back and says why it couldn't, and returns SAVED, DUPLICATE or FAILED.
 
     A broken constraint is a duplicate if find_duplicate, run after the rollback, finds what the commit
     clashed with (e.g. saved by another request since the check before saving): that gets
@@ -65,22 +80,22 @@ def _commit_or_flash(action, find_duplicate=None, duplicate_message=None):
     """
     try:
         db.session.commit()
-        return True
+        return SAVED
     except IntegrityError:
-        db.session.rollback()
         duplicate = None
-        if find_duplicate:
+        # if even the rollback fails, the database is down: there is no looking for the duplicate
+        if _rollback_quietly() and find_duplicate:
             try:
                 duplicate = find_duplicate()
             except Exception:
-                db.session.rollback()
+                _rollback_quietly()
         if duplicate:
             flash(duplicate_message(duplicate), 'error')
-        else:
-            _flash_unexpected_error(action)
+            return DUPLICATE
+        _flash_unexpected_error(action)
     except Exception:
         _flash_unexpected_error(action)
-    return False
+    return FAILED
 
 
 @bp.route('/')
@@ -254,7 +269,7 @@ def new_exam(offering):
     title = "Create an Exam for {}".format(offering.name)
     if form.validate_on_submit():
         # a rollback expires the offering: read what the error paths need first
-        canvas_id, name = offering.canvas_id, form.name.data
+        canvas_id, name, display_name = offering.canvas_id, form.name.data, form.display_name.data
         offering_url = url_for('views.offering', offering=offering)
 
         def find_exam():
@@ -267,14 +282,15 @@ def new_exam(offering):
                 # only one exam can be active at a time, so deactivate all others first
                 offering.mark_all_exams_as_inactive()
             offering.exams.append(Exam(offering_canvas_id=canvas_id, name=name,
-                                       display_name=form.display_name.data, is_active=form.active.data))
+                                       display_name=display_name, is_active=form.active.data))
             if offering.ensure_one_exam_is_active():
                 flash("No active exam left. The first exam is activated by default.", 'info')
         except Exception:
             _flash_unexpected_error(f"create exam '{name}'")
             return redirect(offering_url)
         # a duplicate is one created by someone else since the check above
-        _commit_or_flash(f"create exam '{name}'", find_exam, lambda exam: _exam_exists_message(name))
+        if _commit_or_flash(f"create exam '{name}'", find_exam, lambda exam: _exam_exists_message(name)):
+            flash(f"Created exam '{display_name}'.", 'success')
         return redirect(offering_url)
     return render_template("upsert_exam.html", title=title, form=form, exam=None)
 
@@ -328,7 +344,8 @@ def edit_exam(exam):
             if exam.offering.ensure_one_exam_is_active():
                 flash("No active exam left. The first exam is activated by default.", 'info')
         offering_url = url_for('views.offering', offering=exam.offering)
-        _commit_or_flash(f"edit exam '{form.display_name.data}'")
+        if _commit_or_flash(f"edit exam '{form.display_name.data}'"):
+            flash(f"Saved exam '{form.display_name.data}'.", 'success')
         return redirect(offering_url)
     return render_template("upsert_exam.html",
                            title="Edit Exam: {}".format(exam.display_name),
@@ -341,6 +358,7 @@ def toggle_exam(exam):
     Path: /offerings/<canvas_id>/exams/<exam_name>/toggle
     Toggles an exam for a course offering.
     """
+    was_active = exam.is_active
     if exam.is_active:
         exam.is_active = False
         if exam.offering.ensure_one_exam_is_active():
@@ -351,7 +369,10 @@ def toggle_exam(exam):
         exam.is_active = True
     # the commit expires the exam
     display_name, offering_url = exam.display_name, url_for('views.offering', offering=exam.offering)
-    _commit_or_flash(f"activate or deactivate exam '{display_name}'")
+    # deactivating the only exam (or the first, with no other active) leaves it active, as the info above says
+    is_active = exam.is_active
+    if _commit_or_flash(f"activate or deactivate exam '{display_name}'") and is_active != was_active:
+        flash(f"{'Activated' if is_active else 'Deactivated'} exam '{display_name}'.", 'success')
     return redirect(offering_url)
 
 
@@ -390,11 +411,15 @@ def _room_clash(exam_id, name, start_at, other_than=None):
             lambda existing: _room_exists_message(existing.display_name))
 
 
-def _save_new_room(room):
+def _save_new_room(room, say_so=True):
+    """Saves a room, or says why it couldn't, and returns whether it saved it."""
     exam_id, name, start_at, display_name = room.exam_id, room.name, room.start_at, room.display_name
     db.session.add(room)
     # a duplicate is one imported by someone else since prepare_room checked
-    _commit_or_flash(f"import room '{display_name}'", *_room_clash(exam_id, name, start_at))
+    saved = _commit_or_flash(f"import room '{display_name}'", *_room_clash(exam_id, name, start_at))
+    if saved and say_so:
+        flash(f"Imported room '{display_name}'.", 'success')
+    return saved
 
 
 @bp.route('/<exam:exam>/rooms/import/')
@@ -449,14 +474,18 @@ def import_room_from_master_sheet(exam):
     choose_form = ChooseRoomForm(room_list=get_spreadsheet_tabs(current_app.config.get('MASTER_ROOM_SHEET_URL')))
     upload_form = UploadRoomForm()
     if choose_form.validate_on_submit():
+        # one message for all the rooms imported: flashes are kept in the session cookie, which is small
+        imported = 0
         for r in choose_form.rooms.data:
             f = RoomForm(
                 display_name=r,
                 sheet_url=current_app.config.get("MASTER_ROOM_SHEET_URL"),
                 sheet_range=r)
             room = _prepare_room(r, lambda: get_room_from_google_spreadsheet(exam, f))
-            if room:
-                _save_new_room(room)
+            if room and _save_new_room(room, say_so=False):
+                imported += 1
+        if imported:
+            flash(f"Imported {imported} room{'' if imported == 1 else 's'}.", 'success')
         return redirect(exam_url)
     for field, errors in choose_form.errors.items():
         for error in errors:
@@ -588,12 +617,39 @@ def edit_room(exam, id):  # noqa: C901
             with db.session.no_autoflush:
                 update_room_from_manual_input(room, seats_to_add)
         except DataValidationError as e:
-            flash(f"Couldn't edit the seats of room '{form.display_name.data}': {e}", 'error')
+            # save all of the edit or none of it: keep the form up so the seats can be fixed
+            _rollback_quietly()
+            flash(f"Couldn't edit the seats of room '{form.display_name.data}', so nothing was saved: {e}", 'error')
+            return _room_form_again(exam_id, id, form, exam_url)
         except Exception:
+            # the rollback also undoes the new name and time
             _flash_unexpected_error(f"edit the seats of room '{form.display_name.data}'")
             return redirect(exam_url)
         # the name (slug) never changes here: a duplicate is another room of that name at the new start time
-        _commit_or_flash(f"edit room '{form.display_name.data}'", *_room_clash(exam_id, name, start_at_iso, other_than=id))
+        outcome = _commit(f"edit room '{form.display_name.data}'",
+                          *_room_clash(exam_id, name, start_at_iso, other_than=id))
+        if outcome == SAVED:
+            flash(f"Saved room '{form.display_name.data}'.", 'success')
+        elif outcome == DUPLICATE:
+            # keep the form up so another time can be picked
+            return _room_form_again(exam_id, id, form, exam_url)
+        return redirect(exam_url)
+    return render_template('upsert_room.html', exam=exam, form=form, room=room)
+
+
+def _room_form_again(exam_id, id, form, exam_url):
+    """
+    After a rolled back edit, the form again with what was entered, or the exam page if the room
+    can't be loaded (deleted meanwhile, or the database is down): what went wrong is already flashed.
+    """
+    try:
+        # the rollback expired the room and exam: load them before rendering, which shows the flashes
+        room = Room.query.filter_by(exam_id=exam_id, id=id).first()
+        if room is None:
+            return redirect(exam_url)
+        exam = room.exam
+    except Exception:
+        _rollback_quietly()
         return redirect(exam_url)
     return render_template('upsert_room.html', exam=exam, form=form, room=room)
 

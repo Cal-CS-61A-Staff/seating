@@ -8,6 +8,7 @@ from datetime import datetime
 
 import pytest
 from markupsafe import escape
+from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 import server.views
@@ -229,9 +230,14 @@ def test_room_moved_onto_another_rooms_time_names_that_room(staff):
                         start_at=to_ISO8601(datetime(2023, 12, 12, 14, 0))))
     db.session.commit()
     # renaming doesn't change the slug: moving the seed room to that time clashes with the late room
-    staff.post(f'{EXAM_URL}/rooms/1/edit', data={**EDIT_ROOM, 'display_name': 'Soda 999 Overflow',
-                                                 'start_at': '2023-12-12T14:00'})
-    assert _flashes(staff) == [('error', _room_exists_message('Soda 999 (late)'))]
+    before = _seed_room_name_and_time()
+    response = staff.post(f'{EXAM_URL}/rooms/1/edit', data={**EDIT_ROOM, 'display_name': 'Soda 999 Overflow',
+                                                            'start_at': '2023-12-12T14:00'})
+    # the form stays up, with what was entered, to pick another time
+    assert response.status_code == 200
+    assert 'value="Soda 999 Overflow"' in response.text
+    assert str(escape(_room_exists_message('Soda 999 (late)'))) in response.text
+    assert _seed_room_name_and_time() == before
 
 
 @pytest.mark.parametrize('url, data, message_start', [
@@ -250,20 +256,158 @@ def test_other_broken_constraints_are_unexpected(staff, monkeypatch, url, data, 
     _assert_unexpected_error_flashed(staff, message_start)
 
 
-@pytest.mark.parametrize('error, message', [
-    (DataValidationError('Fixed seat name repeated: A1'),
-     "Couldn't edit the seats of room 'Soda 999': Fixed seat name repeated: A1"),
-    (OperationalError(SECRET, {}, Exception()), None),
-])
-def test_editing_room_seats_that_fail(staff, monkeypatch, error, message):
+RENAMED_ROOM = {**EDIT_ROOM, 'display_name': 'Soda 999 Overflow', 'start_at': '2023-12-12T14:00'}
+
+
+def _seed_room_name_and_time():
+    db.session.expire_all()
+    room = db.session.get(Room, 1)
+    return room.display_name, room.start_at
+
+
+def test_room_seats_that_fail_validation_save_nothing(staff, monkeypatch):
     def fail(*args):
-        raise error
+        raise DataValidationError('Fixed seat name repeated: A1')
     monkeypatch.setattr(server.views, 'update_room_from_manual_input', fail)
-    staff.post(f'{EXAM_URL}/rooms/1/edit', data=EDIT_ROOM)
-    if message:
-        assert _flashes(staff) == [('error', message)]
-    else:
-        _assert_unexpected_error_flashed(staff, "Couldn't edit the seats of room 'Soda 999'")
+    before = _seed_room_name_and_time()
+    response = staff.post(f'{EXAM_URL}/rooms/1/edit', data=RENAMED_ROOM)
+    # the form stays up, with what was entered, to fix the seats
+    assert response.status_code == 200
+    assert 'value="Soda 999 Overflow"' in response.text
+    assert str(escape("Couldn't edit the seats of room 'Soda 999 Overflow', so nothing was saved:"
+                      " Fixed seat name repeated: A1")) in response.text
+    assert _seed_room_name_and_time() == before
+
+
+def test_room_seats_that_fail_with_the_database_down_go_back_to_the_exam(staff, database_goes_down, monkeypatch):
+    def fail(*args):
+        raise DataValidationError('Fixed seat name repeated: A1')
+    monkeypatch.setattr(server.views, 'update_room_from_manual_input', fail)
+    # after the rollback, the room can't be loaded to show the form again
+    assert staff.post(f'{EXAM_URL}/rooms/1/edit', data=RENAMED_ROOM).status_code == 302
+    assert _flashes(staff) == [('error', "Couldn't edit the seats of room 'Soda 999 Overflow', so nothing was saved:"
+                                         " Fixed seat name repeated: A1")]
+
+
+def test_room_seats_that_fail_when_even_rollbacks_fail_go_back_to_the_exam(staff, monkeypatch):
+    def fail(*args):
+        # the database goes down: queries fail, and so do rollbacks
+        monkeypatch.setattr(db.session(), 'execute', _db_error)
+        raise DataValidationError('Fixed seat name repeated: A1')
+    monkeypatch.setattr(server.views, 'update_room_from_manual_input', fail)
+    monkeypatch.setattr(db.session, 'rollback', _db_error)
+    assert staff.post(f'{EXAM_URL}/rooms/1/edit', data=RENAMED_ROOM).status_code == 302
+    assert _flashes(staff) == [('error', "Couldn't edit the seats of room 'Soda 999 Overflow', so nothing was saved:"
+                                         " Fixed seat name repeated: A1")]
+
+
+def test_room_deleted_while_its_seats_fail_goes_back_to_the_exam(staff, monkeypatch):
+    def fail(*args):
+        raise DataValidationError('Fixed seat name repeated: A1')
+    monkeypatch.setattr(server.views, 'update_room_from_manual_input', fail)
+    real_rollback = db.session.rollback
+
+    def rollback():
+        real_rollback()
+        # another staff member deletes the room before the form is shown again
+        db.session.execute(delete(Room).where(Room.id == 1))
+        db.session.commit()
+    monkeypatch.setattr(db.session, 'rollback', rollback)
+    assert staff.post(f'{EXAM_URL}/rooms/1/edit', data=RENAMED_ROOM).status_code == 302
+    assert _flashes(staff) == [('error', "Couldn't edit the seats of room 'Soda 999 Overflow', so nothing was saved:"
+                                         " Fixed seat name repeated: A1")]
+
+
+def _clash_on_commit(monkeypatch, rollbacks_that_work):
+    """The commit breaks a constraint, then the database goes down: queries fail, and so do rollbacks
+    after the first rollbacks_that_work."""
+    def commit():
+        raise IntegrityError(SECRET, {}, Exception('UNIQUE constraint failed'))
+    real_rollback = db.session.rollback
+    calls = []
+
+    def rollback():
+        calls.append(1)
+        if len(calls) > rollbacks_that_work:
+            _db_error()
+        real_rollback()
+        monkeypatch.setattr(db.session(), 'execute', _db_error)
+    monkeypatch.setattr(db.session, 'commit', commit)
+    monkeypatch.setattr(db.session, 'rollback', rollback)
+
+
+@pytest.mark.parametrize('rollbacks_that_work', [0, 1], ids=['first rollback fails', 'looking for the clash fails'])
+def test_a_clash_with_the_database_going_down_says_so(staff, monkeypatch, rollbacks_that_work):
+    _clash_on_commit(monkeypatch, rollbacks_that_work)
+    # with a start time, the clashing room is looked for
+    assert staff.post(f'{EXAM_URL}/rooms/1/edit', data=RENAMED_ROOM).status_code == 302
+    _assert_unexpected_error_flashed(staff, "Couldn't edit room 'Soda 999 Overflow'")
+
+
+def test_room_seats_that_fail_unexpectedly_save_nothing(staff, monkeypatch):
+    def fail(*args):
+        raise OperationalError(SECRET, {}, Exception())
+    monkeypatch.setattr(server.views, 'update_room_from_manual_input', fail)
+    before = _seed_room_name_and_time()
+    staff.post(f'{EXAM_URL}/rooms/1/edit', data=RENAMED_ROOM)
+    _assert_unexpected_error_flashed(staff, "Couldn't edit the seats of room 'Soda 999 Overflow'")
+    assert _seed_room_name_and_time() == before
+
+
+def test_edited_room_says_it_was_saved(staff):
+    assert staff.post(f'{EXAM_URL}/rooms/1/edit', data=RENAMED_ROOM).status_code == 302
+    assert _flashes(staff) == [('success', "Saved room 'Soda 999 Overflow'.")]
+    db.session.expire_all()
+    assert db.session.get(Room, 1).display_name == 'Soda 999 Overflow'
+
+
+NO_ACTIVE_EXAM_LEFT = ('info', "No active exam left. The first exam is activated by default.")
+
+
+def test_created_exam_says_it_was_created(staff):
+    staff.post('/offerings/1234567/exams/new/', data={'name': 'final', 'display_name': 'Final', 'submit': 'y'})
+    assert _flashes(staff) == [('success', "Created exam 'Final'.")]
+
+
+def test_edited_exam_says_it_was_saved(staff):
+    staff.post(f'{EXAM_URL}/edit/', data={'display_name': 'Midterm One', 'active': 'y', 'submit': 'y'})
+    assert _flashes(staff) == [('success', "Saved exam 'Midterm One'.")]
+
+
+def test_toggled_exam_says_what_changed(staff):
+    db.session.add(Exam(offering_canvas_id='1234567', name='midterm2', display_name='Midterm 2', is_active=False))
+    db.session.commit()
+    midterm2_url = '/offerings/1234567/exams/midterm2'
+    staff.post(f'{midterm2_url}/toggle/')
+    assert _flashes(staff) == [('success', "Activated exam 'Midterm 2'.")]
+    with staff.session_transaction() as session:
+        session.pop('_flashes')
+    # with no exam left active, the first by name (Midterm 1) is activated
+    staff.post(f'{midterm2_url}/toggle/')
+    assert _flashes(staff) == [NO_ACTIVE_EXAM_LEFT, ('success', "Deactivated exam 'Midterm 2'.")]
+
+
+def test_deactivating_the_only_exam_does_not_say_it_was_deactivated(staff):
+    # it stays active, as the info message says
+    staff.post(f'{EXAM_URL}/toggle/')
+    assert _flashes(staff) == [NO_ACTIVE_EXAM_LEFT]
+    db.session.expire_all()
+    assert db.session.get(Exam, 1).is_active
+
+
+def test_imported_room_says_it_was_imported(staff):
+    staff.post(f'{EXAM_URL}/rooms/import/from_manual/', data={**EDIT_ROOM, 'display_name': 'Cory 277'})
+    assert _flashes(staff) == [('success', "Imported room 'Cory 277'.")]
+
+
+def test_master_sheet_rooms_say_how_many_were_imported(staff, monkeypatch):
+    monkeypatch.setattr(server.views, 'get_spreadsheet_tabs', lambda url: ['Cory 277', 'Wheeler 150'])
+    monkeypatch.setattr(server.views, 'get_room_from_google_spreadsheet',
+                        lambda exam, form: Room(exam_id=exam.id, name=form.display_name.data.lower().replace(' ', ''),
+                                                display_name=form.display_name.data))
+    staff.post(f'{EXAM_URL}/rooms/import/from_master_sheet/',
+               data={'rooms': ['Cory 277', 'Wheeler 150'], 'submit': 'y'})
+    assert _flashes(staff) == [('success', "Imported 2 rooms.")]
 
 
 def test_custom_sheet_room_error_hides_the_exception(staff, monkeypatch):
@@ -297,7 +441,8 @@ def test_master_sheet_rooms_report_each_failure(staff, monkeypatch):
     monkeypatch.setattr(server.views, 'get_room_from_google_spreadsheet', get_room)
     staff.post(f'{EXAM_URL}/rooms/import/from_master_sheet/',
                data={'rooms': ['Cory 277', 'Wheeler 150'], 'submit': 'y'})
-    assert _flashes(staff) == [('error', "Couldn't import room 'Cory 277': Sheet is empty")]
+    assert _flashes(staff) == [('error', "Couldn't import room 'Cory 277': Sheet is empty"),
+                               ('success', "Imported 1 room.")]
     assert [r.display_name for r in Room.query.filter_by(exam_id=1).order_by(Room.id)] == ['Soda 999', 'Wheeler 150']
 
 
