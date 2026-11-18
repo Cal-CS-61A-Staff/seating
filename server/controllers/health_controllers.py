@@ -15,8 +15,10 @@ def check_db():
     try:
         db.session.execute(text("SELECT 1"))
         return jsonify(status="UP"), 200
-    except Exception as e:
-        return jsonify(status="DOWN", error=str(e)), 500
+    except Exception:
+        # The error text can reveal database details, so it only goes to the logs.
+        current_app.logger.exception("Database health check failed")
+        return jsonify(status="DOWN"), 500
 
 
 @health_module.route('/log')

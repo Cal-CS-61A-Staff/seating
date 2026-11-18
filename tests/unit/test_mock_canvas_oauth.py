@@ -15,7 +15,13 @@ real_canvas = pytest.mark.app_config(MOCK_CANVAS=False)
 def test_authorize_redirects_to_own_callback(client):
     response = client.get(AUTH_URL, query_string={'redirect_uri': CALLBACK, 'state': 'abc', 'user_id': '123456'})
     assert response.status_code == 302
-    assert response.headers['Location'] == f'{CALLBACK}?code=123456&state=abc'
+    assert response.headers['Location'] == '/authorized/?code=123456&state=abc'
+
+
+def test_authorize_encodes_query_values(client):
+    response = client.get(AUTH_URL, query_string={'redirect_uri': CALLBACK, 'state': 'a&b', 'user_id': '1#x'})
+    assert response.status_code == 302
+    assert response.headers['Location'] == '/authorized/?code=1%23x&state=a%26b'
 
 
 @pytest.mark.parametrize('redirect_uri', [

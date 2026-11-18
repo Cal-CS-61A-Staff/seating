@@ -70,13 +70,11 @@ def mock_authorize():
     redirect_uri = request.args.get('redirect_uri', None)
     state = request.args.get('state', '')
     user_id = request.args.get('user_id', None)
-    if redirect_uri and _is_own_callback(redirect_uri):
-        sep = '&' if '?' in redirect_uri else '?'
-        full_redirect_uri = \
-            f"{redirect_uri}{sep}code={user_id}&state={state}"
-        return redirect(full_redirect_uri)
-    else:
-        abort(400, 'Invalid redirect_uri: {}'.format(redirect_uri))
+    if not redirect_uri or not _is_own_callback(redirect_uri):
+        abort(400, 'Invalid redirect_uri')
+    # Build the callback URL here instead of reusing the one from the request,
+    # so the browser can only be sent back to this app.
+    return redirect(url_for('auth.authorized', code=user_id, state=state))
 
 
 @dev_login_module.route('/oauth2/token/', methods=['POST'])
