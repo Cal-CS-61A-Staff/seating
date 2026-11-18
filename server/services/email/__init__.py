@@ -5,6 +5,11 @@ from flask import current_app, url_for
 from urllib.parse import urljoin
 
 
+def email_sender():
+    """The address every email is sent from (EMAIL_SENDER), or None if it isn't set up."""
+    return (current_app.config.get('EMAIL_SENDER') or '').strip() or None
+
+
 def email_config():
     """The SMTP server settings of the current app."""
     config = current_app.config
@@ -13,7 +18,7 @@ def email_config():
         config.get('EMAIL_PORT'),
         config.get('EMAIL_USERNAME'),
         config.get('EMAIL_PASSWORD'),
-        config.get('EMAIL_SENDER')
+        email_sender()
     )
 
 
@@ -49,6 +54,20 @@ def substitute_about_assignment(exam, form, student):
             templates.render_html(subject, form.body.data, values))
 
 
+def _construct_email(form, **fields):
+    """
+    An email from the configured sender, never an address staff typed: the app sends as the university
+    account, so a From staff could set would let anyone with a staff role send mail as anyone. Staff
+    choose the Reply-To instead, so that replies reach the course.
+
+    The pages check for a sender before sending: without one, an email would go out with an empty From.
+    """
+    sender = email_sender()
+    if not sender:
+        raise RuntimeError('EMAIL_SENDER is not set, so no email can be sent')
+    return construct_email(from_addr=sender, reply_to=form.reply_to.data, **fields)
+
+
 def email_about_assignment(exam, form, to_addrs):
     if isinstance(to_addrs, str):
         to_addrs = to_addrs.strip().split(',')
@@ -64,8 +83,8 @@ def email_about_assignment(exam, form, to_addrs):
         if not subject:
             failure_addrs.add(to_addr)
             continue
-        email_message = construct_email(
-            from_addr=form.from_addr.data,
+        email_message = _construct_email(
+            form,
             to_addr=to_addr,
             subject=subject,
             body=body,
@@ -100,8 +119,8 @@ def send_test_email(exam, form, student, to_addr):
     subject, body, body_html = substitute_about_assignment(exam, form, student)
     if not subject:
         return False
-    message = construct_email(
-        from_addr=form.from_addr.data,
+    message = _construct_email(
+        form,
         to_addr=to_addr,
         subject=f'[TEST] {subject}',
         body=body,

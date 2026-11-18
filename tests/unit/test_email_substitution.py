@@ -124,7 +124,7 @@ def jimmy(seeded_db):
 
 def _form(body='Dear {{NAME}}, {{EXAM}}'):
     return EmailForm(formdata=None, data={
-        'from_addr': 'staff@berkeley.edu', 'to_addr': 'x@berkeley.edu', 'subject': 'Seat for {{EXAM}}', 'body': body})
+        'reply_to': 'staff@berkeley.edu', 'to_addr': 'x@berkeley.edu', 'subject': 'Seat for {{EXAM}}', 'body': body})
 
 
 def test_substitution_fills_in_all_three(app, jimmy):

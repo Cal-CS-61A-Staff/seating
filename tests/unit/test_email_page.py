@@ -76,7 +76,7 @@ def test_single_student_page_keeps_the_variables(staff):
      'body: {{SEAT_DETAILS_LIST}} is not a variable; the variables are listed below the email.'),
 ])
 def test_unknown_variable_is_refused_before_sending(staff, sent, fields, error):
-    data = {'csrf_token': _csrf(staff), 'from_addr': 'staff@berkeley.edu', 'to_addr': 'jx@berkeley.edu',
+    data = {'csrf_token': _csrf(staff), 'reply_to': 'staff@berkeley.edu', 'to_addr': 'jx@berkeley.edu',
             'subject': 'Seat', 'body': 'Dear {{NAME}}', 'submit': 'y', **fields}
     response = staff.post(EMAIL_URL, data=data)
     assert response.status_code == 200

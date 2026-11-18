@@ -40,7 +40,7 @@ def test_email_page_sends_to_a_large_class_in_batches(get_authed_driver, seeded_
             return realFetch(url, options);
         };
     """)
-    driver.find_element(By.ID, 'from_addr').send_keys('staff@berkeley.edu')
+    driver.find_element(By.ID, 'reply_to').send_keys('staff@berkeley.edu')
     driver.find_element(By.ID, 'cc_addr').send_keys('head-ta@berkeley.edu')
     driver.find_element(By.ID, 'submit').click()
 

@@ -16,7 +16,7 @@ from server.services.core.student import describe_invalid_rows
 from server.services.email.templates import VARIABLES, get_email, make_substitutions
 from server.services.google import get_spreadsheet_tabs
 import server.services.canvas as canvas_client
-from server.services.email import email_about_assignment, send_test_email, substitute_about_assignment
+from server.services.email import email_about_assignment, email_sender, send_test_email, substitute_about_assignment
 from server.services.core.data import get_room_from_csv, get_room_from_google_spreadsheet, get_room_from_manual_input, \
     get_students_from_canvas, get_students_from_import_form, update_room_from_manual_input, \
     get_layout_preview_from_file, get_layout_preview_from_text
@@ -969,6 +969,9 @@ def _email_form(exam, form_class=None):
     return form
 
 
+NO_SENDER_MESSAGE = "No email can be sent: the app has no sender address set up (EMAIL_SENDER)."
+
+
 def _send_test_email(exam, form, **page):
     """
     Handles the "send test" button of the email pages, then shows the page again with the
@@ -989,6 +992,7 @@ def _send_test_email(exam, form, **page):
 
 def _render_email_page(exam, form, **page):
     return render_template('email.html', exam=exam, form=form, variables=VARIABLES,
+                           sender=email_sender(),
                            preview_url=url_for('views.email_preview', exam=exam), **page)
 
 
@@ -1038,6 +1042,9 @@ def email_all_students(exam):
     # the page sends to the students in batches, through this url (see email_students_batch)
     page = {'batch_url': url_for('views.email_students_batch', exam=exam)}
     if form.validate_on_submit():
+        if not email_sender():
+            flash(NO_SENDER_MESSAGE, 'error')
+            return _render_email_page(exam, form, **page)
         if form.send_test.data:
             return _send_test_email(exam, form, **page)
         if not _has_email_recipients(form):
@@ -1083,6 +1090,8 @@ def email_students_batch(exam):
         return jsonify(errors=form.errors), 400
     if not _has_email_recipients(form):
         return jsonify(errors={'to_addr': form.to_addr.errors}), 400
+    if not email_sender():
+        return jsonify(errors={'sender': [NO_SENDER_MESSAGE]}), 400
     successful_emails, failed_emails = email_about_assignment(exam, form, form.to_addr.data)
     return jsonify(sent=sorted(successful_emails), failed=sorted(failed_emails))
 
@@ -1092,6 +1101,9 @@ def email_single_student(exam_student):
     exam, student = exam_student
     form = _email_form(exam)
     if form.validate_on_submit():
+        if not email_sender():
+            flash(NO_SENDER_MESSAGE, 'error')
+            return _render_email_page(exam, form)
         if form.send_test.data:
             return _send_test_email(exam, form)
         if not _has_email_recipients(form):

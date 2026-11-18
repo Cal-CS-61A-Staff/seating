@@ -47,7 +47,7 @@ def sent(monkeypatch):
 
 def _form():
     return EmailForm(formdata=None, data={
-        'from_addr': 'staff@berkeley.edu', 'subject': 'Seat', 'body': 'Dear {{NAME}}'})
+        'reply_to': 'staff@berkeley.edu', 'subject': 'Seat', 'body': 'Dear {{NAME}}'})
 
 
 def test_emailed_is_saved_after_each_batch(app, seated, monkeypatch):
@@ -126,7 +126,7 @@ def _csrf(client):
 def test_batch_endpoint_emails_and_reports_who_was_emailed(seated, sent, login_as):
     client = login_as(1)
     response = client.post(BATCH_URL, data={
-        'csrf_token': _csrf(client), 'from_addr': 'staff@berkeley.edu', 'subject': 'Seat', 'body': 'Dear {{NAME}}',
+        'csrf_token': _csrf(client), 'reply_to': 'staff@berkeley.edu', 'subject': 'Seat', 'body': 'Dear {{NAME}}',
         'to_addr': f'{seated[0].email},{seated[1].email},nobody@berkeley.edu'})
     assert response.status_code == 200
     assert response.get_json() == {'sent': sorted([seated[0].email, seated[1].email]),
@@ -139,7 +139,7 @@ def test_batch_endpoint_rejects_an_invalid_form(seated, sent, login_as):
     client = login_as(1)
     response = client.post(BATCH_URL, data={'csrf_token': _csrf(client), 'to_addr': seated[0].email})
     assert response.status_code == 400
-    assert set(response.get_json()['errors']) == {'from_addr', 'subject', 'body'}
+    assert set(response.get_json()['errors']) == {'subject', 'body'}
     assert sent == []
 
 
@@ -151,7 +151,7 @@ def test_email_page_sends_in_batches(seeded_db, login_as):
 def test_batches_survive_a_test_send(seated, sent, login_as):
     client = login_as(1)
     response = client.post(EMAIL_URL, data={
-        'csrf_token': _csrf(client), 'from_addr': 'staff@berkeley.edu', 'to_addr': seated[0].email,
+        'csrf_token': _csrf(client), 'reply_to': 'staff@berkeley.edu', 'to_addr': seated[0].email,
         'subject': 'Seat', 'body': 'Dear {{NAME}}', 'send_test': 'y', 'test_student': str(seated[0].id),
         'test_to_addr': 'me@berkeley.edu'})
     assert f'fetch("{BATCH_URL}"' in response.get_data(as_text=True)

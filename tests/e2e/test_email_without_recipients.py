@@ -17,7 +17,7 @@ def _open_with_everyone_emailed(get_authed_driver):
     driver = get_authed_driver("123456")
     driver.get(EMAIL_URL)
     assert driver.find_element(By.ID, 'to_addr').get_attribute('value') == ''
-    driver.find_element(By.ID, 'from_addr').send_keys('staff@berkeley.edu')
+    driver.find_element(By.ID, 'reply_to').send_keys('staff@berkeley.edu')
     return driver
 
 

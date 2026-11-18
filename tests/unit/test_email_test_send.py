@@ -42,7 +42,7 @@ def _post(client, url, page_url=None, **fields):
     page = client.get(page_url or url).get_data(as_text=True)
     data = {
         'csrf_token': re.search(r'name="csrf_token" type="hidden" value="([^"]+)"', page).group(1),
-        'from_addr': 'staff@berkeley.edu', 'to_addr': 'jx@berkeley.edu',
+        'reply_to': 'staff@berkeley.edu', 'to_addr': 'jx@berkeley.edu',
         'cc_addr': 'cc@berkeley.edu', 'bcc_addr': 'bcc@berkeley.edu',
         'subject': 'Seat for {{EXAM}}', 'body': BODY,
     }

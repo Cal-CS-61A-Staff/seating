@@ -237,7 +237,9 @@ class EmailPreviewForm(FlaskForm):
 
 
 class EmailForm(EmailPreviewForm):
-    from_addr = StringField('from_addr', [Email(), InputRequired()])
+    # every email is sent from the configured sender (EMAIL_SENDER); replies go here instead, if given
+    reply_to = StringField('reply_to', [Optional(), Email()],
+                           filters=[lambda value: value.strip() if value else value])
     to_addr = StringField('to_addr', [Optional()])
     cc_addr = StringField('cc_addr', [])
     bcc_addr = StringField('bcc_addr', [])

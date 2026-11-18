@@ -153,6 +153,7 @@ class TestingConfig(ConfigBase):
     def __init__(self):
         super().__init__()
         self.MOCK_CANVAS = True
+        self.EMAIL_SENDER = 'seating@example.edu'
 
     @property
     def SQLALCHEMY_DATABASE_URI(self):

@@ -10,12 +10,24 @@
   <div class="row delist">
     <div class="col-md-6 mb-3">
       <label class="form-label" for="from_addr">FROM:</label>
-      {{ form.from_addr(class="form-control", type="Email", id="from_addr") }}
+      <input class="form-control" type="text" id="from_addr" value="{{ sender or '' }}" readonly
+             aria-describedby="from-help">
+      {% if sender %}
+      <p id="from-help" class="form-text">Every email is sent from this address.</p>
+      {% else %}
+      <p id="from-help" class="form-text text-danger">No sender address is set up (EMAIL_SENDER), so no email can be sent.</p>
+      {% endif %}
     </div>
     <div class="col-md-6 mb-3">
-      <label class="form-label" for="to_addr">TO:</label>
-      {{ form.to_addr(class="form-control", type="text", id="to_addr") }}
+      <label class="form-label" for="reply_to">REPLY-TO:</label>
+      {{ form.reply_to(class="form-control", type="email", id="reply_to", **{'aria-describedby': 'reply-to-help'}) }}
+      <p id="reply-to-help" class="form-text">Where students' replies go, such as the course's email.</p>
     </div>
+  </div>
+
+  <div class="delist mb-3">
+    <label class="form-label" for="to_addr">TO:</label>
+    {{ form.to_addr(class="form-control", type="text", id="to_addr") }}
   </div>
 
   {% if recipients and (recipients.already_emailed or recipients.unseated) %}
@@ -78,7 +90,7 @@
     <div class="test-email-fields">
       <label for="test_to_addr">Send test to:</label>
       {{ form.test_to_addr(class="form-control w-auto", type="email", id="test_to_addr") }}
-      {{ form.send_test(class="btn btn-outline-primary", formnovalidate=true) }}
+      {{ form.send_test(class="btn btn-outline-primary", formnovalidate=true, disabled=not sender) }}
     </div>
     {% else %}
     <p>No student has a seat yet, so there is nothing to preview or test the email with.</p>
@@ -87,7 +99,7 @@
 
   <div>
     <div class="form-buttons">
-      {{ form.submit(class="btn btn-primary", value="Send to students") }}
+      {{ form.submit(class="btn btn-primary", value="Send to students", disabled=not sender) }}
     </div>
     <div id="send-progress" class="send-progress" aria-live="polite"></div>
   </div>
