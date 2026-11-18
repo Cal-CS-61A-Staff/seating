@@ -47,6 +47,23 @@ class User(db.Model, UserMixin):
         self.student_offerings = {str(c.id) for c in student_courses}
 
 
+class CanvasToken(db.Model):
+    """
+    A user's Canvas access token for one signed-in browser (see server/services/auth/canvas_tokens.py).
+
+    Kept here rather than in the session cookie, which Flask signs but doesn't encrypt. The cookie holds
+    only a random handle, stored here as a hash, so deleting the row cuts off every copy of the cookie.
+    """
+    __tablename__ = 'canvas_tokens'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.ForeignKey('users.id', ondelete='CASCADE'), index=True, nullable=False)
+    # hex SHA-256 of the handle in the session cookie
+    handle_hash = db.Column(db.String(64), nullable=False, unique=True, index=True)
+    access_token = db.Column(db.Text, nullable=False)
+    # Unix seconds, from the token's expires_in
+    expires_at = db.Column(db.Integer, nullable=False)
+
+
 class Offering(db.Model):
     __tablename__ = 'offerings'
     id = db.Column(db.Integer, primary_key=True)

@@ -9,6 +9,7 @@ from server.models import db, User
 
 from server.controllers import auth_module
 from server.services.auth import SIGNED_IN_AT_KEY, oauth_provider
+from server.services.auth.canvas_tokens import discard_token, store_token
 from authlib.integrations.base_client import OAuthError
 
 
@@ -30,10 +31,12 @@ def authorized():
         # the provider's error is copied from the `error`/`error_description` query parameters,
         # which anyone can put in a link, and a returned str is served as HTML: escape it
         return 'Access denied: {}'.format(escape(e.description or e.error or 'unknown error')), 403
-    session['access_token'] = resp['access_token']
+    # a token from an earlier sign-in in this browser is no longer needed
+    discard_token()
+    access_token = resp['access_token']
     user_info = resp['user']
 
-    user = canvas_client.get_user(user_info['id'])
+    user = canvas_client.get_user(user_info['id'], key=access_token)
     staff_course_dics, student_course_dics, _, _ = canvas_client.get_user_courses_categorized(user)
 
     user_model = User.query.filter_by(canvas_id=str(user_info['id'])).one_or_none()
@@ -42,6 +45,7 @@ def authorized():
         db.session.add(user_model)
     user_model.set_course_roles(staff_course_dics, student_course_dics)
     db.session.commit()
+    store_token(user_model, access_token, resp.get('expires_in'))
 
     # No remember cookie: it holds no time, so it would sign the user back in with the roles from
     # their last sign-in for as long as the browser keeps it.
@@ -55,6 +59,7 @@ def authorized():
 @auth_module.route('/logout/')
 @login_required
 def logout():
+    discard_token()
     session.clear()
     logout_user()
     return redirect(url_for('views.index'))

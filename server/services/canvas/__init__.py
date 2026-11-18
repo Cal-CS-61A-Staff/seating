@@ -1,3 +1,4 @@
+import requests
 from flask import current_app, session, request, url_for
 from canvasapi import Canvas
 from canvasapi.user import User
@@ -18,11 +19,28 @@ def _get_client(key=None) -> FakeCanvas | Canvas:
     if is_mock_canvas():
         return FakeCanvas()
     if not key:
-        key = session.get('access_token', None)
+        # imported here because canvas_tokens imports this module
+        from server.services.auth.canvas_tokens import current_token
+        key = current_token()
     if not key:
         session['after_login'] = request.url
         raise Redirect(url_for('auth.login'))
     return Canvas(current_app.config['CANVAS_SERVER_URL'], key)
+
+
+def revoke_token(access_token: str):
+    """
+    Asks Canvas to revoke an access token, so it stops working before it expires. Best effort: signing
+    out mustn't fail because Canvas is down, and the token expires within an hour regardless.
+    """
+    if is_mock_canvas():
+        return
+    try:
+        response = requests.delete(current_app.config['CANVAS_SERVER_URL'] + 'login/oauth2/token',
+                                   headers={'Authorization': f'Bearer {access_token}'}, timeout=5)
+        response.raise_for_status()
+    except requests.RequestException as error:
+        current_app.logger.warning("Couldn't revoke a Canvas access token: %s", error)
 
 
 def get_user(canvas_id, key=None) -> FakeUser | User:

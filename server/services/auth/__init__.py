@@ -33,7 +33,8 @@ def get_access_token():
     Supplies the stored Canvas token to Authlib when the client is used to call
     the remote API. Authlib expects a token dict rather than a bare string.
     """
-    access_token = session.get('access_token')
+    from server.services.auth.canvas_tokens import current_token
+    access_token = current_token()
     return {'access_token': access_token, 'token_type': 'Bearer'} if access_token else None
 
 
@@ -73,6 +74,13 @@ def init_auth(app):
             fetch_token=get_access_token,
         )
     app.extensions['seating_oauth_provider'] = provider
+
+    @app.before_request
+    def drop_legacy_access_token():
+        """Removes the Canvas token that sign-ins used to keep in the session cookie."""
+        from server.services.auth.canvas_tokens import LEGACY_SESSION_KEY
+        if LEGACY_SESSION_KEY in session:
+            session.pop(LEGACY_SESSION_KEY)
 
 
 def oauth_provider():
