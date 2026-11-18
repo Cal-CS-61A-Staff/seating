@@ -5,6 +5,13 @@
 </form>
 {% endmacro %}
 
+{% macro post_button(action, label, confirm=none) %}
+{# a button that posts to `action`, after `confirm` is confirmed if given #}
+<form method="POST" action="{{ action }}" class="inline-form"{% if confirm %} onsubmit='return confirm({{ confirm|tojson }});'{% endif %}>
+  <button type="submit" class="icon-button" aria-label="{{ label }}"{{ kwargs|xmlattr }}>{{ caller() }}</button>
+</form>
+{% endmacro %}
+
 {% macro field(field) %}
   {{ field(**kwargs)|safe }}
   {% if field.errors %}

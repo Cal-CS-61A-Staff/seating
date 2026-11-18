@@ -1,9 +1,10 @@
 import time
 
-from flask import current_app, redirect, request, session, url_for
+from flask import current_app, redirect, session, url_for
 
 from flask_login import LoginManager
 from authlib.integrations.flask_client import OAuth
+from .after_login import remember_page_for_after_login
 from .scope import scopes
 from server.services.canvas import is_mock_canvas
 
@@ -98,5 +99,5 @@ def load_user(user_id):
 
 @login_manager.unauthorized_handler
 def unauthorized():
-    session['after_login'] = request.url
+    remember_page_for_after_login()
     return redirect(url_for('auth.login'))

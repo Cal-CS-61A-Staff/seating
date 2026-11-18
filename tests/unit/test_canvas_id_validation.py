@@ -78,9 +78,9 @@ def test_imported_students_can_be_deleted_from_the_students_page(exam, login_as)
     _import(exam, HEADER + 'c@berkeley.edu,Cy,777777\n')
     client = login_as(1)
     page = client.get(f'{EXAM_URL}/students/').get_data(as_text=True)
-    links = re.findall(r"delete this student\?', '([^']+)'", page)
+    links = re.findall(r'<form method="POST" action="([^"]+/delete)"', page)
     new_student = Student.query.filter_by(exam_id=1, canvas_id='777777').one()
     assert f'{EXAM_URL}/students/{new_student.id}/delete' in links
     for link in links:
-        assert client.get(link).status_code == 302
+        assert client.post(link).status_code == 302
     assert Student.query.filter_by(exam_id=1).count() == 0

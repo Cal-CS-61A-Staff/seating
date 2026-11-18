@@ -175,6 +175,11 @@ p a,
   cursor: pointer;
 }
 
+/* the post_button macro's form, which leaves its button laid out as if the form weren't there */
+.inline-form {
+  display: contents;
+}
+
 .icon-button:hover,
 .icon-button:focus-visible {
   background-color: rgba(0, 0, 0, 0.12);

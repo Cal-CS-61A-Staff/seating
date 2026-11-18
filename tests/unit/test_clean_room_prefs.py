@@ -65,8 +65,11 @@ def test_remove_button_cleans_preferences(exam, stale_students, login_as):
     page = client.get(STUDENTS_URL).get_data(as_text=True)
     csrf_token = re.search(r'name="csrf_token" type="hidden" value="([^"]+)"', page).group(1)
     # submit the form where the page actually points it, not a hard-coded url
-    action = re.search(r'<form method="POST" action="([^"]+)">', page).group(1)
-    assert action == f'{STUDENTS_URL}remove_deleted_rooms/'
+    # (besides the navbar's Log Out and the delete buttons)
+    actions = [action for action in re.findall(r'<form method="POST" action="([^"]+)">', page)
+               if action != '/logout/' and not action.endswith('/delete')]
+    assert actions == [f'{STUDENTS_URL}remove_deleted_rooms/']
+    action = actions[0]
 
     response = client.post(action, data={'csrf_token': csrf_token}, follow_redirects=True)
 

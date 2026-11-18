@@ -27,9 +27,11 @@ class Site:
 
     def visit(self, path, user=None):
         if user != self.user:
-            # logout needs a signed in user, or it sends the next login back to logout
+            # log out with the navbar's Log Out form, which posts; not every audited page has the navbar
             if self.user is not None:
-                self.driver.get(f'{BASE_URL}/logout/')
+                self.driver.get(f'{BASE_URL}/offerings')
+                self.driver.execute_script("document.querySelector('form[action=\"/logout/\"]').submit()")
+                WebDriverWait(self.driver, 10).until(EC.url_to_be(f'{BASE_URL}/'))
             if user is not None:
                 self._login(user)
             self.user = user

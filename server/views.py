@@ -3,6 +3,7 @@ from flask import Blueprint, abort, current_app, redirect, render_template, requ
     Response
 from flask.json import jsonify
 from flask_login import current_user, login_required
+from werkzeug.exceptions import HTTPException
 
 from server.models import SeatAssignment, db, Exam, Room, Seat, Student
 from server.forms import AssignSingleForm, EditExamForm, EditRoomForm, ExamForm, ImportStudentsForm, \
@@ -164,7 +165,7 @@ def offering(offering):
                            is_staff=is_staff)
 
 
-@bp.route('/<offering:offering>/hide/')
+@bp.route('/<offering:offering>/hide/', methods=['POST'])
 def hide_offering(offering):
     """
     Path: /offerings/<canvas_id>/hide
@@ -218,7 +219,7 @@ def new_exam(offering):
                            form=form, exam=None)
 
 
-@bp.route("/<exam:exam>/delete/", methods=["GET", "DELETE"])
+@bp.route("/<exam:exam>/delete/", methods=["POST"])
 def delete_exam(exam):
     """
     Path: /offerings/<canvas_id>/exams/<exam_name>/delete
@@ -267,7 +268,7 @@ def edit_exam(exam):
                            form=form, exam=exam)
 
 
-@bp.route("/<exam:exam>/toggle/", methods=["GET", "PATCH"])
+@bp.route("/<exam:exam>/toggle/", methods=["POST"])
 def toggle_exam(exam):
     """
     Path: /offerings/<canvas_id>/exams/<exam_name>/toggle
@@ -446,24 +447,23 @@ def import_room_manually(exam):  # noqa: C901
     return render_template('upsert_room.html', exam=exam, form=form, room=None)
 
 
-@bp.route('/<exam:exam>/rooms/<int:id>/delete', methods=['GET', 'DELETE'])
+@bp.route('/<exam:exam>/rooms/<int:id>/delete', methods=['POST'])
 def delete_room(exam, id):
     """
     Path: /offerings/<canvas_id>/exams/<exam_name>/rooms/<room_name>/delete
     Deletes a room for an exam.
     """
     room = Room.query.filter_by(exam_id=exam.id, id=id).first_or_404()
-    if room:
-        try:
-            # students may still reference this room in their wants/avoids
-            exam.remove_room_preferences(room.id)
-            db.session.delete(room)
-            db.session.commit()
-            flash("Deleted room.", 'success')
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Failed to delete room {room.display_name} (ID: {room.id}) due to an error:\n{e}", 'error')
-    return render_template('exam.html', exam=exam)
+    try:
+        # students may still reference this room in their wants/avoids
+        exam.remove_room_preferences(room.id)
+        db.session.delete(room)
+        db.session.commit()
+        flash("Deleted room.", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete room {room.display_name} (ID: {room.id}) due to an error:\n{e}", 'error')
+    return redirect(url_for('views.exam', exam=exam))
 
 
 @bp.route('/<exam:exam>/rooms/<int:id>/edit', methods=['GET', 'POST'])
@@ -597,6 +597,9 @@ def import_students_from_canvas_roster(exam):
     if from_canvas_form.validate_on_submit():
         try:
             _save_student_import(exam, *get_students_from_canvas(exam, from_canvas_form))
+        except HTTPException:
+            # e.g. the redirect to sign in again once the Canvas token has expired
+            raise
         except Exception as e:
             flash(f"Failed to import students due to an unexpected error: {str(e)}", 'error')
         return redirect(url_for('views.students', exam=exam))
@@ -776,7 +779,7 @@ def edit_students(exam):  # noqa: C901
                            did_not_exist=did_not_exist, student=None)
 
 
-@bp.route('/<exam_student:exam_student>/delete', methods=['GET', 'DELETE'])
+@bp.route('/<exam_student:exam_student>/delete', methods=['POST'])
 def delete_student(exam_student):
     exam, student = exam_student
     if student:

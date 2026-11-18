@@ -3,7 +3,8 @@ from server.typings.exception import Redirect
 from server.models import SeatAssignment, Student, db, Offering, Exam
 from werkzeug.routing import BaseConverter
 from flask_login import current_user
-from flask import abort, request, session, url_for
+from server.services.auth.after_login import remember_page_for_after_login
+from flask import abort, url_for
 from flask import Blueprint
 
 
@@ -24,7 +25,7 @@ class StudentConverter(BaseConverter):
 
     def to_python(self, value):
         if not current_user.is_authenticated:
-            session['after_login'] = request.url
+            remember_page_for_after_login()
             raise Redirect(url_for('auth.login'))
         # students are identified by their database id, not their Canvas id or student id
         _, offering_canvas_id, _, exam_name, _, student_id = value.split('/', 5)
@@ -60,7 +61,7 @@ class ExamConverter(BaseConverter):
 
     def to_python(self, value):
         if not current_user.is_authenticated:
-            session['after_login'] = request.url
+            remember_page_for_after_login()
             raise Redirect(url_for('auth.login'))
         _, canvas_id, _, exam_name = value.split('/', 3)
         exam = Exam.query.filter_by(
@@ -101,7 +102,7 @@ class OfferingConverter(BaseConverter):
 
     def to_python(self, value):
         if not current_user.is_authenticated:
-            session['after_login'] = request.url
+            remember_page_for_after_login()
             raise Redirect(url_for('auth.login'))
         canvas_id = value.rsplit('/', 1)[-1]
         # check membership first, so non-members cannot tell which courses use seating

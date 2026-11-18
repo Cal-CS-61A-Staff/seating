@@ -18,10 +18,11 @@
       <a class="item-link flex-grow-1" href="{{ url_for('views.offering', offering=offering) }}">
         {{ offering.name }}
       </a>
-      <button type="button" class="icon-button" aria-label="Hide {{ offering.name }}"
-          data-bs-toggle="tooltip" data-bs-title="Hide"
-          onclick="confirmAction('Hide this offering? Its exams are kept, and importing it again from Canvas shows it again.', '{{ url_for('views.hide_offering', offering=offering) }}');"
-          ><i class="bi bi-eye-slash" aria-hidden="true"></i></button>
+      {% call macros.post_button(url_for('views.hide_offering', offering=offering), 'Hide ' ~ offering.name,
+          confirm='Hide this offering? Its exams are kept, and importing it again from Canvas shows it again.',
+          **{'data-bs-toggle': 'tooltip', 'data-bs-title': 'Hide'}) -%}
+        <i class="bi bi-eye-slash" aria-hidden="true"></i>
+      {%- endcall %}
     </li>
   {% endfor %}
   </ul>

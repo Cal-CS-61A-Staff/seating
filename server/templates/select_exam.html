@@ -26,17 +26,17 @@
         {{ exam.display_name }}
       </a>
       {% if is_staff %}
-      <a class="icon-button" href="{{ url_for('views.toggle_exam', exam=exam) }}"
-        aria-label="{{ 'Deactivate' if exam.is_active else 'Activate' }} {{ exam.display_name }}">
+      {% call macros.post_button(url_for('views.toggle_exam', exam=exam),
+                                 ('Deactivate ' if exam.is_active else 'Activate ') ~ exam.display_name) -%}
         <i class="bi {{ 'bi-star-fill' if exam.is_active else 'bi-star' }}" aria-hidden="true"></i>
-      </a>
+      {%- endcall %}
       <a class="icon-button" href="{{ url_for('views.edit_exam', exam=exam) }}" aria-label="Edit {{ exam.display_name }}">
         <i class="bi bi-pencil" aria-hidden="true"></i>
       </a>
-      <button type="button" class="icon-button" aria-label="Delete {{ exam.display_name }}"
-        onclick="confirmAction('Are you sure you want to delete this exam?', '{{ url_for('views.delete_exam', exam=exam) }}');">
+      {% call macros.post_button(url_for('views.delete_exam', exam=exam), 'Delete ' ~ exam.display_name,
+                                 confirm='Are you sure you want to delete this exam?') -%}
         <i class="bi bi-x-lg" aria-hidden="true"></i>
-      </button>
+      {%- endcall %}
       {% endif %}
     </li>
   {% endfor %}

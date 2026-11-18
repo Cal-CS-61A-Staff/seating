@@ -178,9 +178,10 @@
           </td>
           <td class="students-actions">
             <a class="icon-button" href="{{ url_for('views.edit_student', exam_student=(exam, student)) }}" title="Edit student" aria-label="Edit {{ student.name }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
-            <button type="button" class="icon-button" title="Delete student" aria-label="Delete {{ student.name }}"
-            onclick="confirmAction('Are you sure you want to delete this student?', '{{ url_for('views.delete_student', exam_student=(exam, student)) }}');"
-            ><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            {% call macros.post_button(url_for('views.delete_student', exam_student=(exam, student)), 'Delete ' ~ student.name,
+                                       confirm='Are you sure you want to delete this student?', title='Delete student') -%}
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            {%- endcall %}
           </td>
         </tr>
         {% endfor %}

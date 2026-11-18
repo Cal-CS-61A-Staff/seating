@@ -1,9 +1,3 @@
-function confirmAction(hint, targetUrl) {
-  if (confirm(hint)) {
-    location.href = targetUrl;
-  }
-}
-
 // A seat map puts each seat's tooltip in a hidden .seat-tooltip right after the seat,
 // or after the link around it.
 function seatTooltip(seat) {

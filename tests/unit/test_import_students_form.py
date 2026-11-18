@@ -138,7 +138,8 @@ def test_first_source_given_is_used(staff, sheet):
 def test_page_has_one_form_with_one_set_of_options(staff):
     page = staff.get(IMPORT_URL).get_data(as_text=True)
     assert 'nav-tabs' not in page
-    assert re.findall(r'<form[^>]*action="([^"]+)"', page) == [IMPORT_URL]
+    # besides the navbar's Log Out
+    assert re.findall(r'<form[^>]*action="([^"]+)"', page) == ['/logout/', IMPORT_URL]
     # its second button imports the Canvas roster, with the same options
     assert page.count('value="Import"') == 1
     assert f'formaction="{IMPORT_URL}from_canvas_roster/"' in page

@@ -1,7 +1,7 @@
 import time
 
 from flask import redirect, session, url_for
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user
 from markupsafe import escape
 import server.services.canvas as canvas_client
 
@@ -56,9 +56,10 @@ def authorized():
     return redirect(after_login)
 
 
-@auth_module.route('/logout/')
-@login_required
+@auth_module.route('/logout/', methods=['POST'])
 def logout():
+    # Not login_required: a sign-in that has expired is signed out all the same, rather than sent to
+    # sign in again (silently, if Canvas still has a session) and so left signed in.
     discard_token()
     session.clear()
     logout_user()

@@ -53,11 +53,16 @@ def test_cancelling_an_exam_edit(staff):
 
 
 def test_toggling_an_exam(staff):
-    _lands_on(staff.get(f'{EXAM_URL}/toggle/'), OFFERING_URL)
+    _lands_on(staff.post(f'{EXAM_URL}/toggle/'), OFFERING_URL)
+
+
+def test_deleting_a_room(staff):
+    room = Room.query.filter_by(exam_id=1).first()
+    _lands_on(staff.post(f'{EXAM_URL}/rooms/{room.id}/delete'), f'{EXAM_URL}/')
 
 
 def test_deleting_an_exam(staff):
-    _lands_on(staff.get(f'{EXAM_URL}/delete/'), OFFERING_URL)
+    _lands_on(staff.post(f'{EXAM_URL}/delete/'), OFFERING_URL)
     assert db.session.get(Exam, 1) is None
 
 
@@ -92,7 +97,7 @@ def test_deleting_one_assignment(staff, seated):
 
 
 def test_logging_out(staff):
-    _lands_on(staff.get('/logout/'), '/')
+    _lands_on(staff.post('/logout/'), '/')
 
 
 @pytest.mark.app_config(MOCK_CANVAS=False)

@@ -31,9 +31,9 @@ def test_students_page_links_use_database_ids(seeded_db, login_as):
     assert {student_id for student_id, _ in links} == {'1', '2', '3'}, links
     # every page about a student is linked: the student, edit, assign, email and delete
     assert {rest for _, rest in links} >= {'', '/edit', '/assign/', '/email/', '/delete'}, links
-    # delete links last: following one deletes the student
+    # delete buttons last: pressing one deletes the student
     for student_id, rest in sorted(links, key=lambda link: link[1] == '/delete'):
-        response = client.get(f'{EXAM_URL}/students/{student_id}{rest}')
+        response = _open(client, f'{EXAM_URL}/students/{student_id}{rest}')
         assert response.status_code in (200, 302), (student_id, rest, response.status_code)
 
 
@@ -42,9 +42,14 @@ def test_student_pages_work_by_database_id(seeded_db, login_as, rest):
     assert login_as(1).get(f'{EXAM_URL}/students/1{rest}').status_code == 200
 
 
+def _open(client, url):
+    """Opens a student page, or presses its delete button."""
+    return client.post(url) if url.endswith('/delete') else client.get(url)
+
+
 @pytest.mark.parametrize('rest', PAGES + ['/delete'])
 def test_canvas_id_in_the_url_is_not_a_student(seeded_db, login_as, rest):
-    assert login_as(1).get(f'{EXAM_URL}/students/234567{rest}').status_code == 404
+    assert _open(login_as(1), f'{EXAM_URL}/students/234567{rest}').status_code == 404
 
 
 @pytest.mark.parametrize('rest', PAGES + ['/delete'])
@@ -53,7 +58,7 @@ def test_student_of_another_exam_is_not_found(seeded_db, login_as, rest):
     db.session.add(other_exam)
     db.session.commit()
     other = _add_student(other_exam.id, '999001', 'Other Exam Student')
-    assert login_as(1).get(f'{EXAM_URL}/students/{other.id}{rest}').status_code == 404
+    assert _open(login_as(1), f'{EXAM_URL}/students/{other.id}{rest}').status_code == 404
     assert db.session.get(Student, other.id) is not None
 
 
@@ -67,7 +72,7 @@ def test_student_with_a_bad_canvas_id_can_be_opened_and_deleted(seeded_db, login
     client = login_as(1)
     for rest in ['', '/edit', '/assign/', '/email/']:
         assert client.get(f'{EXAM_URL}/students/{stuck.id}{rest}').status_code == 200, rest
-    assert client.get(f'{EXAM_URL}/students/{stuck.id}/delete').status_code == 302
+    assert client.post(f'{EXAM_URL}/students/{stuck.id}/delete').status_code == 302
     assert db.session.get(Student, stuck.id) is None
 
 

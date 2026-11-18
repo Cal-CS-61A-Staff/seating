@@ -1,5 +1,5 @@
 import requests
-from flask import current_app, session, request, url_for
+from flask import current_app, url_for
 from canvasapi import Canvas
 from canvasapi.user import User
 from canvasapi.course import Course
@@ -23,7 +23,9 @@ def _get_client(key=None) -> FakeCanvas | Canvas:
         from server.services.auth.canvas_tokens import current_token
         key = current_token()
     if not key:
-        session['after_login'] = request.url
+        # imported here because the auth package imports this module
+        from server.services.auth.after_login import remember_page_for_after_login
+        remember_page_for_after_login()
         raise Redirect(url_for('auth.login'))
     return Canvas(current_app.config['CANVAS_SERVER_URL'], key)
 

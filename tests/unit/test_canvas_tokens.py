@@ -54,7 +54,7 @@ def test_sign_in_keeps_the_token_on_the_server(seeded_db, client, canvas_signs_i
 def test_logout_deletes_and_revokes_the_token(seeded_db, client, canvas_signs_in, revoked):
     client.get('/authorized/')
     stolen_cookie = _session(client)
-    assert client.get('/logout/').status_code == 302
+    assert client.post('/logout/').status_code == 302
     assert CanvasToken.query.count() == 0
     assert revoked == ['token-0']
     # a copy of the cookie from before logout no longer finds a token
@@ -75,7 +75,7 @@ def test_expired_tokens_are_not_revoked_and_are_purged(seeded_db, client, canvas
     client.get('/authorized/')
     CanvasToken.query.update({'expires_at': int(time.time()) - 1})
     db.session.commit()
-    client.get('/logout/')
+    client.post('/logout/')
     assert revoked == []
 
     db.session.add(CanvasToken(user_id=1, handle_hash='0' * 64, access_token='old', expires_at=1))
