@@ -201,13 +201,17 @@ def new_exam(offering):
         abort(403, "You are not a staff member in this offering.")
     form = ExamForm()
     if form.validate_on_submit():
-        offering.mark_all_exams_as_inactive()
         try:
+            if form.active.data:
+                # only one exam can be active at a time, so deactivate all others first
+                offering.mark_all_exams_as_inactive()
             exam = Exam(offering_canvas_id=offering.canvas_id,
                         name=form.name.data,
                         display_name=form.display_name.data,
-                        is_active=True)
-            db.session.add(exam)
+                        is_active=form.active.data)
+            offering.exams.append(exam)
+            if offering.ensure_one_exam_is_active():
+                flash("No active exam left. The first exam is activated by default.", 'info')
             db.session.commit()
             return redirect(url_for('views.offering', offering=offering))
         except Exception as e:
