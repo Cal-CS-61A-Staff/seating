@@ -168,8 +168,7 @@ def hide_offering(offering):
     Hides a course offering from the offerings page. Its exams are kept,
     and importing the course again shows it again.
     """
-    # offering urls convertor only checks login but does not check staff status
-    # we need to do it here
+    # offering urls convertor lets the course's students in too: check staff status here
     if str(offering.canvas_id) not in current_user.staff_offerings:
         abort(403, "You are not a staff member in this offering.")
     try:
@@ -193,8 +192,7 @@ def new_exam(offering):
     Path: /offerings/<canvas_id>/exams/new
     Creates a new exam for a course offering.
     """
-    # offering urls convertor only checks login but does not check staff status
-    # we need to do it here
+    # offering urls convertor lets the course's students in too: check staff status here
     if str(offering.canvas_id) not in current_user.staff_offerings:
         abort(403, "You are not a staff member in this offering.")
     form = ExamForm()

@@ -104,6 +104,9 @@ class OfferingConverter(BaseConverter):
             session['after_login'] = request.url
             raise Redirect(url_for('auth.login'))
         canvas_id = value.rsplit('/', 1)[-1]
+        # check membership first, so non-members cannot tell which courses use seating
+        if str(canvas_id) not in current_user.staff_offerings | current_user.student_offerings:
+            abort(403, "You are not authorized to view this page. " + GENERAL_STUDENT_HINT)
 
         offering = Offering.query.filter_by(
             canvas_id=canvas_id).one_or_none()
