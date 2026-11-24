@@ -47,6 +47,20 @@ def test_new_exam(staff):
     assert not db.session.get(Exam, 1).is_active
 
 
+@pytest.mark.parametrize('display_name, name', [
+    ('Midterm 2', 'midterm_2'),
+    ('Final - Makeup (Room B)', 'final_makeup_room_b'),
+    ('Midterm1', 'midterm1_2'),
+    ('New Final', 'exam_new_final'),
+    ('New', 'exam_new'),
+    ('!!!', 'exam_'),
+])
+def test_new_exam_internal_name_comes_from_display_name(staff, display_name, name):
+    staff.post('/offerings/1234567/exams/new/', data={'display_name': display_name, 'submit': 'y'})
+    assert Exam.query.filter_by(offering_canvas_id='1234567', name=name).one().display_name == display_name
+    assert staff.get(f'/offerings/1234567/exams/{name}/').status_code == 200
+
+
 def test_new_exam_left_inactive(staff):
     response = staff.post('/offerings/1234567/exams/new/',
                           data={'name': 'final', 'display_name': 'Final', 'submit': 'y'})

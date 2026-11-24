@@ -47,16 +47,6 @@ def _assert_unexpected_error_flashed(client, message_start):
     assert 'oski' not in message and 'db.internal' not in message
 
 
-def test_duplicate_exam_name_is_reported_plainly(staff):
-    response = staff.post('/offerings/1234567/exams/new/',
-                          data={'name': 'midterm1', 'display_name': 'Midterm 1 again', 'submit': 'y'})
-    # the form comes back, filled in, to pick another name
-    assert response.status_code == 200
-    assert b'Midterm 1 again' in response.data
-    assert escape("An exam named 'midterm1' already exists in this offering.") in response.text
-    assert Exam.query.filter_by(offering_canvas_id='1234567', name='midterm1').count() == 1
-
-
 def test_database_error_shows_a_reference_and_logs_the_error(staff, database_goes_down, caplog):
     staff.post(f'{EXAM_URL}/delete/')
     _assert_unexpected_error_flashed(staff, "Couldn't delete exam 'Midterm 1'")

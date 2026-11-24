@@ -9,14 +9,11 @@
     <h2 class="h4">Create New Exam</h2>
   {% endif %}
   {% call macros.form(form) %}
+    {% if exam %}
     <div class="mb-3">
-      {% if not exam %}
-        <label class="form-label" for="idname">Exam Internal Name</label>
-        {{ form.name(class="form-control", type="Exam Name", id="idname") }}
-      {% else %}
-        <label>Exam Internal Name: {{ exam.name }}</label>
-      {% endif %}
+      <label>Exam Internal Name: {{ exam.name }}</label>
     </div>
+    {% endif %}
     <div class="mb-3">
       <label class="form-label" for="displayname">Exam Display Name</label>
       {{ form.display_name(class="form-control", type="Exam Display Name", id="displayname") }}

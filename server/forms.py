@@ -1,12 +1,9 @@
-import re
-
 from flask_wtf import FlaskForm
 from wtforms import FieldList, FormField, SelectField, ValidationError, BooleanField, FileField, SelectMultipleField, \
     StringField, SubmitField, TextAreaField, DateTimeField, IntegerField, widgets
 from wtforms import Form as NoCsrfForm
 from flask_wtf.file import FileRequired, FileAllowed
 from wtforms.validators import Email, InputRequired, URL, Optional, DataRequired
-from server.controllers import exam_regex
 from server.services.email.templates import VARIABLES, unknown_variables
 from server.typings.enum import AssignmentImportStrategy, NewRowImportStrategy, UpdatedRowImportStrategy, \
     MissingRowImportStrategy
@@ -36,13 +33,7 @@ class ExamFormBase(FlaskForm):
 
 
 class ExamForm(ExamFormBase):
-    name = StringField('name', [InputRequired()], render_kw={"placeholder": "midterm1"})
     submit = SubmitField('create')
-
-    def validate_name(form, field):
-        pattern = '^{}$'.format(exam_regex)
-        if not re.match(pattern, field.data):
-            raise ValidationError('Exam name must be match pattern {}'.format(pattern))
 
 
 class EditExamForm(ExamFormBase):

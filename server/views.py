@@ -6,6 +6,7 @@ from flask.json import jsonify
 from flask_login import current_user, login_required
 from werkzeug.exceptions import HTTPException
 
+from server.controllers import exam_regex
 from server.models import SeatAssignment, db, Exam, Room, Seat, Student
 from server.forms import AssignSingleForm, EditExamForm, EditRoomForm, ExamForm, ImportStudentsForm, \
     RoomForm, ChooseRoomForm, ImportStudentFromCanvasRosterForm, DeleteStudentForm, \
@@ -269,7 +270,8 @@ def new_exam(offering):
     title = "Create an Exam for {}".format(offering.name)
     if form.validate_on_submit():
         # a rollback expires the offering: read what the error paths need first
-        canvas_id, name, display_name = offering.canvas_id, form.name.data, form.display_name.data
+        canvas_id, display_name = offering.canvas_id, form.display_name.data
+        name = _internal_exam_name(offering, display_name)
         offering_url = url_for('views.offering', offering=offering)
 
         def find_exam():
@@ -297,6 +299,23 @@ def new_exam(offering):
 
 def _exam_exists_message(name):
     return f"An exam named '{name}' already exists in this offering."
+
+
+# Input: offering, the course; display_name, the name staff typed, like 'Midterm 2'.
+# Output: an unused internal name for that course, like 'midterm_2'.
+# Description: Lowercases, drops all but letters, digits, spaces, hyphens and underscores,
+# then turns spaces and hyphens into '_'. Adds 'exam_' in front if that leaves nothing or a
+# start the exam URLs don't allow (like 'new'). Adds '_2', '_3', ... if the name is taken.
+def _internal_exam_name(offering, display_name):
+    name = re.sub(r'[^a-z0-9 _-]', '', display_name.lower())
+    name = re.sub(r'[ -]+', '_', name)
+    if not re.fullmatch(exam_regex, name):
+        name = 'exam_' + name
+    taken = {exam.name for exam in offering.exams}
+    candidate, number = name, 2
+    while candidate in taken:
+        candidate, number = f'{name}_{number}', number + 1
+    return candidate
 
 
 def _room_exists_message(display_name):
