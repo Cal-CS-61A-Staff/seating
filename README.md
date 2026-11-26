@@ -1,5 +1,7 @@
 # Exam Seating App
 
+# An updated version of the app can be found at https://github.com/berkeley-cdss/seating/
+
 The seating app assigns seats to students, taking some basic preferences into account. 
 Students can log in with their Ok account to view their seat in their room. 
 General course staff can project the seating chart during the beginning of the exam
